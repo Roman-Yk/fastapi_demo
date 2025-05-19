@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    env_file: ./backend/.env
+    ports:
+      - 8000:8000
+    depends_on:
+      - database
+    networks:
+      - default
+
+  database:
+    image: postgres:latest
+    env_file: ./backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - default
+
+  
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  postgres_data:
