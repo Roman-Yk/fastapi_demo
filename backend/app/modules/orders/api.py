@@ -1,7 +1,8 @@
+from typing import Optional, Annotated
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +12,7 @@ from app.database.conn import get_db
 
 from app.utils.queries.queries import fetch_one_or_none, fetch_all
 
-from .schemas import ResponseOrderSchema
+from .schemas import ResponseOrderSchema, OrderQueryModel
 from .service import fetch_all_orders
 
 
@@ -30,8 +31,9 @@ class OrdersResource:
         self.db = db
 
     @orders_router.get("/orders", response_model=list[ResponseOrderSchema])
-    async def get_orders(self):
-        orders = await fetch_all_orders(self.db, select(Order))
+    async def get_orders(self, query: Annotated[OrderQueryModel, Query()]):
+
+        orders = await fetch_all_orders(self.db, query)
         return orders
 
     @orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)

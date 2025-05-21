@@ -1,0 +1,2 @@
+ORDER_ASC = "ASC"
+ORDER_DESC = "DESC"

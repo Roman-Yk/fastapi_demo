@@ -32,6 +32,8 @@ mako==1.3.10
     # via alembic
 markupsafe==3.0.2
     # via mako
+mypy-extensions==1.1.0
+    # via typing-inspect
 psutil==5.9.8
     # via fastapi-utils
 psycopg2-binary==2.9.10
@@ -65,7 +67,10 @@ typing-extensions==4.13.2
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+    #   typing-inspect
     #   typing-inspection
+typing-inspect==0.9.0
+    # via -r requirements.in
 typing-inspection==0.4.0
     # via
     #   pydantic

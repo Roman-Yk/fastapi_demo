@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PASSWORD: str 
     POSTGRES_PORT: int
+    
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
@@ -18,7 +19,6 @@ class Settings(BaseSettings):
     def ALEMBIC_DATABASE_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
 
-    
     # Redis settings
     # JWT settings
 
