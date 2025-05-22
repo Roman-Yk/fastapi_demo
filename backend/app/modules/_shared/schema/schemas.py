@@ -1,44 +1,101 @@
-from typing import Optional, List, Type, Dict, Any
-from pydantic import BaseModel, Field, create_model, validator
+import json
+
+from fastapi import Query, HTTPException
+from typing import Optional, Type, TypeVar
+from typing import Optional, List, Type, Any
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, Field, create_model, field_validator, ValidationError
 
 ORDER_ASC = "ASC"
 ORDER_DESC = "DESC"
 
-def create_filter_model(filter_fields: Dict[str, Any], name="FilterModel") -> Type[BaseModel]:
+def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[BaseModel]:
     """
     Dynamically create a Pydantic model for filter fields.
     filter_fields: dict with keys=field names, values=types (or tuples for ranges)
     """
     fields = {}
-    for f_name, f_type in filter_fields.items():
-        if isinstance(f_type, tuple) and len(f_type) == 2 and f_type[0] == "range":
-            # Range: create optional from/to fields for that attribute
-            fields[f"{f_name}_from"] = (Optional[f_type[1]], None)
-            fields[f"{f_name}_to"] = (Optional[f_type[1]], None)
+    for filter_var in filter_fields:
+        if isinstance(filter_var, tuple):
+            f_name, f_type = filter_var
+            if len(filter_var) == 2:
+                fields[f_name] = (Optional[f_type], None)
+            else:
+                raise ValueError("Filter field tuple must have exactly two elements.")
         else:
-            fields[f_name] = (Optional[f_type], None)
+            fields[filter_var] = (Optional[str], None)
     return create_model(name, **fields)
 
 
 def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseModel]:
     """
-    Create a Pydantic model with validation for sort field and order.
+    Create a Pydantic model with validation for sort field.
     """
     class SortModel(BaseModel):
-        sort_by: Optional[str] = Field(None)
-        sort_order: Optional[str] = Field(None)
-
-        @validator("sort_by")
+        sort: Optional[str] = Field(None)
+        
+        @field_validator("sort", mode="before")
         def check_sort_by(cls, v):
             if v is not None and v not in sort_fields:
-                raise ValueError(f"sort_by must be one of {sort_fields}")
-            return v
-
-        @validator("sort_order")
-        def check_sort_order(cls, v):
-            if v is not None and v not in (ORDER_ASC, ORDER_DESC):
-                raise ValueError(f"sort_order must be '{ORDER_ASC}' or '{ORDER_DESC}'")
+                return None 
             return v
 
     SortModel.__name__ = name
     return SortModel
+
+
+
+F = TypeVar("F", bound=BaseModel)
+S = TypeVar("S", bound=BaseModel)
+
+class CollectionQueryParams:
+    """
+    General class for collection query parameters.
+    filter: JSON-encoded filter {'field': 'value'}
+    sort: Sort field
+    order: Sort order ASC/DESC
+    page: Page number
+    perPage: Items per page
+    That class enables passing filter as json string
+    Because default pydantic validator does not support json string
+    and parses everything as plain string. But react admin works with ?filter={}.
+    """
+    filter_model: Optional[Type[F]] = None
+    sort_model: Optional[Type[S]] = None
+
+    def __init__(
+        self,
+        filter: Optional[str] = Query(None, description="JSON-encoded filter {'field': 'value'}"),
+        sort: Optional[str] = Query(None, description="Sort field for example eta_date"),
+        order: Optional[str] = Query(None, description="Sort order ASC/DESC"),
+        page: int = Query(1, ge=1, description="Page number"),
+        perPage: int = Query(50, ge=1, le=100, description="Items per page"),
+    ):
+        self.page = page
+        self.perPage = perPage
+        self.filter = self._parse_filter(filter)
+        self.sort = self._parse_sort(sort)
+        self.order = order
+
+    def _parse_filter(self, filter_raw: Optional[str]) -> Optional[F]:
+        if not filter_raw or not self.filter_model:
+            return None
+        try:
+            data = json.loads(filter_raw)
+            return self.filter_model(**data).model_dump()
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+        except ValidationError as e:
+            # Convert the validation error to a format FastAPI understands
+            raise HTTPException(
+                status_code=422,
+                detail=jsonable_encoder({"filter_model_validation_error": e.errors()})
+        )
+            
+    def _parse_sort(self, sort_raw: Optional[str]) -> Optional[S]:
+        if not sort_raw or not self.sort_model:
+            return None
+        try:
+            return self.sort_model(sort=sort_raw).model_dump()
+        except (json.JSONDecodeError, ValidationError) as e:
+            raise HTTPException(status_code=422, detail=f"Invalid sort: {e}")

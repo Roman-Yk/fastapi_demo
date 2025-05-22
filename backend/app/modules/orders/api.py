@@ -12,7 +12,7 @@ from app.database.conn import get_db
 
 from app.utils.queries.queries import fetch_one_or_none, fetch_all
 
-from .schemas import ResponseOrderSchema, OrderQueryModel
+from .schemas import ResponseOrderSchema, OrderQueryParams
 from .service import fetch_all_orders
 
 
@@ -31,9 +31,8 @@ class OrdersResource:
         self.db = db
 
     @orders_router.get("/orders", response_model=list[ResponseOrderSchema])
-    async def get_orders(self, query: Annotated[OrderQueryModel, Query()]):
-
-        orders = await fetch_all_orders(self.db, query)
+    async def get_orders(self, query_params: OrderQueryParams = Depends()):
+        orders = await fetch_all_orders(self.db, query_params)
         return orders
 
     @orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)
