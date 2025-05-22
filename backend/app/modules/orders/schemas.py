@@ -1,9 +1,6 @@
 import uuid
-import json
-from fastapi import HTTPException, Query
-from pydantic import BaseModel, create_model, ValidationError
-from typing import Annotated, Optional
 from datetime import date, time
+from typing import Annotated, Optional
 from pydantic import BaseModel, AfterValidator
 from app.modules._shared.schema.validators import is_not_past_date
 from app.modules._shared.schema.schemas import (
@@ -105,20 +102,40 @@ class ResponseOrderSchema(OrderBaseOutputSchema):
     etd_driver_phone: Optional[str] = None
 
     class Config:
+        """
+        Pydantic model configuration.
+        orm_mode - to allow ORM objects to be used as input not only dicts
+        allow_population_by_field_name - to allow population by field name
+        use_enum_values - to use enum raw values instead of enum objects
+        arbitrary_types_allowed - By default, Pydantic only allows certain types. 
+        Setting this to True allows use custom or arbitrary types 
+        (e.g., database classes or UUIDs) without raising errors during validation.
+        """
         orm_mode = True
         allow_population_by_field_name = True
         use_enum_values = True
         arbitrary_types_allowed = True
 
 
-
-filter_fields = [
+#Declare dynamic filter model
+Filter_model = create_filter_model([
     ("id", uuid.UUID),
     "reference",
-]
-
-sort_fields = ["id", "reference"]
+])
+#Declare dynamic sort model
+SortModel = create_sort_model([
+    "id", 
+    "reference"
+])
 
 class OrderQueryParams(CollectionQueryParams):
-    filter_model = create_filter_model(filter_fields)
-    sort_model = create_sort_model(sort_fields)
+    """
+    Query parameters for order collection.
+    filter: JSON-encoded filter {'field': 'value'}
+    sort: Sort field
+    order: Sort order ASC/DESC
+    page: Page number
+    perPage: Items per page
+    """
+    filter_model = Filter_model
+    sort_model = SortModel

@@ -10,7 +10,7 @@ async def fetch_all_orders(db, querystring):
     Main function to fetch all orders.
     """
     select_query = select(Order)
-    print(f"\033[31m{querystring.filter}\033[0m")
+    print(f"\033[31m{querystring.filter.reference}\033[0m")
     print(f"\033[31m{querystring.sort}\033[0m")
     print(f"\033[31m{querystring.order}\033[0m")
 

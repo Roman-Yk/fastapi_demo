@@ -12,7 +12,9 @@ ORDER_DESC = "DESC"
 def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[BaseModel]:
     """
     Dynamically create a Pydantic model for filter fields.
-    filter_fields: dict with keys=field names, values=types (or tuples for ranges)
+    filter_fields: tuple or string
+        - If tuple, the first element is the field name and the second is the type.
+        - If string, the field name is the string and the type is Optional[str].
     """
     fields = {}
     for filter_var in filter_fields:
@@ -29,7 +31,7 @@ def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[Ba
 
 def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseModel]:
     """
-    Create a Pydantic model with validation for sort field.
+    Dynamically create a Pydantic model with validation for sort field.
     """
     class SortModel(BaseModel):
         sort: Optional[str] = Field(None)
@@ -51,11 +53,17 @@ S = TypeVar("S", bound=BaseModel)
 class CollectionQueryParams:
     """
     General class for collection query parameters.
-    filter: JSON-encoded filter {'field': 'value'}
-    sort: Sort field
-    order: Sort order ASC/DESC
-    page: Page number
-    perPage: Items per page
+    Requires filter_model and sort_model to be defined.
+        - filter_model: Pydantic model for filter created using create_filter_model
+        - sort_model: Pydantic model for sort created using create_sort_model
+    
+    Fields:
+        - filter: JSON-encoded filter {'field': 'value'}
+        - sort: Sort field
+        - order: Sort order ASC/DESC
+        - page: Page number
+        - perPage: Items per page
+        
     That class enables passing filter as json string
     Because default pydantic validator does not support json string
     and parses everything as plain string. But react admin works with ?filter={}.
@@ -82,7 +90,7 @@ class CollectionQueryParams:
             return None
         try:
             data = json.loads(filter_raw)
-            return self.filter_model(**data).model_dump()
+            return self.filter_model(**data).model_dump(exclude_unset=True)
         except json.JSONDecodeError as e:
             raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
         except ValidationError as e:

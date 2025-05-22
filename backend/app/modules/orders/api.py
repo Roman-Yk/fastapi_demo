@@ -26,12 +26,19 @@ class OrdersResource:
     """
     def __init__(self, db: AsyncSession = Depends(get_db)):
         """
-        Initialize the OrdersResource with a database session.
+        Initialize the OrdersResource with a database session to not pass for every route separately.
         """
         self.db = db
 
     @orders_router.get("/orders", response_model=list[ResponseOrderSchema])
     async def get_orders(self, query_params: OrderQueryParams = Depends()):
+        """
+        Get all orders with optional filtering, sorting, and pagination.
+        
+        query_params: OrderQueryParams = Depends()
+        need to be called like that because it's not a pydantic model and needed to be initialized
+        
+        """
         orders = await fetch_all_orders(self.db, query_params)
         return orders
 
