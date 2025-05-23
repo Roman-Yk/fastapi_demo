@@ -1,2 +1,2 @@
 from .Order import Order
-from .OrderServiceType import OrderServiceType
+from .OrderServiceType import OrderServiceType, OrderService

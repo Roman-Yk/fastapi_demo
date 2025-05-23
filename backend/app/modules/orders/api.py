@@ -11,8 +11,8 @@ from app.database.models import Order
 from app.database.conn import get_db
 
 
-from .schemas import ResponseOrderSchema, OrderQueryParams
-from .service import fetch_all_orders
+from .schemas import ResponseOrderSchema, CollectionOrderQueryParams
+from .service import get_all_orders, get_order_by_id
 from app.utils.queries.fetching import fetch_one_or_none
 
 orders_router = InferringRouter(tags=["orders"])
@@ -20,31 +20,31 @@ orders_router = InferringRouter(tags=["orders"])
 
 @cbv(orders_router)
 class OrdersResource:
-    """
-    Class based view for handling orders resources.
-    """
-    def __init__(self, db: AsyncSession = Depends(get_db)):
-        """
-        Initialize the OrdersResource with a database session to not pass for every route separately.
-        """
-        self.db = db
+	"""
+	Class based view for handling orders resources.
+	"""
+	def __init__(self, db: AsyncSession = Depends(get_db)):
+		"""
+		Initialize the OrdersResource with a database session to not pass for every route separately.
+		"""
+		self.db = db
 
-    @orders_router.get("/orders", response_model=list[ResponseOrderSchema])
-    async def get_orders(self, query_params: OrderQueryParams = Depends()):
-        """
-        Get all orders with optional filtering, sorting, and pagination.
-        """
-        """
-        query_params: OrderQueryParams = Depends()
-        need to be called like that because it's not a pydantic model and needed to be initialized
-        """
-        orders = await fetch_all_orders(self.db, query_params)
-        return orders
+	@orders_router.get("/orders", response_model=list[ResponseOrderSchema])
+	async def get_orders(self, query_params: CollectionOrderQueryParams = Depends()):
+		"""
+		Get all orders with optional filtering, sorting, and pagination.
+		"""
+		"""
+		query_params: CollectionOrderQueryParams = Depends()
+		need to be called like that because it's not a pydantic model and needed to be initialized
+		"""
+		orders = await get_all_orders(self.db, query_params)
+		return orders
 
-    @orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)
-    async def get_order_by_id(self, order_id: int):
-        query = select(Order).where(Order.id == order_id)
-        order = await fetch_one_or_none(self.db, query)
-        if not order:
-            raise HTTPException(status_code=404, detail="Order not found")
-        return order
+	@orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)
+	async def get_order_by_id(self, order_id: int):
+		"""
+		Get order by ID.
+		"""
+		order = await get_order_by_id(self.db, order_id)
+		return order

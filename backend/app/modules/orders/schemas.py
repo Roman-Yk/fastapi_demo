@@ -1,141 +1,83 @@
 import uuid
-from datetime import date, time
-from typing import Annotated, Optional
-from pydantic import BaseModel, AfterValidator
-from app.modules._shared.schema.validators import is_not_past_date
+from datetime import time
+from typing import Optional
+from pydantic import BaseModel
+
+from app.database.models.orders import OrderService
+
 from app.modules._shared.schema.schemas import (
     create_filter_model,
     create_sort_model,
-    CollectionQueryParams
-    )
+    CollectionQueryParams,
+)
 
-# Base for shared fields
-class OrderBaseSchema(BaseModel):
-    reference: str
-    service: int
-    terminal_id: uuid.UUID
+from app.modules._shared.schema.types import (
+    NotPastOptionalDate,
+    NonNegativeOptionalFloat,
+    NonNegativeOptionalInt,
+)
 
-    commodity: Optional[str] = None
-    pallets: Optional[int] = None
-    boxes: Optional[int] = None
-    kilos: Optional[float] = None
-    notes: Optional[str] = None
-    priority: Optional[bool] = None
+from app.modules._shared.schema.base import ResponseBaseModel
 
-    eta_date: Annotated[Optional[date], AfterValidator(is_not_past_date)] = None
-    eta_time: Optional[time] = None
-    etd_date: Annotated[Optional[date], AfterValidator(is_not_past_date)] = None
-    etd_time: Optional[time] = None
-
-
-class OrderBaseOutputSchema(BaseModel):
-    reference: str
-    service: int
-    terminal_id: uuid.UUID
-
-    commodity: Optional[str] = None
-    pallets: Optional[int] = None
-    boxes: Optional[int] = None
-    kilos: Optional[float] = None
-    notes: Optional[str] = None
-    priority: Optional[bool] = None
-
-    eta_date: Optional[date] = None
-    eta_time: Optional[time] = None
-    etd_date: Optional[date] = None
-    etd_time: Optional[time] = None
+from .BaseSchemas import (
+    ETAETDFieldsMixin,
+    OrderBaseResponseSchema,
+    OrderFieldsMixin
+)
 
 
 # Create schema
-class CreateOrderSchema(OrderBaseSchema):
-    pass
+class CreateOrderSchema(OrderFieldsMixin):
+    reference: str
+    service: OrderService
+    terminal_id: uuid.UUID
+
+    eta_date: NotPastOptionalDate = None
+    eta_time: Optional[time] = None
+    etd_date: NotPastOptionalDate = None
+    etd_time: Optional[time] = None
 
 
 # Update schema (Patch)
-class UpdateOrderSchema(BaseModel):
-    commodity: Optional[str] = None
-    pallets: Optional[int] = None
-    boxes: Optional[int] = None
-    kilos: Optional[float] = None
-    notes: Optional[str] = None
-    priority: Optional[bool] = None
-
-    eta_date: Annotated[Optional[date], AfterValidator(is_not_past_date)] = None
+class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
+    eta_date: NotPastOptionalDate = None
     eta_time: Optional[time] = None
-    eta_truck: Optional[str] = None
-    eta_driver: Optional[str] = None
-    eta_trailer: Optional[str] = None
-    eta_truck_id: Optional[uuid.UUID] = None
-    eta_driver_id: Optional[uuid.UUID] = None
-    eta_trailer_id: Optional[uuid.UUID] = None
-    eta_driver_phone: Optional[str] = None
 
-    etd_date: Annotated[Optional[date], AfterValidator(is_not_past_date)] = None
+    etd_date: NotPastOptionalDate = None
     etd_time: Optional[time] = None
-    etd_truck: Optional[str] = None
-    etd_driver: Optional[str] = None
-    etd_trailer: Optional[str] = None
-    etd_truck_id: Optional[uuid.UUID] = None
-    etd_driver_id: Optional[uuid.UUID] = None
-    etd_trailer_id: Optional[uuid.UUID] = None
-    etd_driver_phone: Optional[str] = None
+    
+    commodity: Optional[str] = None
+    pallets: NonNegativeOptionalInt = None
+    boxes: NonNegativeOptionalInt = None
+    kilos: NonNegativeOptionalFloat = None
 
 
-# Response schema
-class ResponseOrderSchema(OrderBaseOutputSchema):
-    id: uuid.UUID
+# Declare dynamic filter model
+Filter_model = create_filter_model(
+    [
+        ("id", uuid.UUID),
+        "reference",
+    ]
+)
+# Declare dynamic sort model
+SortModel = create_sort_model(["id", "reference"])
 
-    eta_truck: Optional[str] = None
-    eta_driver: Optional[str] = None
-    eta_trailer: Optional[str] = None
-    eta_truck_id: Optional[uuid.UUID] = None
-    eta_driver_id: Optional[uuid.UUID] = None
-    eta_trailer_id: Optional[uuid.UUID] = None
-    eta_driver_phone: Optional[str] = None
-
-    etd_truck: Optional[str] = None
-    etd_driver: Optional[str] = None
-    etd_trailer: Optional[str] = None
-    etd_truck_id: Optional[uuid.UUID] = None
-    etd_driver_id: Optional[uuid.UUID] = None
-    etd_trailer_id: Optional[uuid.UUID] = None
-    etd_driver_phone: Optional[str] = None
-
-    class Config:
-        """
-        Pydantic model configuration.
-        orm_mode - to allow ORM objects to be used as input not only dicts
-        allow_population_by_field_name - to allow population by field name
-        use_enum_values - to use enum raw values instead of enum objects
-        arbitrary_types_allowed - By default, Pydantic only allows certain types. 
-        Setting this to True allows use custom or arbitrary types 
-        (e.g., database classes or UUIDs) without raising errors during validation.
-        """
-        orm_mode = True
-        allow_population_by_field_name = True
-        use_enum_values = True
-        arbitrary_types_allowed = True
-
-
-#Declare dynamic filter model
-Filter_model = create_filter_model([
-    ("id", uuid.UUID),
-    "reference",
-])
-#Declare dynamic sort model
-SortModel = create_sort_model([
-    "id", 
-    "reference"
-])
-
-class OrderQueryParams(CollectionQueryParams):
+# Response schema for order
+class CollectionOrderQueryParams(CollectionQueryParams):
     """
     Query parameters for order collection.
-    filter: JSON-encoded filter {'field': 'value'}
-    sort: Sort field
-    order: Sort order ASC/DESC
-    page: Page number
-    perPage: Items per page
+        - filter: JSON-encoded filter {'field': 'value'}
+        - sort: Sort field
+        - order: Sort order ASC/DESC
+        - page: Page number
+        - perPage: Items per page
+    method:
+        - data: returns the query parameters as a dictionary
     """
     filter_model = Filter_model
     sort_model = SortModel
+
+
+# Response schema
+class ResponseOrderSchema(OrderBaseResponseSchema, AppBaseModel):
+    id: uuid.UUID

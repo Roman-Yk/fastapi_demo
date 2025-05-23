@@ -1,56 +1,11 @@
 import json
-
 from fastapi import Query, HTTPException
 from typing import Optional, Type, TypeVar
 from typing import Optional, List, Type, Any
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, create_model, field_validator, ValidationError
 
-ORDER_ASC = "ASC"
-ORDER_DESC = "DESC"
-
-def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[BaseModel]:
-    """
-    Dynamically create a Pydantic model for filter fields.
-    filter_fields: tuple or string
-        - If tuple, the first element is the field name and the second is the type.
-        - If string, the field name is the string and the type is Optional[str].
-    """
-    fields = {}
-    for filter_var in filter_fields:
-        if isinstance(filter_var, tuple):
-            f_name, f_type = filter_var
-            if len(filter_var) == 2:
-                fields[f_name] = (Optional[f_type], None)
-            else:
-                raise ValueError("Filter field tuple must have exactly two elements.")
-        else:
-            fields[filter_var] = (Optional[str], None)
-    return create_model(name, **fields)
-
-
-def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseModel]:
-    """
-    Dynamically create a Pydantic model with validation for sort field.
-    """
-    class SortModel(BaseModel):
-        sort: Optional[str] = Field(None)
-        order: Optional[str] = Field(None)
-        
-        @field_validator("sort", mode="before")
-        def check_sort_by(cls, v):
-            if v is not None and v not in sort_fields:
-                return None 
-            return v
-        
-        @field_validator("order", mode="before")
-        def check_sort_order(cls, v):
-            if v is not None and v not in (ORDER_ASC, ORDER_DESC):
-                raise ValueError(f"sort=[field_name, ASC/DESC] order must be '{ORDER_ASC}' or '{ORDER_DESC}'")
-            return v
-        
-    SortModel.__name__ = name
-    return SortModel
+from app.constants import ORDER_ASC, ORDER_DESC
 
 
 F = TypeVar("F", bound=BaseModel)
@@ -73,6 +28,9 @@ class CollectionQueryParams:
     That class enables passing filter as json string
     Because default pydantic validator does not support json string
     and parses everything as plain string. But react admin works with ?filter={}.
+    
+    methods:
+        - data: Returns the data as a dictionary.
     """
     filter_model: Optional[Type[F]] = None
     sort_model: Optional[Type[S]] = None
@@ -124,3 +82,48 @@ class CollectionQueryParams:
             return loaded_sort
         except (json.JSONDecodeError, ValidationError) as e:
             raise HTTPException(status_code=422, detail=f"Invalid sort: {e}")
+
+
+
+def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[BaseModel]:
+    """
+    Dynamically create a Pydantic model for filter fields.
+    filter_fields: tuple or string
+        - If tuple, the first element is the field name and the second is the type.
+        - If string, the field name is the string and the type is Optional[str].
+    """
+    fields = {}
+    for filter_var in filter_fields:
+        if isinstance(filter_var, tuple):
+            f_name, f_type = filter_var
+            if len(filter_var) == 2:
+                fields[f_name] = (Optional[f_type], None)
+            else:
+                raise ValueError("Filter field tuple must have exactly two elements.")
+        else:
+            fields[filter_var] = (Optional[str], None)
+    return create_model(name, **fields)
+
+
+def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseModel]:
+    """
+    Dynamically create a Pydantic model with validation for sort field.
+    """
+    class SortModel(BaseModel):
+        sort: Optional[str] = Field(None)
+        order: Optional[str] = Field(None)
+        
+        @field_validator("sort", mode="before")
+        def check_sort_by(cls, v):
+            if v is not None and v not in sort_fields:
+                return None 
+            return v
+        
+        @field_validator("order", mode="before")
+        def check_sort_order(cls, v):
+            if v is not None and v not in (ORDER_ASC, ORDER_DESC):
+                raise ValueError(f"sort=[field_name, ASC/DESC] order must be '{ORDER_ASC}' or '{ORDER_DESC}'")
+            return v
+        
+    SortModel.__name__ = name
+    return SortModel

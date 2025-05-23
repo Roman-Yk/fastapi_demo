@@ -1,5 +1,5 @@
-import enum
 import os
+import enum
 
 from ...custom_types.EnumType import EnumType
 
@@ -8,7 +8,6 @@ class OrderService(enum.IntEnum):
 	RELOAD_CAR_CAR = 1
 	RELOAD_CAR_TERMINAL_CAR = 2
 	INTO_PLUKK_STORAGE = 3
-	CROSS_DOCK = 4
 
 	@property
 	def full_name(self):
@@ -35,10 +34,6 @@ services = {
 	OrderService.INTO_PLUKK_STORAGE: {
 		"full_name": os.getenv("INTO_PLUKK_STORAGE__FULL_NAME", "Into Plukk Storage"),
 		"short_name": os.getenv("INTO_PLUKK_STORAGE__SHORT_NAME", "Plukk"),
-	},
-	OrderService.CROSS_DOCK: {
-		"full_name": os.getenv("CROSS_DOCK__FULL_NAME", "Cross Dock"),
-		"short_name": os.getenv("CROSS_DOCK__SHORT_NAME", "CD"),
 	},
 }
 
