@@ -1,8 +1,8 @@
-"""Create all tables_
+"""tables_creation_
 
-Revision ID: 2e1d01815f6e
+Revision ID: c0bcc1ea7a9f
 Revises:
-Create Date: 2025-05-21 11:55:20.256866
+Create Date: 2025-05-23 15:07:36.709748
 
 """
 
@@ -10,9 +10,8 @@ from alembic import op
 import sqlalchemy as sa
 from app.database.models.orders.OrderServiceType import OrderServiceType
 
-
 # revision identifiers, used by Alembic.
-revision = "2e1d01815f6e"
+revision = "c0bcc1ea7a9f"
 down_revision = None
 branch_labels = None
 depends_on = None

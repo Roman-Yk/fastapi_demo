@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # Redis settings
     # JWT settings
 
+    #.env file is being searched in the root directory
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

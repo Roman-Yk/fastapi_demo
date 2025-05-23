@@ -1,6 +1,8 @@
 import uuid
-from sqlalchemy import Integer, Column, UUID, String, Date, Time, Float, Boolean, ForeignKey, func
+
+from sqlalchemy import Integer, Column, String, Date, Time, Float, Boolean, ForeignKey, func
 from sqlalchemy.orm import validates
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.base_model import BASE_MODEL
 
@@ -9,7 +11,7 @@ from .OrderServiceType import OrderServiceType
 class Order(BASE_MODEL):
 	__tablename__ = "orders"
 
-	id = Column(UUID(), default=uuid.UUID, primary_key=True, index=True)
+	id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, index=True)
 	reference = Column(String(32), nullable=True)
 
 	service = Column(OrderServiceType(), nullable=True)

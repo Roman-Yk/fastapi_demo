@@ -1,19 +1,16 @@
-from typing import Optional, Annotated
+import uuid
+
+from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
-from fastapi import Depends, HTTPException, Query
-
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Order
 from app.database.conn import get_db
 
+from .schemas import ResponseOrderSchema, CollectionOrderQueryParams, CreateOrderSchema
+from .service import OrderService
 
-from .schemas import ResponseOrderSchema, CollectionOrderQueryParams
-from .service import get_all_orders, get_order_by_id
-from app.utils.queries.fetching import fetch_one_or_none
 
 orders_router = InferringRouter(tags=["orders"])
 
@@ -28,6 +25,8 @@ class OrdersResource:
 		Initialize the OrdersResource with a database session to not pass for every route separately.
 		"""
 		self.db = db
+		self.service = OrderService(self.db)
+
 
 	@orders_router.get("/orders", response_model=list[ResponseOrderSchema])
 	async def get_orders(self, query_params: CollectionOrderQueryParams = Depends()):
@@ -38,13 +37,21 @@ class OrdersResource:
 		query_params: CollectionOrderQueryParams = Depends()
 		need to be called like that because it's not a pydantic model and needed to be initialized
 		"""
-		orders = await get_all_orders(self.db, query_params)
+		orders = await self.service.get_all_orders(query_params)
 		return orders
 
 	@orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)
-	async def get_order_by_id(self, order_id: int):
+	async def get_order_by_id(self, order_id: uuid.UUID):
 		"""
 		Get order by ID.
 		"""
-		order = await get_order_by_id(self.db, order_id)
+		order = await self.service.get_order_by_id(order_id)
 		return order
+
+	@orders_router.post("/orders", response_model=ResponseOrderSchema)
+	async def create_order(self, order: CreateOrderSchema):
+		"""
+		Create a new order.
+		"""
+		new_order = await self.service.create_order(order)
+		return new_order
