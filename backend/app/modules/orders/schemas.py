@@ -19,7 +19,6 @@ from app.modules._shared.schema.types import (
 
 from app.modules._shared.schema.base import ResponseBaseModel
 
-
 from .BaseSchemas import (
 	ETAETDFieldsMixin,
 	OrderBaseResponseSchema,
@@ -41,6 +40,10 @@ class CreateOrderSchema(OrderFieldsMixin):
 
 # Update schema (Patch)
 class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
+	"""
+	Update/Patch order schema.
+	if using patch then use model_dump(exclude_unset=True)
+	"""
 	eta_date: NotPastOptionalDate = None
 	eta_time: Optional[time] = None
 
