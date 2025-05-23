@@ -46,7 +46,8 @@ class OrdersResource:
 		need to be called like that because it's not a pydantic model and needs to be initialized
 		"""
 		orders, count = await self.order_service.get_all_orders(query_params)
-		self.response.headers["Content-Range"] = generate_range([1, 40], count)
+		if query_params.dict_data.get("range"):
+			self.response.headers["Content-Range"] = generate_range(query_params.dict_data.get("range"), count)
 		return orders
 
 	@orders_router.get("/orders/{order_id}", response_model=ResponseOrderSchema)

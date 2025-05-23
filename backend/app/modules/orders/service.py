@@ -30,7 +30,7 @@ class OrderService:
 				Order,
 				select_query,
 				count_query,
-				querystring.data(),
+				querystring.dict_data,
 			)
 			orders = await fetch_all(self.db, query)
 			orders_count = await fetch_count_query(self.db, count_query)

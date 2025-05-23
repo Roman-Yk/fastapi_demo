@@ -1,11 +1,13 @@
 import json
+
 from fastapi import Query, HTTPException
-from typing import Optional, Type, TypeVar
-from typing import Optional, List, Type, Any
 from fastapi.encoders import jsonable_encoder
+from typing import Optional, List, Type, Any, Tuple, TypeVar
 from pydantic import BaseModel, Field, create_model, field_validator, ValidationError
 
 from app.constants import ORDER_ASC, ORDER_DESC
+
+from .types import NonNegativeOptionalInt
 
 
 F = TypeVar("F", bound=BaseModel)
@@ -39,6 +41,7 @@ class CollectionQueryParams:
         self,
         filter: Optional[str] = Query(None, description="JSON-encoded filter {'field': 'value'}"),
         sort: Optional[str] = Query(None, description='Sort list ["field_name", "ASC/DESC"]'),
+        range: Optional[str] = Query(None, description="Range list [start, end]"),
         page: int = Query(1, ge=1, description="Page number"),
         perPage: int = Query(50, ge=1, le=100, description="Items per page"),
     ):
@@ -46,19 +49,25 @@ class CollectionQueryParams:
         self.perPage = perPage
         self.filter = self._parse_filter(filter)
         self.sort = self._parse_sort(sort)
+        self.range = self._parse_range(range)
 
-    def data(self) -> dict[str, Any]:
+    @property
+    def dict_data(self) -> dict[str, Any]:
         """
-        Return the data as a dictionary.
+        Return the self data as a dictionary.
         """
         return {
             "filter": self.filter,
             "sort": self.sort,
             "page": self.page,
             "perPage": self.perPage,
+            "range": self.range,
         }
 
     def _parse_filter(self, filter_raw: Optional[str]) -> Optional[F]:
+        """
+        parse nested json encoded filter into dictionary
+        """
         if not filter_raw or not self.filter_model:
             return None
         try:
@@ -71,9 +80,12 @@ class CollectionQueryParams:
             raise HTTPException(
                 status_code=422,
                 detail=jsonable_encoder({"filter_model_validation_error": e.errors()})
-        )
+            )
             
     def _parse_sort(self, sort_raw: Optional[str]) -> Optional[S]:
+        """
+        parse passed sort string
+        """
         if not sort_raw or not self.sort_model:
             return None
         try:
@@ -81,8 +93,35 @@ class CollectionQueryParams:
             validate = self.sort_model(sort=loaded_sort[0], order=loaded_sort[1])
             return loaded_sort
         except (json.JSONDecodeError, ValidationError) as e:
-            raise HTTPException(status_code=422, detail=f"Invalid sort: {e}")
+            raise HTTPException(
+                status_code=422,  
+                detail=jsonable_encoder({"sort_model_validation_error": e.errors()})
+            )
+        
+    def _parse_range(self, range_raw: Optional[Tuple[int, int]]) -> Optional[Tuple[int, int]]:
+        """
+        parse passed range string
+        """
+        if not range_raw:
+            return None
+        try:
+            start, end = json.loads(range_raw)
+            validated = RangeQueryParams(start=start, end=end)
+            return (validated.start, validated.end)
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=422,  
+                detail=jsonable_encoder({"range_model_validation_error": e.errors()})
+            )
 
+
+class RangeQueryParams(BaseModel):
+    """
+    Model for validating range query parameters.
+
+    """
+    start: NonNegativeOptionalInt
+    end: NonNegativeOptionalInt
 
 
 def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[BaseModel]:
@@ -108,6 +147,7 @@ def create_filter_model(filter_fields: List[Any], name="FilterModel") -> Type[Ba
 def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseModel]:
     """
     Dynamically create a Pydantic model with validation for sort field.
+    sort_fields: list of allowed field names to be sorted by.
     """
     class SortModel(BaseModel):
         sort: Optional[str] = Field(None)
