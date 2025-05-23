@@ -35,16 +35,22 @@ def create_sort_model(sort_fields: List[str], name="SortModel") -> Type[BaseMode
     """
     class SortModel(BaseModel):
         sort: Optional[str] = Field(None)
+        order: Optional[str] = Field(None)
         
         @field_validator("sort", mode="before")
         def check_sort_by(cls, v):
             if v is not None and v not in sort_fields:
                 return None 
             return v
-
+        
+        @field_validator("order", mode="before")
+        def check_sort_order(cls, v):
+            if v is not None and v not in (ORDER_ASC, ORDER_DESC):
+                raise ValueError(f"sort=[field_name, ASC/DESC] order must be '{ORDER_ASC}' or '{ORDER_DESC}'")
+            return v
+        
     SortModel.__name__ = name
     return SortModel
-
 
 
 F = TypeVar("F", bound=BaseModel)
@@ -74,8 +80,7 @@ class CollectionQueryParams:
     def __init__(
         self,
         filter: Optional[str] = Query(None, description="JSON-encoded filter {'field': 'value'}"),
-        sort: Optional[str] = Query(None, description="Sort field for example eta_date"),
-        order: Optional[str] = Query(None, description="Sort order ASC/DESC"),
+        sort: Optional[str] = Query(None, description='Sort list ["field_name", "ASC/DESC"]'),
         page: int = Query(1, ge=1, description="Page number"),
         perPage: int = Query(50, ge=1, le=100, description="Items per page"),
     ):
@@ -83,7 +88,17 @@ class CollectionQueryParams:
         self.perPage = perPage
         self.filter = self._parse_filter(filter)
         self.sort = self._parse_sort(sort)
-        self.order = order
+
+    def data(self) -> dict[str, Any]:
+        """
+        Return the data as a dictionary.
+        """
+        return {
+            "filter": self.filter,
+            "sort": self.sort,
+            "page": self.page,
+            "perPage": self.perPage,
+        }
 
     def _parse_filter(self, filter_raw: Optional[str]) -> Optional[F]:
         if not filter_raw or not self.filter_model:
@@ -104,6 +119,8 @@ class CollectionQueryParams:
         if not sort_raw or not self.sort_model:
             return None
         try:
-            return self.sort_model(sort=sort_raw).model_dump()
+            loaded_sort = json.loads(sort_raw)
+            validate = self.sort_model(sort=loaded_sort[0], order=loaded_sort[1])
+            return loaded_sort
         except (json.JSONDecodeError, ValidationError) as e:
             raise HTTPException(status_code=422, detail=f"Invalid sort: {e}")

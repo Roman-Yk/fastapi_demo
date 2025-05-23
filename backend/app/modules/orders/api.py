@@ -10,11 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import Order
 from app.database.conn import get_db
 
-from app.utils.queries.queries import fetch_one_or_none, fetch_all
 
 from .schemas import ResponseOrderSchema, OrderQueryParams
 from .service import fetch_all_orders
-
+from app.utils.queries.fetching import fetch_one_or_none
 
 orders_router = InferringRouter(tags=["orders"])
 
@@ -34,10 +33,10 @@ class OrdersResource:
     async def get_orders(self, query_params: OrderQueryParams = Depends()):
         """
         Get all orders with optional filtering, sorting, and pagination.
-        
+        """
+        """
         query_params: OrderQueryParams = Depends()
         need to be called like that because it's not a pydantic model and needed to be initialized
-        
         """
         orders = await fetch_all_orders(self.db, query_params)
         return orders
