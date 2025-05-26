@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional, Annotated
 from pydantic import AfterValidator
-from app.modules._shared.schema.validators import is_non_negative, is_not_past_date
+from app.resources._shared.schema.validators import is_non_negative, is_not_past_date
 
 
 #optional fields with validators

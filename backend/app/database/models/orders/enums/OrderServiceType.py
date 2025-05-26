@@ -1,7 +1,7 @@
 import os
 import enum
 
-from ...custom_types.EnumType import EnumType
+from ....custom_types.EnumType import EnumType
 
 
 class OrderService(enum.IntEnum):

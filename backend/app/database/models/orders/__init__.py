@@ -1,2 +1,3 @@
 from .Order import Order
-from .OrderServiceType import OrderServiceType, OrderService
+from .enums.OrderServiceType import OrderServiceType, OrderService
+from .OrderDocument import OrderDocument

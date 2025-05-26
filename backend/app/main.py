@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .modules.orders import orders_router
+from .resources.orders import orders_router
 
 
 app = FastAPI(

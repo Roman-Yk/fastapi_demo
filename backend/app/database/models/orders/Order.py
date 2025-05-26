@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.base_model import BASE_MODEL
 
-from .OrderServiceType import OrderServiceType
+from .enums.OrderServiceType import OrderServiceType
 
 class Order(BASE_MODEL):
 	__tablename__ = "orders"

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import date, time
 
 from app.database.models.orders import OrderService
-from app.modules._shared.schema.types import (
+from app.resources._shared.schema.types import (
 	NonNegativeOptionalFloat,
 	NonNegativeOptionalInt
 )
