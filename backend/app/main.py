@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .api.orders import orders_router
+from  app.api import orders_router, order_documents_router
 
 
 app = FastAPI(
@@ -12,4 +12,5 @@ app = FastAPI(
 
 
 app.include_router(orders_router, prefix="/api/v1", tags=["orders"])
+app.include_router(order_documents_router, prefix="/api/v1", tags=["order_documents"])
 

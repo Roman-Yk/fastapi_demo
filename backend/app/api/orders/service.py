@@ -26,14 +26,17 @@ class OrderService:
 		try:
 			select_query = select(Order)
 			count_query = select(func.count()).select_from(Order)
+
 			query, count_query = apply_filter_sort_range_for_query(
 				Order,
 				select_query,
 				count_query,
 				querystring.dict_data,
 			)
+
 			orders = await fetch_all(self.db, query)
 			orders_count = await fetch_count_query(self.db, count_query)
+			print(f"\033[31m{orders}\033[0m")
 			return orders, orders_count
 		except Exception as e:
 			raise HTTPException(status_code=400, detail=f"Error fetching orders: {str(e)}")

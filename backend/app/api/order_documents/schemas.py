@@ -1,9 +1,10 @@
 import uuid
 from datetime import time
 from typing import Optional
+from fastapi import Form, UploadFile
 from pydantic import BaseModel, Field
 
-from app.database.models.orders import OrderService
+from app.database.models.orders.enums import OrderDocumentType
 
 from app.api._shared.schema.schemas import (
 	create_filter_model,
@@ -25,17 +26,8 @@ from .BaseSchemas import (
 	OrderFieldsMixin
 )
 
-
-# Create schema
-class CreateOrderSchema(OrderFieldsMixin):
-	reference: str
-	service: OrderService
-	terminal_id: uuid.UUID
-
-	eta_date: NotPastOptionalDate = None
-	eta_time: Optional[time] = None
-	etd_date: NotPastOptionalDate = None
-	etd_time: Optional[time] = None
+ 
+ 
 
 
 # Update schema (Patch)
