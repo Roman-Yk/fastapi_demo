@@ -21,7 +21,7 @@ from app.database.models.orders.enums import OrderDocumentType
 from app.database.models.orders import Order, OrderDocument, OrderDocumentText
 
 from app.core.settings import settings
-
+from .tasks import parse_order_document
 class OrderDocumentsService:
 	"""
 	Service class for handling order-related operations.
@@ -79,6 +79,7 @@ class OrderDocumentsService:
 		# # await self.db.commit()
 		# print(f"\033[31m{destination_path}\033[0m")
 		# return new_order_document
+		parse_order_document.delay()
 		pass
 
 	async def patch_order_document(self, order_document_id: uuid.UUID):

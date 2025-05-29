@@ -20,6 +20,7 @@ class Settings(BaseSettings):
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
 
     # Redis settings
+    REDIS_URL: str
     # JWT settings
 
     FILES_PATH: str = "files"

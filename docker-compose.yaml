@@ -1,14 +1,19 @@
 services:
   backend:
+    tty: true
+    restart: always
     build: ./backend
+    image: "fastapi-demo-backend:latest"
     volumes:
       - ./backend:/app
       - ./files:/app/files
-    env_file: ./backend/.env
+    env_file: 
+      - ./backend/.env
     ports:
       - 8000:8000
     depends_on:
       - database
+      - redis
     networks:
       - default
 
@@ -22,7 +27,33 @@ services:
     networks:
       - default
 
-  
+
+  redis:
+    restart: always
+    image: redis:alpine
+    logging:
+      driver: none
+    networks:
+      - default
+    
+  celery_worker:
+    build: ./backend
+    image: "fastapi-demo-backend:latest"
+    entrypoint: ["./entrypoints/celery_worker.sh"]
+    volumes:
+      - ./files:/app/files
+    depends_on:
+      - backend
+      - redis
+    logging:
+      driver: "local"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
 
 networks:
   default:
