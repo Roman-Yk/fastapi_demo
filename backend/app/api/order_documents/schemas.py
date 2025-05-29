@@ -26,9 +26,6 @@ from .BaseSchemas import (
 	OrderFieldsMixin
 )
 
- 
- 
-
 
 # Update schema (Patch)
 class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):

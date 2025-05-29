@@ -1,26 +1,13 @@
-from app.core.settings import settings
-
 from typing import AsyncGenerator
 
 from fastapi import HTTPException
-
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-# create the async engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    future=True,
-    echo=False,
-)
-
-# create the async session
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+from app.modules.db.session_contexts import AsyncSessionContext
 
 # Dependency for getting the database session
 async def get_db() -> AsyncGenerator:
-    async with async_session() as session:
+    async with AsyncSessionContext() as session:
         try:
             yield session
             await session.commit()

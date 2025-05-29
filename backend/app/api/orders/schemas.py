@@ -75,6 +75,7 @@ class CollectionOrderQueryParams(CollectionQueryParams):
 		- order: Sort order ASC/DESC
 		- page: Page number
 		- perPage: Items per page
+		- range: Range of items to return
 	method:
 		- data: returns the query parameters as a dictionary
 	"""
