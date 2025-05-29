@@ -1,8 +1,8 @@
-from app.modules.celery import celery_app
-import json
+from app.modules.celery import celery_app, TaskBase
 
-@celery_app.task(name="parse_order_document")
-def parse_order_document():
+
+@celery_app.task(base=TaskBase, bind=True, name="parse_order_document")
+def parse_order_document(self, order_id):
     """
     Task to parse an order document.
     This function should contain the logic to process the order document.

@@ -19,7 +19,7 @@ from app.database.base_model import BASE_MODEL
 config = context.config
 
 #update sqlalchemy.url with the database URL
-config.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.SYNC_DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

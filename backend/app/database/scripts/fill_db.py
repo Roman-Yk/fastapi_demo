@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.dialects.postgresql import insert
 from app.core.settings import settings
 # Replace with your actual DB connection URL
-engine = create_engine(settings.ALEMBIC_DATABASE_URL)
+engine = create_engine(settings.SYNC_DATABASE_URL)
 metadata = MetaData()
 metadata.reflect(bind=engine)
 

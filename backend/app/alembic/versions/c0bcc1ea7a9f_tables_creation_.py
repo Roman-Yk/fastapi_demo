@@ -8,7 +8,7 @@ Create Date: 2025-05-23 15:07:36.709748
 
 from alembic import op
 import sqlalchemy as sa
-from backend.app.database.models.orders.enums.OrderServiceType import OrderServiceType
+from app.database.models.orders.enums.OrderServiceType import OrderServiceType
 
 # revision identifiers, used by Alembic.
 revision = "c0bcc1ea7a9f"

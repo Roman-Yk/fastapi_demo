@@ -37,7 +37,7 @@ function db() {
     }
 
     function fill(){
-        docker-compose exec backend python -m app.database.fill_db
+        docker-compose exec backend python -m app.database.scripts.fill_db
     }
 
     # Available commands for db

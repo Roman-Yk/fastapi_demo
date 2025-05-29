@@ -44,7 +44,6 @@ class OrderDocumentsService:
 
 	async def create_order_document(
 		self,
-		
 		order_id: uuid.UUID,
 		file: UploadFile,
 		title: str,

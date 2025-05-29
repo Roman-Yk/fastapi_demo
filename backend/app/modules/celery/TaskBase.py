@@ -1,20 +1,14 @@
 from celery import Task
-from app.database.conn import get_db
 
 
-# TODO: investigate what solution is better (_DatabaseTask, DatabaseTask)
-# http://www.prschmid.com/2013/04/using-sqlalchemy-with-celery-tasks.html
-# https://celery.school/sqlalchemy-session-celery-tasks
-
-
-class DatabaseTask(Task):
+class TaskBase(Task):
     def __init__(self):
         self.sessions = {}
         self.dic_fns_after_return = {}
 
     def before_start(self, task_id, args, kwargs):
-        from osfc.modules.db.SessionContext import SessionContextNoPool
-        self.sessions[task_id] = SessionContextNoPool()
+        from app.modules.db.session_contexts import SyncSessionContextNoPool
+        self.sessions[task_id] = SyncSessionContextNoPool()
         self.dic_fns_after_return[task_id] = []
         print("DatabaseTask Create session: " + task_id)
         super().before_start(task_id, args, kwargs)
