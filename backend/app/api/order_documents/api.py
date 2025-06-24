@@ -22,19 +22,20 @@ order_documents_router = InferringRouter(prefix="/orders", tags=["order_document
 
 
 @cbv(order_documents_router)
-class OrdersResource:
+class OrderDocumentsResource:
 	"""
 	Class based view for handling order_documents resources.
 	"""
 
 	def __init__(self, response: Response, db: AsyncSession = Depends(get_db)):
 		"""
-		Initialize the OrdersResource with a database session, OrderService and response object
+		Initialize the OrderDocumentsResource with a database session, OrderDocumentsService, and response object
 		to not pass for every route separately.
 		"""
 		self.db = db
 		self.order_documents_service = OrderDocumentsService(self.db)
 		self.response = response
+
 
 	@order_documents_router.get("/{order_id}/documents/", response_model=list[ResponseOrderDocumentSchema])
 	async def get_order_documents(
@@ -43,10 +44,10 @@ class OrdersResource:
 		query_params: CollectionOrderDocumentsQueryParams = Depends(),
 	):
 		"""
-		Get all order documents
-		"""
-		"""
-		order_id: id to get linked documents for order
+		Get all order documents with optional filtering, sorting, and pagination.
+		order_id - path parameter
+		query_params: CollectionOrderDocumentsQueryParams = Depends()
+		need to be called like that because it's not a pydantic model and needs to be initialized.
 		"""
 		documents, count = await self.order_documents_service.get_all_order_documents(
 			order_id,
@@ -58,16 +59,19 @@ class OrdersResource:
 			)
 		return documents
 
+
 	@order_documents_router.get("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def get_order_document_by_id(self, order_id: uuid.UUID, document_id: uuid.UUID):
 		"""
-		Get order by ID.
+		Get order document by ID.
 		order_id - path parameter
+		document_id - path parameter
 		"""
 		document = await self.order_documents_service.get_order_document_by_id(
 			document_id
 		)
 		return document
+
 
 	@order_documents_router.post("/{order_id}/documents/")
 	async def create_order_document(
@@ -77,9 +81,12 @@ class OrdersResource:
 		title: str = Form(...),
 		type: OrderDocumentType = Form(...),
 	):
-		"""
-		Create a new order.
-		order is a body passed in request, validated by CreateOrderSchema
+		"""		
+		Create a new order document.
+		order_id - path parameter
+		file - file passed in request, validated by UploadFile
+		title - title of the document, passed in request body form
+		type - type of the document, passed in request body form
 		"""
 		await self.order_documents_service.create_order_document(
 			order_id=order_id,
@@ -89,15 +96,16 @@ class OrdersResource:
 		)
 		return {}
 
+
 	@order_documents_router.patch("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def patch_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
 		"""
-		Partially update an existing order.
+		Patch an existing order document.
 		order_id - path parameter
-		order is a body passed in request, validated by UpdateOrderDocumentSchema
+		document_id - path parameter
+		body is a body passed in request, validated by UpdateOrderDocumentSchema
 		"""
 		updated_document = await self.order_documents_service.update_order_document(
-			order_id=order_id,
 			document_id=document_id,
 			data=body.model_dump(exclude_unset=True),
 		)
@@ -107,12 +115,12 @@ class OrdersResource:
 	@order_documents_router.put("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def update_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
 		"""
-		Update an existing order.
+		Update an existing order document.
 		order_id - path parameter
-		order is a body passed in request, validated by UpdateOrderDocumentSchema
+		document_id - path parameter
+		body is a body passed in request, validated by UpdateOrderDocumentSchema
 		"""
 		updated_document = await self.order_documents_service.update_order_document(
-			order_id=order_id,
 			document_id=document_id,
 			data=body.model_dump(),
 		)

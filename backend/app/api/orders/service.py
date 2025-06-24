@@ -1,5 +1,5 @@
 import uuid
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,7 @@ from app.database.models import Order
 from app.utils.queries.fetching import fetch_one_or_none, fetch_all, fetch_count_query, fetch_one_or_404
 from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
+
 from .schemas import CollectionOrderQueryParams, CreateOrderSchema, UpdateOrderSchema
 
 class OrderService:

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.database.models.orders import OrderService
 
+from app.api._shared.schema.base import ResponseBaseModel
 from app.api._shared.schema.schemas import (
 	create_filter_model,
 	create_sort_model,
@@ -17,7 +18,6 @@ from app.api._shared.schema.types import (
 	NonNegativeOptionalInt,
 )
 
-from app.api._shared.schema.base import ResponseBaseModel
 
 from .BaseSchemas import (
 	ETAETDFieldsMixin,

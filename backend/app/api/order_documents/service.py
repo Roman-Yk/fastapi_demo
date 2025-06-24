@@ -2,11 +2,9 @@ import os
 import uuid
 import shutil
 
-from fastapi import HTTPException, Response, UploadFile
+from fastapi import HTTPException, UploadFile
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database.models import Order
 
 from app.utils.queries.fetching import (
 	fetch_one_or_none,
@@ -17,12 +15,13 @@ from app.utils.queries.fetching import (
 from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
 
-from .schemas import CollectionOrderDocumentsQueryParams, UpdateOrderSchema
 from app.database.models.orders.enums import OrderDocumentType
-from app.database.models.orders import Order, OrderDocument, OrderDocumentText
+from app.database.models.orders import OrderDocument
 
 from app.core.settings import settings
+
 from .tasks import parse_order_document
+from .schemas import CollectionOrderDocumentsQueryParams
 
 class OrderDocumentsService:
 	"""

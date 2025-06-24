@@ -1,31 +1,16 @@
 import uuid
 from datetime import time, datetime
 from typing import Optional
-from fastapi import Form, UploadFile
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.database.models.orders.enums import OrderDocumentType
 
+from app.api._shared.schema.base import ResponseBaseModel
 from app.api._shared.schema.schemas import (
 	create_filter_model,
 	create_sort_model,
 	CollectionQueryParams,
 )
-
-from app.api._shared.schema.types import (
-	NotPastOptionalDate,
-	NonNegativeOptionalFloat,
-	NonNegativeOptionalInt,
-)
-
-from app.api._shared.schema.base import ResponseBaseModel
-
-from .BaseSchemas import (
-	ETAETDFieldsMixin,
-	OrderBaseResponseSchema,
-	OrderFieldsMixin
-)
-
 
 # Update schema (Patch)
 class UpdateOrderDocumentSchema(BaseModel):
@@ -52,7 +37,7 @@ Filter_model = create_filter_model(
 # Declare dynamic sort model
 SortModel = create_sort_model(["id"])
 
-# Response schema for order
+# Query parameters for order documents collection
 class CollectionOrderDocumentsQueryParams(CollectionQueryParams):
 	"""
 	Query parameters for order collection.
