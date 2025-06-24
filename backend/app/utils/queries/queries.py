@@ -244,7 +244,6 @@ def apply_filter_sort_range_for_query(
 		if filter_expr is not None:
 			query = query.where(filter_expr)
 			count_query = count_query.where(filter_expr)
-	print(f"\033[31mhmmmmmmm\033[0m")
 
 	if sort_by:
 		query = query.order_by(*sort_by)
@@ -254,15 +253,12 @@ def apply_filter_sort_range_for_query(
 		query = query.order_by(order_expr)
 	elif fallback_sort:
 		query = query.order_by(*fallback_sort)
-	print(f"\033[31mhmmmmmmm2\033[0m")
 
 	if apply_range and "range" in data and data["range"]:
 		range_from, range_to = data["range"]
 		if range_to >= 0:
 			query = query.offset(range_from).limit(range_to - range_from + 1)
-	print(f"\033[31mhmmmmmmm3\033[0m")
 
-	print(f"\033[31m{query}, {count_query}\033[0m")
 
 	return query, count_query
 

@@ -1,5 +1,5 @@
 import uuid
-from datetime import time
+from datetime import time, datetime
 from typing import Optional
 from fastapi import Form, UploadFile
 from pydantic import BaseModel, Field
@@ -28,35 +28,32 @@ from .BaseSchemas import (
 
 
 # Update schema (Patch)
-class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
+class UpdateOrderDocumentSchema(BaseModel):
 	"""
 	Update/Patch order schema.
 	if using patch then use model_dump(exclude_unset=True)
 	"""
-	eta_date: NotPastOptionalDate = None
-	eta_time: Optional[time] = None
-
-	etd_date: NotPastOptionalDate = None
-	etd_time: Optional[time] = None
-	
-	commodity: Optional[str] = None
-	pallets: NonNegativeOptionalInt = None
-	boxes: NonNegativeOptionalInt = None
-	kilos: NonNegativeOptionalFloat = None
+	title: Optional[str] = None
+	type: Optional[str] = None
 
 
 # Declare dynamic filter model
 Filter_model = create_filter_model(
 	[
 		("id", uuid.UUID),
-		"reference",
+		("order_id", uuid.UUID),
+		("type", OrderDocumentType),
+		("src", str),
+		("title", str),
+		("thumbnail", str),
+		("created_at", datetime),
 	]
 )
 # Declare dynamic sort model
-SortModel = create_sort_model(["id", "reference"])
+SortModel = create_sort_model(["id"])
 
 # Response schema for order
-class CollectionOrderQueryParams(CollectionQueryParams):
+class CollectionOrderDocumentsQueryParams(CollectionQueryParams):
 	"""
 	Query parameters for order collection.
 		- filter: JSON-encoded filter {'field': 'value'}
@@ -72,5 +69,15 @@ class CollectionOrderQueryParams(CollectionQueryParams):
 
 
 # Response schema
-class ResponseOrderSchema(OrderBaseResponseSchema, ResponseBaseModel):
+class ResponseOrderDocumentSchema(ResponseBaseModel):
 	id: uuid.UUID
+	order_id: uuid.UUID
+	type: OrderDocumentType
+ 
+	src: str
+	title: str
+	thumbnail: str
+	created_at: datetime
+
+
+

@@ -11,91 +11,109 @@ from app.database.conn import get_db
 from app.utils.queries.queries import generate_range
 
 from .schemas import (
-    ResponseOrderSchema,
-    CollectionOrderQueryParams,
-    UpdateOrderSchema,
+	ResponseOrderDocumentSchema,
+	CollectionOrderDocumentsQueryParams,
+	UpdateOrderDocumentSchema,
 )
 from .service import OrderDocumentsService
 
 
-order_documents_router = InferringRouter(tags=["order_documents"])
+order_documents_router = InferringRouter(prefix="/orders", tags=["order_documents"])
 
 
 @cbv(order_documents_router)
 class OrdersResource:
-    """
-    Class based view for handling order_documents resources.
-    """
+	"""
+	Class based view for handling order_documents resources.
+	"""
 
-    def __init__(self, response: Response, db: AsyncSession = Depends(get_db)):
-        """
-        Initialize the OrdersResource with a database session, OrderService and response object
-        to not pass for every route separately.
-        """
-        self.db = db
-        self.order_documents_service = OrderDocumentsService(self.db)
-        self.response = response
+	def __init__(self, response: Response, db: AsyncSession = Depends(get_db)):
+		"""
+		Initialize the OrdersResource with a database session, OrderService and response object
+		to not pass for every route separately.
+		"""
+		self.db = db
+		self.order_documents_service = OrderDocumentsService(self.db)
+		self.response = response
 
-    @order_documents_router.get(
-        "/order-documents", response_model=list[ResponseOrderSchema]
-    )
-    async def get_order_documents(self):
-        """
-        Get all order documents
-        """
-        """
+	@order_documents_router.get("/{order_id}/documents/", response_model=list[ResponseOrderDocumentSchema])
+	async def get_order_documents(
+		self,
+		order_id: uuid.UUID,
+		query_params: CollectionOrderDocumentsQueryParams = Depends(),
+	):
+		"""
+		Get all order documents
+		"""
+		"""
 		order_id: id to get linked documents for order
 		"""
-        pass
+		documents, count = await self.order_documents_service.get_all_order_documents(
+			order_id,
+			query_params,
+		)
+		if query_params.dict_data.get("range"):
+			self.response.headers["Content-Range"] = generate_range(
+				query_params.dict_data.get("range"), count
+			)
+		return documents
 
-    @order_documents_router.get(
-        "/order-documents/{order_id}", response_model=ResponseOrderSchema
-    )
-    async def get_order_document_by_id(self):
-        """
-        Get order by ID.
-        order_id - path parameter
-        """
-        pass
+	@order_documents_router.get("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
+	async def get_order_document_by_id(self, order_id: uuid.UUID, document_id: uuid.UUID):
+		"""
+		Get order by ID.
+		order_id - path parameter
+		"""
+		document = await self.order_documents_service.get_order_document_by_id(
+			document_id
+		)
+		return document
 
-    @order_documents_router.post("/order-documents")
-    async def create_order_document(
-        self,
+	@order_documents_router.post("/{order_id}/documents/")
+	async def create_order_document(
+		self,
 		order_id: uuid.UUID = Form(...),
 		file: UploadFile = File(...),
 		title: str = Form(...),
 		type: OrderDocumentType = Form(...),
-    ):
-        """
-        Create a new order.
-        order is a body passed in request, validated by CreateOrderSchema
-        """
-        await self.order_documents_service.create_order_document(
+	):
+		"""
+		Create a new order.
+		order is a body passed in request, validated by CreateOrderSchema
+		"""
+		await self.order_documents_service.create_order_document(
 			order_id=order_id,
 			file=file,
 			title=title,
-			type=type,
+			doc_type=type,
 		)
-        return {}
+		return {}
 
-    @order_documents_router.patch(
-        "/order-documents/{order_id}", response_model=ResponseOrderSchema
-    )
-    async def patch_order_document(self):
-        """
-        Partially update an existing order.
-        order_id - path parameter
-        order is a body passed in request, validated by UpdateOrderSchema
-        """
-        pass
+	@order_documents_router.patch("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
+	async def patch_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
+		"""
+		Partially update an existing order.
+		order_id - path parameter
+		order is a body passed in request, validated by UpdateOrderDocumentSchema
+		"""
+		updated_document = await self.order_documents_service.update_order_document(
+			order_id=order_id,
+			document_id=document_id,
+			data=body.model_dump(exclude_unset=True),
+		)
+		return updated_document
+		
 
-    @order_documents_router.put(
-        "/order-documents/{order_id}", response_model=ResponseOrderSchema
-    )
-    async def update_order_document(self):
-        """
-        Update an existing order.
-        order_id - path parameter
-        order is a body passed in request, validated by UpdateOrderSchema
-        """
-        pass
+	@order_documents_router.put("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
+	async def update_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
+		"""
+		Update an existing order.
+		order_id - path parameter
+		order is a body passed in request, validated by UpdateOrderDocumentSchema
+		"""
+		updated_document = await self.order_documents_service.update_order_document(
+			order_id=order_id,
+			document_id=document_id,
+			data=body.model_dump(),
+		)
+		return updated_document

@@ -66,7 +66,7 @@ Filter_model = create_filter_model(
 # Declare dynamic sort model
 SortModel = create_sort_model(["id", "reference"])
 
-# Response schema for order
+# Query parameters for order collection
 class CollectionOrderQueryParams(CollectionQueryParams):
 	"""
 	Query parameters for order collection.

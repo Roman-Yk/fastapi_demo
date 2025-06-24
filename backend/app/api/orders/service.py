@@ -7,7 +7,7 @@ from app.database.models import Order
 
 from app.utils.queries.fetching import fetch_one_or_none, fetch_all, fetch_count_query, fetch_one_or_404
 from app.utils.queries.queries import apply_filter_sort_range_for_query
-
+from app.utils.models.update_model import update_model_fields
 from .schemas import CollectionOrderQueryParams, CreateOrderSchema, UpdateOrderSchema
 
 class OrderService:
@@ -36,7 +36,6 @@ class OrderService:
 
 			orders = await fetch_all(self.db, query)
 			orders_count = await fetch_count_query(self.db, count_query)
-			print(f"\033[31m{orders}\033[0m")
 			return orders, orders_count
 		except Exception as e:
 			raise HTTPException(status_code=400, detail=f"Error fetching orders: {str(e)}")
@@ -76,7 +75,9 @@ class OrderService:
 			order = await fetch_one_or_404(self.db, query, detail="Order not found")
 			# model_dump(exclude_unset=True) is used to exclude unset fields 
 			# otherwise it would update all fields declared in schema
-			order = await self._update_fields(order, data.model_dump(exclude_unset=True))
+			order = await update_model_fields(self.db, order, data.model_dump(exclude_unset=True))
+			await self.db.commit()
+			return order
 		except Exception as e:
 			raise HTTPException(status_code=400, detail=f"Error updating order: {str(e)}")
 
@@ -88,15 +89,8 @@ class OrderService:
 		try:
 			query = select(Order).where(Order.id == order_id)
 			order = await fetch_one_or_404(self.db, query, detail="Order not found")
-			order = await self._update_fields(order, data.model_dump())
+			order = await update_model_fields(self.db, order, data.model_dump())
+			await self.db.commit()
 			return order
 		except Exception as e:
 			raise HTTPException(status_code=400, detail=f"Error updating order: {str(e)}")
-
-
-	async def _update_fields(self, order: Order, data: dict):
-		for key, value in data.items():
-			setattr(order, key, value)
-		await self.db.commit()
-		await self.db.refresh(order)
-		return order
