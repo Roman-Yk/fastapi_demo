@@ -60,9 +60,9 @@ class ResponseOrderDocumentSchema(ResponseBaseModel):
 	type: OrderDocumentType
  
 	src: str
-	title: str
-	thumbnail: str
-	created_at: datetime
+	title: str | None
+	thumbnail: str | None
+	created_at: datetime | None
 
 
 

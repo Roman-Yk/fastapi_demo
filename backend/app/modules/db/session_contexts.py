@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from . import ASYNC_DB_ENGINE, SYNC_DB_ENGINE_NO_POOL
+from .engines import ASYNC_DB_ENGINE, SYNC_DB_ENGINE_NO_POOL
 
 # used for fastapi
 AsyncSessionContext = sessionmaker(
@@ -13,5 +14,5 @@ AsyncSessionContext = sessionmaker(
 SyncSessionContextNoPool = sessionmaker(
     SYNC_DB_ENGINE_NO_POOL, 
     expire_on_commit=False, # False means we can still access object attributes after commit without re-fetching from the DB.
-    class_=AsyncSession
+    class_=Session
 )

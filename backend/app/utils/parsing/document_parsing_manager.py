@@ -1,5 +1,5 @@
 import io
-
+import os
 import docx2txt
 import openpyxl
 import PyPDF2
@@ -7,7 +7,7 @@ import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
 
-from app.core.config import FileConfig
+from app.core.configs.FileConfig import FileConfig
 
 
 class DocumentParsingManager:
@@ -19,6 +19,34 @@ class DocumentParsingManager:
 
     CUSTOM_TESSERACT_CONFIG = r"--oem 1 --psm 11"
     PARSING_LANGUAGES = "nor+eng"
+
+    @classmethod
+    def get_file_extension_from_path(cls, file_path):
+        """
+        Extracts the file extension from a given file path.
+        Args:
+                file_path (str): The path to the file.
+        Returns:
+                str: The file extension in lowercase.
+        """
+        return os.path.splitext(file_path)[-1].lower()
+
+
+    @classmethod
+    def get_text_from_document_by_path(cls, file_path):
+        """
+        Reads the content of a document file and returns it as bytes.
+        Args:
+                file_path (str): The path to the document file.
+        Returns:
+                bytes: The content of the document file in bytes.
+        """
+        extension = os.path.splitext(file_path)[-1].lower()
+    
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+
+        return DocumentParsingManager.get_document_text_based_on_file_extension(file_bytes, extension)
 
     @classmethod
     def get_document_text_based_on_file_extension(cls, file_bytes, extension):

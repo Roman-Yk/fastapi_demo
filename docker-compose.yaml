@@ -27,6 +27,17 @@ services:
     networks:
       - default
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    env_file: ./backend/.env
+    ports:
+      - 5050:80
+    depends_on:
+      - database
+    networks:
+      - default
+    volumes:
+      - ./configs/pgadmin-servers.json:/pgadmin4/servers.json:ro
 
   redis:
     restart: always
@@ -54,6 +65,22 @@ services:
       resources:
         limits:
           cpus: '0.50'
+    networks:
+      - default
+
+  flower:
+    build: ./backend
+    image: "fastapi-demo-backend:latest"
+    entrypoint: ["./entrypoints/flower.sh"]
+    ports:
+      - 5555:5555
+    depends_on:
+      - redis
+      - celery_worker
+    env_file:
+      - ./backend/.env
+    networks:
+      - default
 
 networks:
   default:

@@ -23,6 +23,7 @@ task_default_routing_key = _default_task_queue
 
 imports = {
     "app.api.order_documents.tasks",
+    "app.api._shared.tasks.tasks",
 }
 
 broker_url = settings.REDIS_URL

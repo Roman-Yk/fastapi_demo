@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "demo_db",
+            "Group": "Servers",
+            "Host": "database",
+            "Port": 5432,
+            "SSLMode": "prefer",
+            "Username": "admin",
+            "MaintenanceDB": "demo_db"
+        }
+    }
+}

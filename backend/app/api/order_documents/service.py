@@ -20,7 +20,7 @@ from app.database.models.orders import OrderDocument
 
 from app.core.settings import settings
 
-from .tasks import parse_order_document
+from app.api._shared.tasks.tasks import add_order_document_text
 from .schemas import CollectionOrderDocumentsQueryParams
 
 class OrderDocumentsService:
@@ -88,7 +88,8 @@ class OrderDocumentsService:
 		)
 		self.db.add(new_order_document)
 		await self.db.commit()
-
+  
+		add_order_document_text.delay(document_id=new_order_document.id,)
 		# # Define destination path on the filesystem
 		# destination_path = os.path.join(settings.FILES_PATH, filename)
 		# print(f"\033[31m{destination_path}\033[0m")

@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     libffi-dev \
     musl-dev \
     gcc \
+    gdb \
     postgresql-dev
 
 # Install Python dependencies into a separate folder
@@ -20,9 +21,12 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies INCLUDING tesseract and poppler-utils
 RUN apk add --no-cache \
-    libpq
+    libpq \
+    tesseract-ocr \
+    tesseract-ocr-data-eng \
+    poppler-utils
 
 # Copy installed Python dependencies
 COPY --from=builder /install/deps /usr/local/

@@ -76,7 +76,7 @@ class OrderDocumentsResource:
 	@order_documents_router.post("/{order_id}/documents/")
 	async def create_order_document(
 		self,
-		order_id: uuid.UUID = Form(...),
+		order_id: uuid.UUID,
 		file: UploadFile = File(...),
 		title: str = Form(...),
 		type: OrderDocumentType = Form(...),

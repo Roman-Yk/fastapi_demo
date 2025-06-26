@@ -19,7 +19,9 @@ bcrypt==4.3.0
 billiard==4.2.1
     # via celery
 celery==5.5.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   flower
 click==8.2.0
     # via
     #   celery
@@ -33,16 +35,24 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
+docx2txt==0.9
+    # via -r requirements.in
+et-xmlfile==2.0.0
+    # via openpyxl
 fastapi==0.115.12
     # via
     #   -r requirements.in
     #   fastapi-utils
 fastapi-utils==0.8.0
     # via -r requirements.in
+flower==2.0.1
+    # via -r requirements.in
 greenlet==3.2.2
     # via sqlalchemy
 h11==0.16.0
     # via uvicorn
+humanize==4.12.3
+    # via flower
 idna==3.10
     # via anyio
 kombu==5.5.3
@@ -55,6 +65,19 @@ markupsafe==3.0.2
     # via mako
 mypy-extensions==1.1.0
     # via typing-inspect
+openpyxl==3.1.5
+    # via -r requirements.in
+packaging==25.0
+    # via pytesseract
+pdf2image==1.17.0
+    # via -r requirements.in
+pillow==11.2.1
+    # via
+    #   -r requirements.in
+    #   pdf2image
+    #   pytesseract
+prometheus-client==0.22.1
+    # via flower
 prompt-toolkit==3.0.51
     # via click-repl
 psutil==5.9.8
@@ -70,12 +93,20 @@ pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.9.1
     # via -r requirements.in
+pypdf2==3.0.1
+    # via -r requirements.in
+pytesseract==0.3.13
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via celery
 python-dotenv==1.1.0
     # via pydantic-settings
 python-multipart==0.0.20
     # via -r requirements.in
+pytz==2025.2
+    # via
+    #   -r requirements.in
+    #   flower
 redis==6.1.0
     # via -r requirements.in
 six==1.17.0
@@ -88,6 +119,8 @@ sqlalchemy==2.0.41
     #   alembic
 starlette==0.46.2
     # via fastapi
+tornado==6.5.1
+    # via flower
 typing-extensions==4.13.2
     # via
     #   alembic
