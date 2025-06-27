@@ -45,6 +45,7 @@ class DocumentParsingManager:
             text = ""
         return text
 
+
     @classmethod
     def get_file_extension_from_path(cls, file_path: str):
         """
@@ -55,6 +56,7 @@ class DocumentParsingManager:
                 str: The file extension in lowercase.
         """
         return os.path.splitext(file_path)[-1].lower()
+
 
     @classmethod
     def get_text_from_document_by_path(cls, file_path: str) -> str:
@@ -73,6 +75,7 @@ class DocumentParsingManager:
         return DocumentParsingManager.get_document_text_based_on_file_extension(
             file_bytes, extension
         )
+
 
     @classmethod
     def get_text_from_image_with_pytesseract(cls, file_bytes) -> str:
@@ -110,6 +113,7 @@ class DocumentParsingManager:
                 image, lang=cls.PARSING_LANGUAGES, config=cls.CUSTOM_TESSERACT_CONFIG
             )
 
+
     @classmethod
     def get_text_from_pdf_with_pytesseract(cls, file_bytes) -> str:
         """
@@ -136,6 +140,7 @@ class DocumentParsingManager:
             text_list.append(f"\n{image_string}")
         return "".join(text_list)
 
+
     @classmethod
     def get_text_from_pdf_with_pypdf2(cls, file_bytes) -> str:
         """
@@ -161,6 +166,7 @@ class DocumentParsingManager:
             print(f"Error parsing PDF with PyPDF2: {e}")
             return ""
 
+
     @classmethod
     def _get_column_widths(cls, worksheet) -> List:
         """
@@ -181,6 +187,7 @@ class DocumentParsingManager:
                 column_widths.append(len(str(col[0].value)))
         return column_widths
 
+
     @classmethod
     def get_text_from_worksheet(cls, worksheet) -> str:
         """
@@ -200,6 +207,7 @@ class DocumentParsingManager:
             text_list.append("\n")
         return "".join(text_list)
 
+
     @classmethod
     def get_text_from_xlsx_with_openpyxl(cls, file_bytes) -> str:
         """
@@ -217,6 +225,7 @@ class DocumentParsingManager:
             text_list.append(f"{worksheet}\n{cls.get_text_from_worksheet(worksheet)}\n")
         return "".join(text_list)
 
+
     @classmethod
     def get_text_from_docx_with_docx2txt(cls, file_bytes) -> str:
         """
@@ -227,6 +236,7 @@ class DocumentParsingManager:
                 str: The extracted text from the DOCX file.
         """
         return docx2txt.process(file_bytes)
+
 
     @classmethod
     def get_text_from_txt_with_default(cls, file_bytes) -> str:

@@ -79,5 +79,5 @@ def add_order_document_text(self, document_id: uuid.UUID, skip_not_empty=False):
 				self.session.commit()
 		else:
 			pass
-			TODO: if we need retry then we need to handle close DB session in this case
+			# TODO: if we need retry then we need to handle close DB session in this case
 			raise self.retry(max_retries=max_retries, countdown=5, exc=e)

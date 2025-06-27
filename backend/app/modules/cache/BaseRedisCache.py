@@ -92,7 +92,7 @@ class BaseRedisCache(ABC):
 	@abstractmethod
 	async def _deserialize(cls, data):
 		"""
-		Deserialize data with appropriate colander scheme,
+		Deserialize data with appropriate scheme,
 		implement this method in child class as you need
 		"""
 		pass
@@ -101,7 +101,7 @@ class BaseRedisCache(ABC):
 	@abstractmethod
 	async def _serialize(cls, data):
 		"""
-		Serialize data with appropriate colander scheme,
+		Serialize data with appropriate scheme,
 		implement this method in child class as you need
 		"""
 		pass
