@@ -6,7 +6,7 @@ import PyPDF2
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
-
+from typing import List
 from app.core.configs.FileConfig import FileConfig
 
 
@@ -21,35 +21,7 @@ class DocumentParsingManager:
     PARSING_LANGUAGES = "nor+eng"
 
     @classmethod
-    def get_file_extension_from_path(cls, file_path):
-        """
-        Extracts the file extension from a given file path.
-        Args:
-                file_path (str): The path to the file.
-        Returns:
-                str: The file extension in lowercase.
-        """
-        return os.path.splitext(file_path)[-1].lower()
-
-
-    @classmethod
-    def get_text_from_document_by_path(cls, file_path):
-        """
-        Reads the content of a document file and returns it as bytes.
-        Args:
-                file_path (str): The path to the document file.
-        Returns:
-                bytes: The content of the document file in bytes.
-        """
-        extension = os.path.splitext(file_path)[-1].lower()
-    
-        with open(file_path, "rb") as f:
-            file_bytes = f.read()
-
-        return DocumentParsingManager.get_document_text_based_on_file_extension(file_bytes, extension)
-
-    @classmethod
-    def get_document_text_based_on_file_extension(cls, file_bytes, extension):
+    def get_document_text_based_on_file_extension(cls, file_bytes, extension: str) -> str:
         """
         Extracts text from a document based on its file extension.
         Args:
@@ -74,7 +46,36 @@ class DocumentParsingManager:
         return text
 
     @classmethod
-    def get_text_from_image_with_pytesseract(cls, file_bytes):
+    def get_file_extension_from_path(cls, file_path: str):
+        """
+        Extracts the file extension from a given file path.
+        Args:
+                file_path (str): The path to the file.
+        Returns:
+                str: The file extension in lowercase.
+        """
+        return os.path.splitext(file_path)[-1].lower()
+
+    @classmethod
+    def get_text_from_document_by_path(cls, file_path: str) -> str:
+        """
+        Reads the content of a document file and returns it as bytes.
+        Args:
+                file_path (str): The path to the document file.
+        Returns:
+                str: The content of the document file in bytes.
+        """
+        extension = os.path.splitext(file_path)[-1].lower()
+
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+
+        return DocumentParsingManager.get_document_text_based_on_file_extension(
+            file_bytes, extension
+        )
+
+    @classmethod
+    def get_text_from_image_with_pytesseract(cls, file_bytes) -> str:
         """
         Extracts text from an image using pytesseract.
         Args:
@@ -110,7 +111,7 @@ class DocumentParsingManager:
             )
 
     @classmethod
-    def get_text_from_pdf_with_pytesseract(cls, file_bytes):
+    def get_text_from_pdf_with_pytesseract(cls, file_bytes) -> str:
         """
         Extracts text from a PDF file using pytesseract.
         Args:
@@ -118,7 +119,13 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the PDF.
         """
-        doc = convert_from_bytes(file_bytes.getvalue())
+        # Handle both bytes and BytesIO objects
+        if isinstance(file_bytes, bytes):
+            pdf_bytes = file_bytes
+        else:
+            pdf_bytes = file_bytes.getvalue()
+
+        doc = convert_from_bytes(pdf_bytes)
         text_list = []
         for _, page_data in enumerate(doc):
             image_string = pytesseract.image_to_string(
@@ -130,7 +137,7 @@ class DocumentParsingManager:
         return "".join(text_list)
 
     @classmethod
-    def get_text_from_pdf_with_pypdf2(cls, file_bytes):
+    def get_text_from_pdf_with_pypdf2(cls, file_bytes) -> str:
         """
         Extracts text from a PDF file using PyPDF2.
         Args:
@@ -138,14 +145,24 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the PDF.
         """
-        pdf_reader = PyPDF2.PdfFileReader(file_bytes, strict=False)
-        text_list = []
-        for i in range(pdf_reader.numPages):
-            text_list.append(f"\n{pdf_reader.getPage(i).extractText()}")
-        return "".join(text_list)
+        if isinstance(file_bytes, bytes):
+            file_bytes = io.BytesIO(file_bytes)
+
+        try:
+            pdf_reader = PyPDF2.PdfReader(file_bytes)
+            text_list = []
+
+            for i in range(len(pdf_reader.pages)):
+                page_text = pdf_reader.pages[i].extract_text()
+                text_list.append(f"\n{page_text}")
+
+            return "".join(text_list)
+        except Exception as e:
+            print(f"Error parsing PDF with PyPDF2: {e}")
+            return ""
 
     @classmethod
-    def _get_column_widths(cls, worksheet):
+    def _get_column_widths(cls, worksheet) -> List:
         """
         Calculates the maximum width of each column in the worksheet.
         Args:
@@ -165,7 +182,7 @@ class DocumentParsingManager:
         return column_widths
 
     @classmethod
-    def get_text_from_worksheet(cls, worksheet):
+    def get_text_from_worksheet(cls, worksheet) -> str:
         """
         Extracts text from an openpyxl worksheet and formats it into a string.
         Args:
@@ -184,7 +201,7 @@ class DocumentParsingManager:
         return "".join(text_list)
 
     @classmethod
-    def get_text_from_xlsx_with_openpyxl(cls, file_bytes):
+    def get_text_from_xlsx_with_openpyxl(cls, file_bytes) -> str:
         """
         Extracts text from an Excel file using openpyxl.
         Args:
@@ -201,7 +218,7 @@ class DocumentParsingManager:
         return "".join(text_list)
 
     @classmethod
-    def get_text_from_docx_with_docx2txt(cls, file_bytes):
+    def get_text_from_docx_with_docx2txt(cls, file_bytes) -> str:
         """
         Extracts text from a DOCX file using docx2txt.
         Args:
@@ -212,7 +229,7 @@ class DocumentParsingManager:
         return docx2txt.process(file_bytes)
 
     @classmethod
-    def get_text_from_txt_with_default(cls, file_bytes):
+    def get_text_from_txt_with_default(cls, file_bytes) -> str:
         """
         Extracts text from a TXT file using the default read method.
         Args:

@@ -63,26 +63,12 @@ class TerminalCache(BaseRedisCache):
 	
 	@classmethod
 	async def _deserialize(cls, data):
-		if isinstance(data, str):
-			# If data is a JSON string, parse it first
-			terminal_list = TerminalListSchema.model_validate_json(data)
-		else:
-			# If data is a list, validate directly
-			terminal_list = TerminalListSchema.model_validate(data)
-		
-		# For Pydantic v2 RootModel, access the root value
-		if hasattr(terminal_list, 'root'):
-			terminals = terminal_list.root
-		else:
-			# For Pydantic v1 __root__ approach
-			terminals = terminal_list.__root__
-		
+		terminals = TerminalListSchema.model_validate(data).root
 		py_terminals = [terminal.model_dump() for terminal in terminals]
 		return py_terminals
 
 	@classmethod
 	async def _serialize(cls, data):
-		# Create TerminalListSchema directly from the list
 		terminal_list = TerminalListSchema.model_validate(data)
 		return terminal_list.model_dump(mode='json')
 		
