@@ -125,3 +125,13 @@ class OrderDocumentsResource:
 			data=body.model_dump(),
 		)
 		return updated_document
+
+	@order_documents_router.delete("/{order_id}/documents/{document_id}")
+	async def delete_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID):
+		"""
+		Delete an existing order document.
+		order_id - path parameter
+		document_id - path parameter
+		"""
+		await self.order_documents_service.delete_order_document(document_id=document_id)
+		return {}

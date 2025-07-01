@@ -16,7 +16,7 @@ from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
 
 from app.database.models.orders.enums import OrderDocumentType
-from app.database.models.orders import OrderDocument
+from app.database.models.orders import OrderDocument, OrderDocumentText
 
 from app.core.settings import settings
 
@@ -72,48 +72,26 @@ class OrderDocumentsService:
 		"""
 		Create a new order_document.
 		"""
-  
-		filename = f"{uuid.uuid4()}_{file.filename}"
+		try:
+			filename = f"{uuid.uuid4()}_{file.filename}"
 
-		destination_path = os.path.join(settings.FILES_PATH, filename)
+			destination_path = os.path.join(settings.FILES_PATH, filename)
 
-		with open(destination_path, "wb") as buffer:
-			shutil.copyfileobj(file.file, buffer)
-  
-		new_order_document = OrderDocument(
-			order_id=order_id,
-			title=title,
-			type=doc_type,
-			src=destination_path
-		)
-		self.db.add(new_order_document)
-		await self.db.commit()
-  
-		add_order_document_text.delay(document_id=new_order_document.id,)
-		# # Define destination path on the filesystem
-		# destination_path = os.path.join(settings.FILES_PATH, filename)
-		# print(f"\033[31m{destination_path}\033[0m")
-
-		# print(f"\033[31m{filename}\033[0m")
-
-		# # Save the file
-		# with open(destination_path, "wb") as buffer:
-		# 	shutil.copyfileobj(file.file, buffer)
-
-		# await file.close()
-  
-		# # new_order_document = OrderDocument(
-		# # 	order_id=order_id,
-		# # 	title=title,
-		# # 	type=type,
-		# # 	src=destination_path
-		# # )
-		# # await self.db.add(new_order_document)
-		# # await self.db.commit()
-		# print(f"\033[31m{destination_path}\033[0m")
-		# return new_order_document
-		# parse_order_document.delay()
-		pass
+			with open(destination_path, "wb") as buffer:
+				shutil.copyfileobj(file.file, buffer)
+	
+			new_order_document = OrderDocument(
+				order_id=order_id,
+				title=title,
+				type=doc_type,
+				src=destination_path
+			)
+			self.db.add(new_order_document)
+			await self.db.commit()
+	
+			add_order_document_text.delay(document_id=new_order_document.id,)
+		except Exception as e:
+			raise HTTPException(status_code=400, detail=f"Error creating order document: {str(e)}")
 
 
 	async def update_order_document(self, order_document_id: uuid.UUID, data: dict) -> OrderDocument:
@@ -124,3 +102,21 @@ class OrderDocumentsService:
 		order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
 		order_document = await update_model_fields(self.db, order_document, data)
 		return order_document
+
+
+	async def delete_order_document(self, order_document_id: uuid.UUID):
+		"""
+		Delete an existing order_document.
+		"""
+		order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+		order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+		order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
+		order_document_text = await fetch_one_or_404(self.db, order_document_text_select_query)
+  
+		if order_document.src and os.path.exists(order_document.src):
+			os.remove(order_document.src)
+   
+		await self.db.delete(order_document_text)
+		await self.db.delete(order_document)
+		await self.db.commit()
+		return ""

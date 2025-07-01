@@ -43,7 +43,7 @@ def add_order_document_text(self, document_id: uuid.UUID, skip_not_empty=False):
 		
 		extension = DocumentParsingManager.get_file_extension_from_path(file_name_with_ext)
 
-		if extension not in FileConfig.searchable_extensions:
+		if extension not in FileConfig.documents_extensions:
 			raise ValueError(f"File with ID {document_id} has unsupported extension: {extension}")
 
 		if order_document_text:

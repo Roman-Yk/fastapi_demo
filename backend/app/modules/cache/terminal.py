@@ -3,7 +3,6 @@ from typing import List
 from pydantic import BaseModel, RootModel
 from sqlalchemy import text
 
-from app.utils.utils import compare_data_with_hash
 from app.modules.db.session_contexts import AsyncSessionContext
 from .BaseRedisCache import BaseRedisCache
 
@@ -24,7 +23,6 @@ class TerminalListSchema(RootModel[List[TerminalDictSchema]]):
     """
     Schema for a list of terminals.
     """
-
     pass
 
 

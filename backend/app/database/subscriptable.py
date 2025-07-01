@@ -2,6 +2,12 @@ from sqlalchemy.orm.attributes import QueryableAttribute
 
 
 class Subscriptable(object):
+	"""
+	This class allows instances of SQLAlchemy models to be subscriptable,
+	meaning you can access model attributes using the syntax `instance[key]`.
+	It checks if the key corresponds to an attribute of the model and returns it.
+	If the key does not correspond to an attribute, it returns None.
+	"""
 	def _is_attribute(self, key):
 		if not hasattr(self.__class__, key):
 			return False

@@ -22,8 +22,7 @@ class CollectionQueryParams:
     
     Fields:
         - filter: JSON-encoded filter {'field': 'value'}
-        - sort: Sort field
-        - order: Sort order ASC/DESC
+        - sort: Sort field ["field_name", "ASC/DESC"]
         - page: Page number
         - perPage: Items per page
         

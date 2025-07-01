@@ -2,6 +2,11 @@ from celery import Task
 
 
 class TaskBase(Task):
+    """
+    Base class for celery tasks.
+    This class provides a structure for tasks that need to manage database sessions.
+    It initializes a session before the task starts and closes it after the task completes.
+    """
     def __init__(self):
         self.sessions = {}
         self.dic_fns_after_return = {}
