@@ -21,7 +21,9 @@ class DocumentParsingManager:
     PARSING_LANGUAGES = "nor+eng"
 
     @classmethod
-    def get_document_text_based_on_file_extension(cls, file_bytes, extension: str) -> str:
+    def get_document_text_based_on_file_extension(
+        cls, file_bytes, extension: str
+    ) -> str:
         """
         Extracts text from a document based on its file extension.
         Args:
@@ -49,7 +51,6 @@ class DocumentParsingManager:
             print(f"Error parsing {extension} document: {str(e)}")
             return ""
 
-
     @classmethod
     def get_file_extension_from_path(cls, file_path: str):
         """
@@ -60,7 +61,6 @@ class DocumentParsingManager:
                 str: The file extension in lowercase.
         """
         return os.path.splitext(file_path)[-1].lower()
-
 
     @classmethod
     def get_text_from_document_by_path(cls, file_path: str) -> str:
@@ -83,7 +83,6 @@ class DocumentParsingManager:
         except Exception as e:
             print(f"Error reading file {file_path}: {str(e)}")
             return ""
-
 
     @classmethod
     def get_text_from_image_with_pytesseract(cls, file_bytes) -> str:
@@ -119,12 +118,13 @@ class DocumentParsingManager:
                     except Exception as error:
                         continue
                 return pytesseract.image_to_string(
-                    image, lang=cls.PARSING_LANGUAGES, config=cls.CUSTOM_TESSERACT_CONFIG
+                    image,
+                    lang=cls.PARSING_LANGUAGES,
+                    config=cls.CUSTOM_TESSERACT_CONFIG,
                 )
         except Exception as e:
             print(f"Error during image OCR processing: {str(e)}")
             return ""
-
 
     @classmethod
     def get_text_from_pdf_with_pytesseract(cls, file_bytes) -> str:
@@ -156,7 +156,6 @@ class DocumentParsingManager:
             print(f"Error during PDF OCR processing: {str(e)}")
             return ""
 
-
     @classmethod
     def get_text_from_pdf_with_pypdf2(cls, file_bytes) -> str:
         """
@@ -182,7 +181,6 @@ class DocumentParsingManager:
             print(f"Error parsing PDF with PyPDF2: {e}")
             return ""
 
-
     @classmethod
     def _get_column_widths(cls, worksheet) -> List:
         """
@@ -207,7 +205,6 @@ class DocumentParsingManager:
             print(f"Error calculating column widths: {str(e)}")
             return [10] * (worksheet.max_column or 1)  # Default width fallback
 
-
     @classmethod
     def get_text_from_worksheet(cls, worksheet) -> str:
         """
@@ -231,7 +228,6 @@ class DocumentParsingManager:
             print(f"Error processing worksheet: {str(e)}")
             return ""
 
-
     @classmethod
     def get_text_from_xlsx_with_openpyxl(cls, file_bytes) -> str:
         """
@@ -247,12 +243,13 @@ class DocumentParsingManager:
             text_list = []
             for sheet_name in sheet_names:
                 worksheet = workbook[sheet_name]
-                text_list.append(f"{worksheet}\n{cls.get_text_from_worksheet(worksheet)}\n")
+                text_list.append(
+                    f"{worksheet}\n{cls.get_text_from_worksheet(worksheet)}\n"
+                )
             return "".join(text_list)
         except Exception as e:
             print(f"Error parsing Excel file: {str(e)}")
             return ""
-
 
     @classmethod
     def get_text_from_docx_with_docx2txt(cls, file_bytes) -> str:
@@ -268,7 +265,6 @@ class DocumentParsingManager:
         except Exception as e:
             print(f"Error parsing DOCX file: {str(e)}")
             return ""
-
 
     @classmethod
     def get_text_from_txt_with_default(cls, file_bytes) -> str:

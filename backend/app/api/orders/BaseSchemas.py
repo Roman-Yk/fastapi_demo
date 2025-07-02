@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import date, time
 
-from app.database.models.orders import OrderService
+from app.database.models.orders import OrderService, CommodityType
 from app.api._shared.schema.types import (
 	NonNegativeOptionalFloat,
 	NonNegativeOptionalInt
@@ -34,7 +34,7 @@ class OrderFieldsMixin(BaseModel):
 	"""
 	Shared fields for order schemas.
 	"""
-	commodity: Optional[str] = None
+	commodity: Optional[CommodityType] = None
 	pallets: NonNegativeOptionalInt = None
 	boxes: NonNegativeOptionalInt = None
 	kilos: NonNegativeOptionalFloat = None

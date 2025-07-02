@@ -60,12 +60,8 @@ class OrderDocumentsService(BaseService):
         """
         Retrieve a single order_document by its ID.
         """
-        select_query = select(OrderDocument).where(
-            OrderDocument.id == order_document_id
-        )
-        order_document = await fetch_one_or_404(
-            self.db, select_query, detail="Order document not found"
-        )
+        select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+        order_document = await fetch_one_or_404(self.db, select_query, detail="Order document not found")
         return order_document
 
     async def create_order_document(
@@ -91,7 +87,10 @@ class OrderDocumentsService(BaseService):
                 shutil.copyfileobj(file.file, buffer)
 
             new_order_document = OrderDocument(
-                order_id=order_id, title=title, type=doc_type, src=destination_path
+                order_id=order_id, 
+                title=title, 
+                type=doc_type, 
+                src=destination_path
             )
             self.db.add(new_order_document)
             await self.db.commit()
@@ -103,7 +102,6 @@ class OrderDocumentsService(BaseService):
             # Re-raise HTTP exceptions (like validation errors)
             raise
         except Exception as e:
-            await self.db.rollback()
             # Clean up file if it was created
             if "destination_path" in locals() and os.path.exists(destination_path):
                 os.remove(destination_path)
@@ -118,20 +116,10 @@ class OrderDocumentsService(BaseService):
         Update an existing order document.
         """
         try:
-            order_document_select_query = select(OrderDocument).where(
-                OrderDocument.id == order_document_id
-            )
-            order_document = await fetch_one_or_404(
-                self.db, order_document_select_query, detail="Order document not found"
-            )
-
-            # Validate foreign keys if order_id is being updated
-            if "order_id" in data:
-                await self.fk_validator.validate_references_from_mapping(
-                    data, self.ORDER_VALIDATION_MAP
-                )
-
+            order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+            order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
             order_document = await update_model_fields(self.db, order_document, data)
+            
             await self.db.commit()
             return order_document
 
@@ -139,7 +127,6 @@ class OrderDocumentsService(BaseService):
             # Re-raise HTTP exceptions (like 404, validation errors)
             raise
         except Exception as e:
-            await self.db.rollback()
             raise HTTPException(
                 status_code=400, detail=f"Error updating order document: {str(e)}"
             )
@@ -149,20 +136,10 @@ class OrderDocumentsService(BaseService):
         Delete an existing order_document.
         """
         try:
-            order_document_select_query = select(OrderDocument).where(
-                OrderDocument.id == order_document_id
-            )
-            order_document = await fetch_one_or_404(
-                self.db, order_document_select_query, detail="Order document not found"
-            )
-            order_document_text_select_query = select(OrderDocumentText).where(
-                OrderDocumentText.order_document_id == order_document.id
-            )
-            order_document_text = await fetch_one_or_404(
-                self.db,
-                order_document_text_select_query,
-                detail="Parsed order document text not found",
-            )
+            order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+            order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+            order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
+            order_document_text = await fetch_one_or_404(self.db, order_document_text_select_query, detail="Parsed order document text not found")
 
             # Remove file from filesystem
             if order_document.src and os.path.exists(order_document.src):
@@ -177,7 +154,6 @@ class OrderDocumentsService(BaseService):
             # Re-raise HTTP exceptions
             raise
         except Exception as e:
-            await self.db.rollback()
             raise HTTPException(
                 status_code=400, detail=f"Error deleting order document: {str(e)}"
             )

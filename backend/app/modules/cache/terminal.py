@@ -14,7 +14,7 @@ class TerminalDictSchema(BaseModel):
     id: uuid.UUID
     name: str
     short_name: str | None
-    account_code: int | None
+    account_code: str | None
     address: str | None
     time_zone: str
 

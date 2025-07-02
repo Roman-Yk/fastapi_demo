@@ -3,7 +3,7 @@ from datetime import time
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from app.database.models.orders import OrderService
+from app.database.models.orders import OrderService, CommodityType
 
 from app.api._shared.schema.base import ResponseBaseModel
 from app.api._shared.schema.schemas import (
@@ -50,7 +50,7 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
 	etd_date: NotPastOptionalDate = None
 	etd_time: Optional[time] = None
 	
-	commodity: Optional[str] = None
+	commodity: Optional[CommodityType] = None
 	pallets: NonNegativeOptionalInt = None
 	boxes: NonNegativeOptionalInt = None
 	kilos: NonNegativeOptionalFloat = None

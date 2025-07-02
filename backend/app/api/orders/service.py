@@ -73,13 +73,15 @@ class OrderService(BaseService):
         Create a new order.
         """
         try:
-            order = Order(**data.model_dump())
+            data = data.model_dump()
+            # validate foreign keys
+            await self.fk_validator.validate_references_from_mapping(data, self.FOREIGN_KEY_VALIDATION_MAP)
+            order = Order(**data)
             self.db.add(order)
             await self.db.commit()
             await self.db.refresh(order)
             return order
         except Exception as e:
-            await self.db.rollback()
             raise HTTPException(
                 status_code=400, detail=f"Error creating order: {str(e)}"
             )
@@ -114,7 +116,6 @@ class OrderService(BaseService):
             # Re-raise HTTP exceptions (like 404, validation errors)
             raise
         except Exception as e:
-            await self.db.rollback()
             raise HTTPException(
                 status_code=400, detail=f"Error updating order: {str(e)}"
             )
@@ -143,7 +144,6 @@ class OrderService(BaseService):
             # Re-raise HTTP exceptions (like 404, validation errors)
             raise
         except Exception as e:
-            await self.db.rollback()
             raise HTTPException(
                 status_code=400, detail=f"Error updating order: {str(e)}"
             )

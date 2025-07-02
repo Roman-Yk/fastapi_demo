@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.database.base_model import BASE_MODEL
 
 from .enums.OrderServiceType import OrderService
+from .enums.Commodity import CommodityType
 
 class Order(BASE_MODEL):
 	__tablename__ = "orders"
@@ -21,7 +22,7 @@ class Order(BASE_MODEL):
 	etd_date = Column(Date(), nullable=True)
 	etd_time = Column(Time(timezone=False), nullable=True)
  
-	commodity = Column(String(256))
+	commodity = Column(Enum(CommodityType), nullable=True)
  
 	pallets = Column(Integer(), nullable=True)
 	boxes = Column(Integer(), nullable=True)
