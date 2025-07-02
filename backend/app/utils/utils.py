@@ -1,4 +1,5 @@
 import decimal
+
 import hashlib
 import json
 import math
@@ -192,3 +193,5 @@ def call_func_after_commit(tm, func, *args, **kwargs):
 
 def safe_divide(numerator, denominator):
     return numerator / denominator if denominator else 0
+
+

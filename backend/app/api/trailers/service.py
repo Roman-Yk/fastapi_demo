@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.vehicles import Trailer
+from app.api._shared.base_service import BaseService
 
 from app.utils.queries.fetching import fetch_one_or_none, fetch_all, fetch_count_query, fetch_one_or_404
 from app.utils.queries.queries import apply_filter_sort_range_for_query
@@ -11,13 +12,10 @@ from app.utils.queries.queries import apply_filter_sort_range_for_query
 from .schemas import CollectionTrailerQueryParams
 
 
-class TrailerService:
+class TrailerService(BaseService):
     """
     Service class for handling trailer-related operations.
     """
-
-    def __init__(self, db: AsyncSession):
-        self.db = db
 
     async def get_all_trailers(self, querystring: CollectionTrailerQueryParams):
         """
@@ -46,6 +44,4 @@ class TrailerService:
         """
         query = select(Trailer).where(Trailer.id == trailer_id)
         trailer = await fetch_one_or_404(self.db, query, detail="Trailer not found")
-        if not trailer:
-            raise HTTPException(status_code=404, detail="Trailer not found")
         return trailer 

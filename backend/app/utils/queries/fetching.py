@@ -1,9 +1,10 @@
+import uuid
 from typing import Any
 from fastapi import HTTPException
+from sqlalchemy import select, exists
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
-
+from sqlalchemy.ext.asyncio import AsyncSession
 
 async def fetch_one_or_none(db: AsyncSession, query: Select) -> Any:
 	result = await db.execute(query)
@@ -22,3 +23,9 @@ async def fetch_one_or_404(db: AsyncSession, query: Select, detail: str = "Item 
     if not result:
         raise HTTPException(status_code=404, detail=detail)
     return result
+
+async def is_record_exists(db: AsyncSession, Model, record_id: uuid.UUID) -> bool:
+    """Check if a record exists by model and id."""
+    query = select(exists().where(Model.id == record_id))
+    result = await db.execute(query)
+    return result.scalar()
