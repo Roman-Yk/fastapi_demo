@@ -1,6 +1,6 @@
 import uuid
 from typing import Annotated
-from fastapi import Depends, Response, Form, UploadFile, File
+from fastapi import Depends, Response, Form, UploadFile, File, status
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
@@ -94,7 +94,7 @@ class OrderDocumentsResource:
 			title=title,
 			doc_type=type,
 		)
-		return {}
+		return status.HTTP_201_CREATED
 
 
 	@order_documents_router.patch("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
@@ -134,4 +134,4 @@ class OrderDocumentsResource:
 		document_id - path parameter
 		"""
 		await self.order_documents_service.delete_order_document(document_id=document_id)
-		return {}
+		return status.HTTP_204_NO_CONTENT

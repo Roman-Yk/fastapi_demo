@@ -2,7 +2,7 @@ import os
 import uuid
 import shutil
 
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,7 +89,7 @@ class OrderDocumentsService:
 			self.db.add(new_order_document)
 			await self.db.commit()
 	
-			add_order_document_text.delay(document_id=new_order_document.id,)
+			add_order_document_text.delay(document_id=new_order_document.id)
 		except Exception as e:
 			raise HTTPException(status_code=400, detail=f"Error creating order document: {str(e)}")
 
@@ -108,15 +108,20 @@ class OrderDocumentsService:
 		"""
 		Delete an existing order_document.
 		"""
-		order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
-		order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
-		order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
-		order_document_text = await fetch_one_or_404(self.db, order_document_text_select_query)
-  
-		if order_document.src and os.path.exists(order_document.src):
-			os.remove(order_document.src)
+		try:
+			order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+			order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+			order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
+			order_document_text = await fetch_one_or_404(self.db, order_document_text_select_query, detail="Parsed order document text not found")
+	
+			if order_document.src and os.path.exists(order_document.src):
+				os.remove(order_document.src)
+	
+			await self.db.delete(order_document_text)
+			await self.db.delete(order_document)
+			await self.db.commit()
    
-		await self.db.delete(order_document_text)
-		await self.db.delete(order_document)
-		await self.db.commit()
-		return ""
+		except HTTPException as e:
+			raise e
+		except Exception as e:
+			raise

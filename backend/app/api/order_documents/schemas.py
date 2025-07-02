@@ -37,6 +37,7 @@ Filter_model = create_filter_model(
 # Declare dynamic sort model
 SortModel = create_sort_model(["id"])
 
+
 # Query parameters for order documents collection
 class CollectionOrderDocumentsQueryParams(CollectionQueryParams):
 	"""
