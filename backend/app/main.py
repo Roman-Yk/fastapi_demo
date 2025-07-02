@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from  app.api import orders_router, order_documents_router
+from  app.api import orders_router, order_documents_router, drivers_router, trucks_router, trailers_router
 from app.modules.cache import populate_cache_on_startup
 
 app = FastAPI(
@@ -13,6 +13,9 @@ app = FastAPI(
 
 app.include_router(orders_router, prefix="/api/v1", tags=["orders"])
 app.include_router(order_documents_router, prefix="/api/v1", tags=["order_documents"])
+app.include_router(drivers_router, prefix="/api/v1", tags=["drivers"])
+app.include_router(trucks_router, prefix="/api/v1", tags=["trucks"])
+app.include_router(trailers_router, prefix="/api/v1", tags=["trailers"])
 
 @app.on_event("startup")
 async def on_startup():
