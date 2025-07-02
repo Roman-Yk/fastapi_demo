@@ -1,8 +1,6 @@
 import os
 import enum
 
-from ....custom_types.EnumType import EnumType
-
 
 class OrderService(enum.IntEnum):
 	RELOAD_CAR_CAR = 1
@@ -36,8 +34,3 @@ services = {
 		"short_name": os.getenv("INTO_PLUKK_STORAGE__SHORT_NAME", "Plukk"),
 	},
 }
-
-
-class OrderServiceType(EnumType):
-	cache_ok = True
-	EnumClass = OrderService

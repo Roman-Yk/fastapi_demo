@@ -30,20 +30,24 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the document.
         """
-        if extension == ".pdf":
-            text = cls.get_text_from_pdf_with_pypdf2(file_bytes)
-            text += cls.get_text_from_pdf_with_pytesseract(file_bytes)
-        elif extension in FileConfig.images_extensions:
-            text = cls.get_text_from_image_with_pytesseract(file_bytes)
-        elif extension == ".xlsx":
-            text = cls.get_text_from_xlsx_with_openpyxl(file_bytes)
-        elif extension == ".docx":
-            text = cls.get_text_from_docx_with_docx2txt(file_bytes)
-        elif extension == ".txt":
-            text = cls.get_text_from_txt_with_default(file_bytes)
-        else:
-            text = ""
-        return text
+        try:
+            if extension == ".pdf":
+                text = cls.get_text_from_pdf_with_pypdf2(file_bytes)
+                text += cls.get_text_from_pdf_with_pytesseract(file_bytes)
+            elif extension in FileConfig.images_extensions:
+                text = cls.get_text_from_image_with_pytesseract(file_bytes)
+            elif extension == ".xlsx":
+                text = cls.get_text_from_xlsx_with_openpyxl(file_bytes)
+            elif extension == ".docx":
+                text = cls.get_text_from_docx_with_docx2txt(file_bytes)
+            elif extension == ".txt":
+                text = cls.get_text_from_txt_with_default(file_bytes)
+            else:
+                text = ""
+            return text
+        except Exception as e:
+            print(f"Error parsing {extension} document: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -67,14 +71,18 @@ class DocumentParsingManager:
         Returns:
                 str: The content of the document file in bytes.
         """
-        extension = os.path.splitext(file_path)[-1].lower()
+        try:
+            extension = os.path.splitext(file_path)[-1].lower()
 
-        with open(file_path, "rb") as f:
-            file_bytes = f.read()
+            with open(file_path, "rb") as f:
+                file_bytes = f.read()
 
-        return DocumentParsingManager.get_document_text_based_on_file_extension(
-            file_bytes, extension
-        )
+            return DocumentParsingManager.get_document_text_based_on_file_extension(
+                file_bytes, extension
+            )
+        except Exception as e:
+            print(f"Error reading file {file_path}: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -86,32 +94,36 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the image.
         """
-        if isinstance(file_bytes, bytes):
-            file_bytes = io.BytesIO(file_bytes)
+        try:
+            if isinstance(file_bytes, bytes):
+                file_bytes = io.BytesIO(file_bytes)
 
-        with Image.open(file_bytes) as image:
-            if image.mode != "RGB":
-                image = image.convert("RGB")
+            with Image.open(file_bytes) as image:
+                if image.mode != "RGB":
+                    image = image.convert("RGB")
 
-            max_dim = 1600
-            if image.width > max_dim or image.height > max_dim:
-                scale = max_dim / max(image.width, image.height)
-                image = image.resize(
-                    (int(image.width * scale), int(image.height * scale))
-                )
-
-            psm_modes = ["11", "6", "3"]
-            for psm in psm_modes:
-                try:
-                    config = f"--oem 3 --psm {psm}"
-                    return pytesseract.image_to_string(
-                        image, lang=cls.PARSING_LANGUAGES, config=config
+                max_dim = 1600
+                if image.width > max_dim or image.height > max_dim:
+                    scale = max_dim / max(image.width, image.height)
+                    image = image.resize(
+                        (int(image.width * scale), int(image.height * scale))
                     )
-                except Exception as error:
-                    continue
-            return pytesseract.image_to_string(
-                image, lang=cls.PARSING_LANGUAGES, config=cls.CUSTOM_TESSERACT_CONFIG
-            )
+
+                psm_modes = ["11", "6", "3"]
+                for psm in psm_modes:
+                    try:
+                        config = f"--oem 3 --psm {psm}"
+                        return pytesseract.image_to_string(
+                            image, lang=cls.PARSING_LANGUAGES, config=config
+                        )
+                    except Exception as error:
+                        continue
+                return pytesseract.image_to_string(
+                    image, lang=cls.PARSING_LANGUAGES, config=cls.CUSTOM_TESSERACT_CONFIG
+                )
+        except Exception as e:
+            print(f"Error during image OCR processing: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -123,22 +135,26 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the PDF.
         """
-        # Handle both bytes and BytesIO objects
-        if isinstance(file_bytes, bytes):
-            pdf_bytes = file_bytes
-        else:
-            pdf_bytes = file_bytes.getvalue()
+        try:
+            # Handle both bytes and BytesIO objects
+            if isinstance(file_bytes, bytes):
+                pdf_bytes = file_bytes
+            else:
+                pdf_bytes = file_bytes.getvalue()
 
-        doc = convert_from_bytes(pdf_bytes)
-        text_list = []
-        for _, page_data in enumerate(doc):
-            image_string = pytesseract.image_to_string(
-                page_data,
-                lang=cls.PARSING_LANGUAGES,
-                config=cls.CUSTOM_TESSERACT_CONFIG,
-            )
-            text_list.append(f"\n{image_string}")
-        return "".join(text_list)
+            doc = convert_from_bytes(pdf_bytes)
+            text_list = []
+            for _, page_data in enumerate(doc):
+                image_string = pytesseract.image_to_string(
+                    page_data,
+                    lang=cls.PARSING_LANGUAGES,
+                    config=cls.CUSTOM_TESSERACT_CONFIG,
+                )
+                text_list.append(f"\n{image_string}")
+            return "".join(text_list)
+        except Exception as e:
+            print(f"Error during PDF OCR processing: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -176,16 +192,20 @@ class DocumentParsingManager:
         Returns:
                 list: A list of maximum widths for each column.
         """
-        column_widths = []
-        has_2_rows = worksheet.max_row >= 2
-        for col in worksheet.iter_cols(1, worksheet.max_column):
-            if has_2_rows:
-                column_widths.append(
-                    max(len(str(col[0].value)), len(str(col[1].value)))
-                )
-            else:
-                column_widths.append(len(str(col[0].value)))
-        return column_widths
+        try:
+            column_widths = []
+            has_2_rows = worksheet.max_row >= 2
+            for col in worksheet.iter_cols(1, worksheet.max_column):
+                if has_2_rows:
+                    column_widths.append(
+                        max(len(str(col[0].value)), len(str(col[1].value)))
+                    )
+                else:
+                    column_widths.append(len(str(col[0].value)))
+            return column_widths
+        except Exception as e:
+            print(f"Error calculating column widths: {str(e)}")
+            return [10] * (worksheet.max_column or 1)  # Default width fallback
 
 
     @classmethod
@@ -197,15 +217,19 @@ class DocumentParsingManager:
         Returns:
                 str: The formatted text from the worksheet.
         """
-        text_list = []
-        column_widths = cls._get_column_widths(worksheet)
-        # Iterate the loop to read the cell values
-        for i in range(0, worksheet.max_row):
-            for col in worksheet.iter_cols(1, worksheet.max_column):
-                width = column_widths[col[i].column - 1]
-                text_list.append(f"{str(col[i].value):{width}}   |")
-            text_list.append("\n")
-        return "".join(text_list)
+        try:
+            text_list = []
+            column_widths = cls._get_column_widths(worksheet)
+            # Iterate the loop to read the cell values
+            for i in range(0, worksheet.max_row):
+                for col in worksheet.iter_cols(1, worksheet.max_column):
+                    width = column_widths[col[i].column - 1]
+                    text_list.append(f"{str(col[i].value):{width}}   |")
+                text_list.append("\n")
+            return "".join(text_list)
+        except Exception as e:
+            print(f"Error processing worksheet: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -217,13 +241,17 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the Excel file.
         """
-        workbook = openpyxl.load_workbook(file_bytes)
-        sheet_names = workbook.sheetnames
-        text_list = []
-        for sheet_name in sheet_names:
-            worksheet = workbook[sheet_name]
-            text_list.append(f"{worksheet}\n{cls.get_text_from_worksheet(worksheet)}\n")
-        return "".join(text_list)
+        try:
+            workbook = openpyxl.load_workbook(file_bytes)
+            sheet_names = workbook.sheetnames
+            text_list = []
+            for sheet_name in sheet_names:
+                worksheet = workbook[sheet_name]
+                text_list.append(f"{worksheet}\n{cls.get_text_from_worksheet(worksheet)}\n")
+            return "".join(text_list)
+        except Exception as e:
+            print(f"Error parsing Excel file: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -235,7 +263,11 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the DOCX file.
         """
-        return docx2txt.process(file_bytes)
+        try:
+            return docx2txt.process(file_bytes)
+        except Exception as e:
+            print(f"Error parsing DOCX file: {str(e)}")
+            return ""
 
 
     @classmethod
@@ -247,6 +279,10 @@ class DocumentParsingManager:
         Returns:
                 str: The extracted text from the TXT file.
         """
-        file_bytes.seek(0)
-        data = file_bytes.read()
-        return data.decode("utf-8")
+        try:
+            file_bytes.seek(0)
+            data = file_bytes.read()
+            return data.decode("utf-8")
+        except Exception as e:
+            print(f"Error reading text file: {str(e)}")
+            return ""

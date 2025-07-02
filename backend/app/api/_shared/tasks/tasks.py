@@ -1,6 +1,6 @@
 import uuid
 from app.database.models.orders import OrderDocument, OrderDocumentText, Order
-from app.database.models._shared.ProcessStatus import ProcessStatus
+from app.database.models._shared.enums.ProcessStatus import ProcessStatus
 from app.modules.celery import celery_app, TaskBase
 from app.utils.parsing.document_parsing_manager import DocumentParsingManager
 from app.core.configs.FileConfig import FileConfig

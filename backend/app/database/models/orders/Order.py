@@ -1,12 +1,12 @@
 import uuid
 
-from sqlalchemy import Integer, Column, String, Date, Time, Float, Boolean, ForeignKey, func
+from sqlalchemy import Integer, Column, String, Date, Time, Float, Boolean, ForeignKey, func, Enum
 from sqlalchemy.orm import validates
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.base_model import BASE_MODEL
 
-from .enums.OrderServiceType import OrderServiceType
+from .enums.OrderServiceType import OrderService
 
 class Order(BASE_MODEL):
 	__tablename__ = "orders"
@@ -14,7 +14,7 @@ class Order(BASE_MODEL):
 	id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, index=True)
 	reference = Column(String(32), nullable=True)
 
-	service = Column(OrderServiceType(), nullable=True)
+	service = Column(Enum(OrderService), nullable=True)
 	eta_date = Column(Date(), nullable=True)
 	eta_time = Column(Time(timezone=False), nullable=True)
 

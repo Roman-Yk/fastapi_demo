@@ -1,7 +1,7 @@
 from sqlalchemy.sql.schema import Column, ForeignKey
-from sqlalchemy.types import Integer, DateTime, Text, UUID
+from sqlalchemy.types import Integer, DateTime, Text, UUID, Enum
 
-from app.database.models._shared.ProcessStatus import ProcessStatus, ProcessStatusType
+from app.database.models._shared.enums.ProcessStatus import ProcessStatus
 
 from ...base_model import BASE_MODEL
 
@@ -16,7 +16,7 @@ class OrderDocumentText(BASE_MODEL):
     text_created_at = Column(DateTime(timezone=False), nullable=True)
     text = Column(Text())
 
-    process_status = Column(ProcessStatusType(), nullable=False, default=ProcessStatus.none)
+    process_status = Column(Enum(ProcessStatus), nullable=False, default=ProcessStatus.none)
 
     def __repr__(self):
         return f"OrderDocumentText({self.order_document_id}, {self.order_id})"
