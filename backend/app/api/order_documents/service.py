@@ -36,8 +36,8 @@ class OrderDocumentsService(BaseService):
         """
         Fetch all order_documents with optional filtering, sorting, and pagination.
         """
-        select_query = select(OrderDocument)
-        count_query = select(func.count()).select_from(OrderDocument)
+        select_query = select(OrderDocument).where(OrderDocument.order_id == order_id)
+        count_query = select(func.count()).select_from(OrderDocument).where(OrderDocument.order_id == order_id)
         try:
             query, count_query = apply_filter_sort_range_for_query(
                 OrderDocument,
@@ -75,17 +75,9 @@ class OrderDocumentsService(BaseService):
         Create a new order_document.
         """
         try:
-            # Validate that the order exists - foreign key validation
-            await self.fk_validator.validate_single_reference(
-                Order, order_id, "order_id"
-            )
-
             filename = f"{uuid.uuid4()}_{file.filename}"
             destination_path = os.path.join(settings.FILES_PATH, filename)
-
-            with open(destination_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-
+            
             new_order_document = OrderDocument(
                 order_id=order_id, 
                 title=title, 
@@ -94,6 +86,9 @@ class OrderDocumentsService(BaseService):
             )
             self.db.add(new_order_document)
             await self.db.commit()
+            
+            with open(destination_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
 
             add_order_document_text.delay(document_id=new_order_document.id)
             return new_order_document

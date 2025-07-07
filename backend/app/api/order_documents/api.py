@@ -36,7 +36,6 @@ class OrderDocumentsResource:
 		self.order_documents_service = OrderDocumentsService(self.db)
 		self.response = response
 
-
 	@order_documents_router.get("/{order_id}/documents/", response_model=list[ResponseOrderDocumentSchema])
 	async def get_order_documents(
 		self,
@@ -59,7 +58,6 @@ class OrderDocumentsResource:
 			)
 		return documents
 
-
 	@order_documents_router.get("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def get_order_document_by_id(self, order_id: uuid.UUID, document_id: uuid.UUID):
 		"""
@@ -71,7 +69,6 @@ class OrderDocumentsResource:
 			document_id
 		)
 		return document
-
 
 	@order_documents_router.post("/{order_id}/documents/")
 	async def create_order_document(
@@ -96,7 +93,6 @@ class OrderDocumentsResource:
 		)
 		return status.HTTP_201_CREATED
 
-
 	@order_documents_router.patch("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def patch_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
 		"""
@@ -111,7 +107,6 @@ class OrderDocumentsResource:
 		)
 		return updated_document
 		
-
 	@order_documents_router.put("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def update_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
 		"""

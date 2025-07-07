@@ -74,8 +74,6 @@ class OrderService(BaseService):
         """
         try:
             data = data.model_dump()
-            # validate foreign keys
-            await self.fk_validator.validate_references_from_mapping(data, self.FOREIGN_KEY_VALIDATION_MAP)
             order = Order(**data)
             self.db.add(order)
             await self.db.commit()
@@ -101,10 +99,6 @@ class OrderService(BaseService):
             if not updated_data:
                 return order  # No changes to apply
 
-            # Foreign key validation - clear and specific
-            await self.fk_validator.validate_references_from_mapping(
-                updated_data, self.FOREIGN_KEY_VALIDATION_MAP
-            )
 
             # Update the order with the new data
             updated_order = await update_model_fields(self.db, order, updated_data)
@@ -130,11 +124,6 @@ class OrderService(BaseService):
 
             # Get all fields from the schema (including unset ones with default values)
             update_data = data.model_dump()
-
-            # Foreign key validation
-            await self.fk_validator.validate_references_from_mapping(
-                update_data, self.FOREIGN_KEY_VALIDATION_MAP
-            )
 
             updated_order = await update_model_fields(self.db, order, update_data)
             await self.db.commit()
