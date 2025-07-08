@@ -5,8 +5,11 @@ services:
     build: ./backend
     image: "fastapi-demo-backend:latest"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./backend:/app
       - ./files:/app/files
+    environment:
+      - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
     env_file: 
       - ./backend/.env
     ports:

@@ -19,7 +19,7 @@ class TestTrucksAPI:
         self, async_client: AsyncClient, sample_truck
     ):
         """Test getting trucks with existing data."""
-        sample_truck = await sample_truck
+        # sample_truck = await sample_truck
         response = await async_client.get("/api/v1/trucks")
         assert response.status_code == 200
         data = response.json()
@@ -33,7 +33,7 @@ class TestTrucksAPI:
         self, async_client: AsyncClient, sample_truck
     ):
         """Test getting a specific truck by ID."""
-        sample_truck = await sample_truck
+        # sample_truck = await sample_truck
         response = await async_client.get(f"/api/v1/trucks/{sample_truck.id}")
         assert response.status_code == 200
         data = response.json()
@@ -176,7 +176,7 @@ class TestTrailersAPI:
         self, async_client: AsyncClient, sample_trailer
     ):
         """Test getting trailers with existing data."""
-        sample_trailer = await sample_trailer
+        # sample_trailer = await sample_trailer
         response = await async_client.get("/api/v1/trailers")
         assert response.status_code == 200
         data = response.json()
@@ -190,7 +190,7 @@ class TestTrailersAPI:
         self, async_client: AsyncClient, sample_trailer: Trailer
     ):
         """Test getting a specific trailer by ID."""
-        sample_trailer = await sample_trailer
+        # sample_trailer = await sample_trailer
         response = await async_client.get(f"/api/v1/trailers/{sample_trailer.id}")
         assert response.status_code == 200
         data = response.json()

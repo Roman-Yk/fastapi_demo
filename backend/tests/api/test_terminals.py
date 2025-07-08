@@ -19,7 +19,7 @@ class TestTerminalsAPI:
         self, async_client: AsyncClient, sample_terminal
     ):
         """Test getting terminals with existing data."""
-        sample_terminal = await sample_terminal
+        # sample_terminal = await sample_terminal
         response = await async_client.get("/api/v1/terminals")
         assert response.status_code == 200
         data = response.json()
@@ -35,7 +35,7 @@ class TestTerminalsAPI:
         self, async_client: AsyncClient, sample_terminal
     ):
         """Test getting a specific terminal by ID."""
-        sample_terminal = await sample_terminal
+        # sample_terminal = await sample_terminal
         response = await async_client.get(f"/api/v1/terminals/{sample_terminal.id}")
         assert response.status_code == 200
         data = response.json()

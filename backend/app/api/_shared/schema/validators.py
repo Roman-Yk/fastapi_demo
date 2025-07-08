@@ -5,6 +5,8 @@ def is_not_past_date(value: date) -> date:
     Forbids past dates.
     If the value is None or in the future, it is allowed.
     """
+    if value is None:
+        return None
     if value < date.today():
         raise ValueError("Date cannot be in the past")
     return value

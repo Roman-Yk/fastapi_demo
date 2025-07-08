@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
+import os
 
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,67 +21,169 @@ from app.main import app
 from app.database.conn import get_db
 from app.database.base_model import BASE_MODEL
 from app.database.models import *
-from app.core.settings import settings
 from contextlib import asynccontextmanager
+
+from testcontainers.postgres import PostgresContainer
+from alembic.config import Config
+from alembic.command import upgrade
+import docker
+
+# Check if Docker is available and running
+try:
+    docker_client = docker.from_env()
+    docker_client.ping()
+    print("✅ Docker is available and testcontainers ready")
+except Exception as e:
+    print(f"\n⚠️  Docker not available: {e}")
+    print("💡 To use testcontainers, make sure Docker is installed and running.")
+    # Exit with an error to prevent tests from running without Docker
+    raise e
 
 
 # Test database configuration
 
-
-@pytest_asyncio.fixture(scope="session")
-def event_loop():
-    """Create a session-wide event loop."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# Global container instance for testcontainers
+_postgres_container = None
+_sync_engine = None
+_async_engine = None
 
 
-@pytest_asyncio.fixture(scope="session")
-async def test_engine():
-    """Create the PostgreSQL test database engine."""
-    engine = create_async_engine(settings.TEST_DATABASE_URL, echo=False, future=True)
+def pytest_configure(config):
+    """Configure pytest with our custom settings."""
+    global _postgres_container, _sync_engine, _async_engine
 
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(BASE_MODEL.metadata.create_all)
+    # Start PostgreSQL container once for all tests
+    try:
+        _postgres_container = PostgresContainer(
+            image="postgres:15",
+            username="test_user",
+            password="test_password",
+            dbname="test_db",
+            port=5432,
+        )
+        _postgres_container.start()
 
-    yield engine
+        # Get connection details
+        host = _postgres_container.get_container_host_ip()
+        port = _postgres_container.get_exposed_port(5432)
 
-    # Drop all tables after the session
-    async with engine.begin() as conn:
-        await conn.run_sync(BASE_MODEL.metadata.drop_all)
+        async_url = (
+            f"postgresql+asyncpg://test_user:test_password@{host}:{port}/test_db"
+        )
+        sync_url = f"postgresql://test_user:test_password@{host}:{port}/test_db"
 
-    await engine.dispose()
+        print(f"\n🚀 PostgreSQL container started at {host}:{port}")
 
+        # Create both sync and async engines
+        _sync_engine = create_engine(sync_url, echo=False)
+        _async_engine = create_async_engine(async_url, echo=False, future=True)
 
-@pytest_asyncio.fixture(scope="function")
-async def test_db_session(test_engine):
-    """Create a new database session for a test."""
-    async_session = async_sessionmaker(
-        bind=test_engine, class_=AsyncSession, expire_on_commit=False
-    )
+        # Create tables using synchronous approach (more reliable)
+        print("🔄 Creating database tables...")
 
-    async with async_session() as session:
         try:
-            yield session
-            await session.commit()
-        except SQLAlchemyError as sql_ex:
-            await session.rollback()
-            raise sql_ex
-        except HTTPException as http_ex:
-            await session.rollback()
-            raise http_ex
-        finally:
-            await session.close()
+            BASE_MODEL.metadata.create_all(bind=_sync_engine)
+            print("✅ Database schema created with metadata.create_all")
+        except Exception as e:
+            print(f"⚠️  metadata.create_all failed: {e}")
+
+            # Fallback to Alembic migrations
+            try:
+                print("🔄 Trying Alembic migrations as fallback...")
+                alembic_ini_path = os.path.join(
+                    os.path.dirname(__file__), "..", "alembic.ini"
+                )
+                alembic_cfg = Config(alembic_ini_path)
+                alembic_cfg.set_main_option("script_location", "app:alembic")
+                alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
+                alembic_cfg.set_main_option("prepend_sys_path", ".")
+
+                upgrade(alembic_cfg, "head")
+                print("✅ Database schema created with Alembic")
+            except Exception as alembic_error:
+                print(f"❌ Both metadata.create_all and Alembic failed!")
+                print(f"   metadata.create_all error: {e}")
+                print(f"   Alembic error: {alembic_error}")
+                raise Exception("Failed to create database schema") from alembic_error
+
+    except Exception as e:
+        print(f"\n❌ Failed to start PostgreSQL container: {e}")
+        raise e
+
+
+def pytest_unconfigure(config):
+    """Clean up after all tests."""
+    global _postgres_container, _sync_engine, _async_engine
+
+    if _sync_engine:
+        _sync_engine.dispose()
+
+    if _async_engine:
+        # We can't await here, but the engine will be cleaned up when the process exits
+        pass
+
+    if _postgres_container:
+        print(f"\n🛑 Stopping PostgreSQL container")
+        _postgres_container.stop()
+
+
+@pytest.fixture(scope="function")
+def test_db_session():
+    """
+    Create a synchronous database session for a test, with proper transaction isolation.
+    """
+    global _sync_engine
+
+    # Create a connection and transaction
+    connection = _sync_engine.connect()
+    trans = connection.begin()
+
+    # Create session bound to this connection
+    session_maker = sessionmaker(bind=connection)
+    session = session_maker()
+
+    try:
+        yield session
+    finally:
+        session.close()
+        trans.rollback()
+        connection.close()
 
 
 @pytest_asyncio.fixture
 async def async_client(test_db_session):
     """Return an async client with DB override."""
 
-    # Override the database dependency to return the test session
+    # Create an async session that wraps the sync session
+    # This is a bit of a hack but works for testing
+    class AsyncSessionWrapper:
+        def __init__(self, sync_session):
+            self.sync_session = sync_session
+
+        def add(self, obj):
+            return self.sync_session.add(obj)
+
+        def delete(self, obj):
+            return self.sync_session.delete(obj)
+
+        async def execute(self, query):
+            return self.sync_session.execute(query)
+
+        async def commit(self):
+            return self.sync_session.commit()
+
+        async def flush(self):
+            return self.sync_session.flush()
+
+        async def refresh(self, obj):
+            return self.sync_session.refresh(obj)
+
+        async def close(self):
+            return self.sync_session.close()
+
+    # Override the database dependency to return the wrapped session
     async def override_get_db():
-        yield test_db_session
+        yield AsyncSessionWrapper(test_db_session)
 
     app.dependency_overrides[get_db] = override_get_db
 
@@ -96,8 +199,8 @@ async def async_client(test_db_session):
 # ---- Test data fixtures ----
 
 
-@pytest_asyncio.fixture
-async def sample_terminal(test_db_session):
+@pytest.fixture
+def sample_terminal(test_db_session):
     terminal = Terminal(
         id=uuid.uuid4(),
         name="Test Terminal",
@@ -107,40 +210,40 @@ async def sample_terminal(test_db_session):
         account_code="T001",
     )
     test_db_session.add(terminal)
-    await test_db_session.commit()
-    await test_db_session.refresh(terminal)
+    test_db_session.flush()
+    test_db_session.refresh(terminal)
     return terminal
 
 
-@pytest_asyncio.fixture
-async def sample_driver(test_db_session):
+@pytest.fixture
+def sample_driver(test_db_session):
     driver = Driver(id=uuid.uuid4(), name="John Doe", phone="+1234567890")
     test_db_session.add(driver)
-    await test_db_session.commit()
-    await test_db_session.refresh(driver)
+    test_db_session.flush()
+    test_db_session.refresh(driver)
     return driver
 
 
-@pytest_asyncio.fixture
-async def sample_truck(test_db_session):
+@pytest.fixture
+def sample_truck(test_db_session):
     truck = Truck(id=uuid.uuid4(), name="Test Truck", license_plate="ABC123")
     test_db_session.add(truck)
-    await test_db_session.commit()
-    await test_db_session.refresh(truck)
+    test_db_session.flush()
+    test_db_session.refresh(truck)
     return truck
 
 
-@pytest_asyncio.fixture
-async def sample_trailer(test_db_session):
+@pytest.fixture
+def sample_trailer(test_db_session):
     trailer = Trailer(id=uuid.uuid4(), name="Test Trailer", license_plate="XYZ789")
     test_db_session.add(trailer)
-    await test_db_session.commit()
-    await test_db_session.refresh(trailer)
+    test_db_session.flush()
+    test_db_session.refresh(trailer)
     return trailer
 
 
-@pytest_asyncio.fixture
-async def sample_order(test_db_session, sample_terminal):
+@pytest.fixture
+def sample_order(test_db_session, sample_terminal):
     order = Order(
         id=uuid.uuid4(),
         reference="TEST-001",
@@ -158,13 +261,13 @@ async def sample_order(test_db_session, sample_terminal):
         priority=False,
     )
     test_db_session.add(order)
-    await test_db_session.commit()
-    await test_db_session.refresh(order)
+    test_db_session.flush()
+    test_db_session.refresh(order)
     return order
 
 
-@pytest_asyncio.fixture
-async def sample_order_document(test_db_session, sample_order):
+@pytest.fixture
+def sample_order_document(test_db_session, sample_order):
     order_document = OrderDocument(
         id=uuid.uuid4(),
         order_id=sample_order.id,
@@ -175,13 +278,13 @@ async def sample_order_document(test_db_session, sample_order):
         created_at=datetime.now(),
     )
     test_db_session.add(order_document)
-    await test_db_session.commit()
-    await test_db_session.refresh(order_document)
+    test_db_session.flush()
+    test_db_session.refresh(order_document)
     return order_document
 
 
-@pytest_asyncio.fixture
-async def multiple_orders(test_db_session, sample_terminal):
+@pytest.fixture
+def multiple_orders(test_db_session, sample_terminal):
     orders = []
     for i in range(15):
         order = Order(
@@ -207,9 +310,9 @@ async def multiple_orders(test_db_session, sample_terminal):
         test_db_session.add(order)
         orders.append(order)
 
-    await test_db_session.commit()
+    test_db_session.flush()
     for order in orders:
-        await test_db_session.refresh(order)
+        test_db_session.refresh(order)
     return orders
 
 
@@ -276,6 +379,6 @@ class TestDataGenerator:
         return {"name": "", "time_zone": ""}
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 def test_data_generator():
     return TestDataGenerator()

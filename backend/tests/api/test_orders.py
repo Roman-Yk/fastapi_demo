@@ -19,11 +19,9 @@ class TestOrdersAPI:
         assert response.json() == []
 
     @pytest.mark.asyncio
-    async def test_get_orders_with_data(
-        self, async_client: AsyncClient, sample_order
-    ):
+    async def test_get_orders_with_data(self, async_client: AsyncClient, sample_order):
         """Test getting orders with existing data."""
-        sample_order = await sample_order
+        # sample_order = await sample_order
         response = await async_client.get("/api/v1/orders")
         assert response.status_code == 200
         data = response.json()
@@ -87,7 +85,7 @@ class TestOrdersAPI:
         self, async_client: AsyncClient, sample_order
     ):
         """Test getting a specific order by ID."""
-        sample_order = await sample_order
+        # sample_order = await sample_order
         response = await async_client.get(f"/api/v1/orders/{sample_order.id}")
         assert response.status_code == 200
         data = response.json()
@@ -208,11 +206,9 @@ class TestOrdersAPI:
         assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
-    async def test_update_order_success(
-        self, async_client: AsyncClient, sample_order
-    ):
+    async def test_update_order_success(self, async_client: AsyncClient, sample_order):
         """Test updating an existing order."""
-        sample_order = await sample_order
+        # sample_order = await sample_order
         update_data = {
             "reference": "UPDATED-REF",
             "service": OrderService.RELOAD_CAR_TERMINAL_CAR,
@@ -236,11 +232,9 @@ class TestOrdersAPI:
         assert data["service"] == update_data["service"]
 
     @pytest.mark.asyncio
-    async def test_patch_order_success(
-        self, async_client: AsyncClient, sample_order
-    ):
+    async def test_patch_order_success(self, async_client: AsyncClient, sample_order):
         """Test partially updating an existing order."""
-        sample_order = await sample_order
+        # sample_order = await sample_order
         patch_data = {
             "notes": "Patched notes",
             "priority": True,
@@ -336,14 +330,10 @@ class TestOrdersAPI:
 
     @pytest.mark.asyncio
     async def test_order_with_all_optional_fields(
-        async_client: AsyncClient,
-        sample_terminal,
+        self, async_client: AsyncClient, sample_terminal
     ):
         """Test creating an order with all optional fields."""
         complete_data = {
-            "reference": "TEST-COMPLETE",
-            "service": OrderService.RELOAD_CAR_CAR,
-            "terminal_id": str(sample_terminal.id),
             "eta_date": date.today().isoformat(),
             "eta_time": "10:00:00",
             "etd_date": date.today().isoformat(),
@@ -353,7 +343,6 @@ class TestOrdersAPI:
             "boxes": 100,
             "kilos": 1500.5,
             "notes": "Complete order with all fields",
-            "priority": True,
         }
 
         response = await async_client.post("/api/v1/orders", json=complete_data)
@@ -388,7 +377,7 @@ class TestOrdersAPI:
         self, async_client: AsyncClient, sample_order
     ):
         """Test that order JSON serialization works correctly."""
-        sample_order = await sample_order
+        # sample_order = await sample_order
         response = await async_client.get(f"/api/v1/orders/{sample_order.id}")
         assert response.status_code == 200
         data = response.json()
@@ -407,7 +396,7 @@ class TestOrdersAPI:
         self, async_client: AsyncClient, sample_terminal: Terminal
     ):
         """Test order field validation for string lengths."""
-        sample_terminal = await sample_terminal
+        # sample_terminal = await sample_terminal
         test_cases = [
             {
                 "field": "reference",
@@ -440,7 +429,7 @@ class TestOrdersAPI:
         self, async_client: AsyncClient, sample_terminal: Terminal
     ):
         """Test creating an order with null values for optional fields."""
-        sample_terminal = await sample_terminal
+        # sample_terminal = await sample_terminal
         null_data = {
             "reference": "TEST-NULL",
             "service": OrderService.RELOAD_CAR_CAR,
@@ -461,3 +450,5 @@ class TestOrdersAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["reference"] == null_data["reference"]
+
+

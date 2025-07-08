@@ -20,7 +20,7 @@ class TestDriversAPI:
         self, async_client: AsyncClient, sample_driver: Driver
     ):
         """Test getting drivers with existing data."""
-        sample_driver = await sample_driver
+        # sample_driver = await sample_driver
         response = await async_client.get("/api/v1/drivers")
         assert response.status_code == 200
         data = response.json()
@@ -33,7 +33,7 @@ class TestDriversAPI:
         self, async_client: AsyncClient, sample_driver: Driver
     ):
         """Test getting a specific driver by ID."""
-        sample_driver = await sample_driver
+        # sample_driver = await sample_driver
         response = await async_client.get(f"/api/v1/drivers/{sample_driver.id}")
         assert response.status_code == 200
         data = response.json()

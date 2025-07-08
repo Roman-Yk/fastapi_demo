@@ -28,7 +28,7 @@ from .BaseSchemas import (
 
 # Create schema
 class CreateOrderSchema(OrderFieldsMixin):
-	reference: str
+	reference: str = Field(max_length=32, min_length=1)
 	service: OrderService
 	terminal_id: uuid.UUID
 
@@ -54,6 +54,7 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
 	pallets: NonNegativeOptionalInt = None
 	boxes: NonNegativeOptionalInt = None
 	kilos: NonNegativeOptionalFloat = None
+	notes: Optional[str] = None
 
 
 # Declare dynamic filter model
