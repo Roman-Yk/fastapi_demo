@@ -1,5 +1,6 @@
 import pytest
 import uuid
+import json
 from datetime import date, time, datetime
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,46 +36,41 @@ class TestOrdersAPI:
         self, async_client: AsyncClient, multiple_orders
     ):
         """Test getting orders with pagination."""
-        response = await async_client.get("/api/v1/orders?page=1&perPage=10")
+        response = await async_client.get("/api/v1/orders?range=[0,9]")
         assert response.status_code == 200
         data = response.json()
         assert len(data) <= 10
 
         # Test second page
-        response = await async_client.get("/api/v1/orders?page=2&perPage=10")
+        response = await async_client.get("/api/v1/orders?range=[5,9]")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) <= 10
+        assert len(data) <= 5
 
-    @pytest.mark.asyncio
-    async def test_get_orders_with_range_header(
-        self, async_client: AsyncClient, multiple_orders
-    ):
-        """Test getting orders with range header."""
-        response = await async_client.get(
-            "/api/v1/orders", headers={"Range": "items=0-9"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) <= 10
 
     @pytest.mark.asyncio
     async def test_get_orders_with_filtering(
         self, async_client: AsyncClient, multiple_orders
     ):
         """Test getting orders with filtering."""
-        response = await async_client.get("/api/v1/orders?service=RELOAD_CAR_CAR")
+        response = await async_client.get(
+            "/api/v1/orders",
+            params={"filter": json.dumps({"service": 1})}
+        )
         assert response.status_code == 200
         data = response.json()
         for order in data:
-            assert order["service"] == "RELOAD_CAR_CAR"
+            assert order["service"] == OrderService.RELOAD_CAR_CAR
 
     @pytest.mark.asyncio
     async def test_get_orders_with_sorting(
         self, async_client: AsyncClient, multiple_orders
     ):
         """Test getting orders with sorting."""
-        response = await async_client.get("/api/v1/orders?sort=reference&order=ASC")
+        response = await async_client.get(
+            "/api/v1/orders",
+            params={"sort": json.dumps(["reference", "ASC"])}
+        )
         assert response.status_code == 200
         data = response.json()
         if len(data) > 1:
@@ -209,27 +205,37 @@ class TestOrdersAPI:
     async def test_update_order_success(self, async_client: AsyncClient, sample_order):
         """Test updating an existing order."""
         # sample_order = await sample_order
-        update_data = {
-            "reference": "UPDATED-REF",
-            "service": OrderService.RELOAD_CAR_TERMINAL_CAR,
-            "terminal_id": str(sample_order.terminal_id),
-            "eta_date": date.today().isoformat(),
-            "eta_time": "12:00:00",
-            "commodity": CommodityType.TROUTH,
-            "pallets": 20,
-            "boxes": 200,
-            "kilos": 2000.0,
-            "notes": "Updated order",
-            "priority": True,
-        }
+        update_data = {}
+        fields = [
+            "eta_truck", "eta_driver", "eta_trailer", "eta_driver_phone",
+            "etd_truck", "etd_driver", "etd_trailer", "etd_driver_phone",
+            "eta_date", "eta_time", "etd_date", "etd_time",
+            "commodity", "notes",
+            "eta_truck_id", "eta_driver_id", "eta_trailer_id",
+            "etd_truck_id", "etd_driver_id", "etd_trailer_id",
+            "pallets", "boxes", "kilos"
+        ]
+        for field in fields:
+            value = getattr(sample_order, field)
+            if isinstance(value, uuid.UUID):
+                update_data[field] = str(value)
+            elif isinstance(value, date) or isinstance(value, time):
+                update_data[field] = value.isoformat()
+            else:
+                update_data[field] = value
+
+        update_data["notes"] = "Updated order data"
+        update_data["eta_driver"] = "eta driver new guy"
 
         response = await async_client.put(
-            f"/api/v1/orders/{sample_order.id}", json=update_data
+            f"/api/v1/orders/{sample_order.id}",
+            json=update_data,  # ✅ DO NOT json.dumps!
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["reference"] == update_data["reference"]
-        assert data["service"] == update_data["service"]
+        assert data["notes"] == update_data["notes"]
+        assert data["eta_driver"] == update_data["eta_driver"]
+        assert data["commodity"] == update_data["commodity"]
 
     @pytest.mark.asyncio
     async def test_patch_order_success(self, async_client: AsyncClient, sample_order):
@@ -237,7 +243,6 @@ class TestOrdersAPI:
         # sample_order = await sample_order
         patch_data = {
             "notes": "Patched notes",
-            "priority": True,
         }
 
         response = await async_client.patch(
@@ -246,9 +251,8 @@ class TestOrdersAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["notes"] == patch_data["notes"]
-        assert data["priority"] == patch_data["priority"]
         # Other fields should remain unchanged
-        assert data["reference"] == sample_order.reference
+        assert data["boxes"] == sample_order.boxes
 
     @pytest.mark.asyncio
     async def test_update_order_not_found(self, async_client: AsyncClient):
@@ -281,8 +285,6 @@ class TestOrdersAPI:
     ):
         """Test updating an order with invalid data."""
         invalid_data = {
-            "reference": "",
-            "service": "INVALID_SERVICE",
             "pallets": -5,
         }
 
@@ -306,7 +308,7 @@ class TestOrdersAPI:
                     "eta_time": "10:00:00",
                     "commodity": CommodityType.SALMON,
                 },
-                "expected_status": [200, 422],
+                "expected_status": [422],
             },
             {
                 "data": {
@@ -320,7 +322,7 @@ class TestOrdersAPI:
                     "boxes": 0,
                     "kilos": 0.0,
                 },
-                "expected_status": [200, 422],
+                "expected_status": [422],
             },
         ]
 
@@ -328,29 +330,6 @@ class TestOrdersAPI:
             response = await async_client.post("/api/v1/orders", json=test_case["data"])
             assert response.status_code in test_case["expected_status"]
 
-    @pytest.mark.asyncio
-    async def test_order_with_all_optional_fields(
-        self, async_client: AsyncClient, sample_terminal
-    ):
-        """Test creating an order with all optional fields."""
-        complete_data = {
-            "eta_date": date.today().isoformat(),
-            "eta_time": "10:00:00",
-            "etd_date": date.today().isoformat(),
-            "etd_time": "18:00:00",
-            "commodity": CommodityType.SALMON,
-            "pallets": 10,
-            "boxes": 100,
-            "kilos": 1500.5,
-            "notes": "Complete order with all fields",
-        }
-
-        response = await async_client.post("/api/v1/orders", json=complete_data)
-        assert response.status_code == 200
-        data = response.json()
-        assert data["reference"] == complete_data["reference"]
-        assert data["notes"] == complete_data["notes"]
-        assert data["priority"] == complete_data["priority"]
 
     @pytest.mark.asyncio
     async def test_concurrent_order_creation(

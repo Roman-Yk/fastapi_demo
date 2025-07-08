@@ -1,10 +1,9 @@
 from typing import List, Tuple, Optional, Any, Dict, Union
-
 import sqlalchemy as sa
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.elements import BinaryExpression
-from sqlalchemy import DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean, and_, or_
+from sqlalchemy import DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean, Enum, and_, or_
 from sqlalchemy.sql.sqltypes import DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean
 
 from app.constants import ORDER_ASC, ORDER_DESC
@@ -84,7 +83,7 @@ def _append_filter_column_to(
 	else:
 		# Determine column type for comparison operators
 		col_type = getattr(column.type, "impl", column.type)
-		if isinstance(col_type, (DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean)):
+		if isinstance(col_type, (DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean, Enum)):
 			operator_map = {
 				"gt": column > value,
 				"gte": column >= value,

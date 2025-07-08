@@ -15,21 +15,21 @@ class ETAETDFieldsMixin(BaseModel):
     ETA and ETD fields mixin for order schemas.
     """
 
-    eta_truck: Optional[str] = Field(max_length=256)
-    eta_driver: Optional[str] = Field(max_length=256)
-    eta_trailer: Optional[str] = Field(max_length=256)
+    eta_truck: Optional[str] = Field(default=None, max_length=256)
+    eta_driver: Optional[str] = Field(default=None, max_length=256)
+    eta_trailer: Optional[str] = Field(default=None, max_length=256)
     eta_truck_id: Optional[uuid.UUID] = None
     eta_driver_id: Optional[uuid.UUID] = None
     eta_trailer_id: Optional[uuid.UUID] = None
-    eta_driver_phone: Optional[str] = Field(max_length=32)
+    eta_driver_phone: Optional[str] = Field(default=None, max_length=32)
 
-    etd_truck: Optional[str] = Field(max_length=256)
-    etd_driver: Optional[str] = Field(max_length=256)
-    etd_trailer: Optional[str] = Field(max_length=256)
+    etd_truck: Optional[str] = Field(default=None, max_length=256)
+    etd_driver: Optional[str] = Field(default=None, max_length=256)
+    etd_trailer: Optional[str] = Field(default=None, max_length=256)
     etd_truck_id: Optional[uuid.UUID] = None
     etd_driver_id: Optional[uuid.UUID] = None
     etd_trailer_id: Optional[uuid.UUID] = None
-    etd_driver_phone: Optional[str] = Field(max_length=32)
+    etd_driver_phone: Optional[str] = Field(default=None, max_length=32)
 
 
 class OrderFieldsMixin(BaseModel):
