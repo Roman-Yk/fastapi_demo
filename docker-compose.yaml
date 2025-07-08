@@ -43,7 +43,10 @@ services:
     restart: always
     image: redis:alpine
     logging:
-      driver: none
+      driver: "local"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - default
     
