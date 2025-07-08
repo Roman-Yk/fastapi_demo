@@ -22,7 +22,6 @@ class TestOrdersAPI:
     @pytest.mark.asyncio
     async def test_get_orders_with_data(self, async_client: AsyncClient, sample_order):
         """Test getting orders with existing data."""
-        # sample_order = await sample_order
         response = await async_client.get("/api/v1/orders")
         assert response.status_code == 200
         data = response.json()
@@ -198,8 +197,7 @@ class TestOrdersAPI:
         }
 
         response = await async_client.post("/api/v1/orders", json=past_data)
-        # This might succeed or fail depending on business rules
-        assert response.status_code in [200, 422]
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_order_success(self, async_client: AsyncClient, sample_order):
@@ -229,7 +227,7 @@ class TestOrdersAPI:
 
         response = await async_client.put(
             f"/api/v1/orders/{sample_order.id}",
-            json=update_data,  # ✅ DO NOT json.dumps!
+            json=update_data, 
         )
         assert response.status_code == 200
         data = response.json()
@@ -308,7 +306,7 @@ class TestOrdersAPI:
                     "eta_time": "10:00:00",
                     "commodity": CommodityType.SALMON,
                 },
-                "expected_status": [422],
+                "expected_status": 422,
             },
             {
                 "data": {
@@ -322,13 +320,13 @@ class TestOrdersAPI:
                     "boxes": 0,
                     "kilos": 0.0,
                 },
-                "expected_status": [422],
+                "expected_status": 422,
             },
         ]
 
         for test_case in test_cases:
             response = await async_client.post("/api/v1/orders", json=test_case["data"])
-            assert response.status_code in test_case["expected_status"]
+            assert response.status_code == test_case["expected_status"]
 
 
     @pytest.mark.asyncio
@@ -380,12 +378,12 @@ class TestOrdersAPI:
             {
                 "field": "reference",
                 "value": "A" * 1000,  # Very long reference
-                "expected_status": [200, 422],
+                "expected_status": 422,
             },
             {
                 "field": "notes",
                 "value": "A" * 5000,  # Very long notes
-                "expected_status": [200, 422],
+                "expected_status": 422,
             },
         ]
 
@@ -401,7 +399,7 @@ class TestOrdersAPI:
             order_data[test_case["field"]] = test_case["value"]
 
             response = await async_client.post("/api/v1/orders", json=order_data)
-            assert response.status_code in test_case["expected_status"]
+            assert response.status_code == test_case["expected_status"]
 
     @pytest.mark.asyncio
     async def test_order_with_null_values(
