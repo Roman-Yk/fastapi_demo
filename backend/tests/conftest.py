@@ -155,7 +155,6 @@ async def async_client(test_db_session):
     """Return an async client with DB override."""
 
     # Create an async session that wraps the sync session
-    # This is a bit of a hack but works for testing
     class AsyncSessionWrapper:
         def __init__(self, sync_session):
             self.sync_session = sync_session

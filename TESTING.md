@@ -64,7 +64,7 @@ backend/
 
 ## Quick Start
 
-### Using the Test Runner Script (Recommended)
+### Using the Test Runner Script 
 
 The project includes a comprehensive test runner script that handles all setup and cleanup:
 
@@ -85,25 +85,7 @@ The project includes a comprehensive test runner script that handles all setup a
 ./run_tests.sh --help
 ```
 
-### Manual Docker Setup
 
-If you prefer manual setup:
-
-```bash
-# Start services
-docker-compose up -d database redis backend
-
-# Wait for services to be ready
-sleep 30
-
-# Run database migrations
-docker-compose exec backend alembic upgrade head
-
-# Run tests
-docker-compose exec backend python -m pytest tests/
-
-# Stop services
-docker-compose down
 ```
 
 ## Test Runner Script
@@ -182,14 +164,71 @@ python -m pytest tests/api/test_orders.py::TestOrdersAPI::test_create_order_succ
 
 ### Generating Coverage Reports
 
+The project supports multiple coverage report formats for different use cases:
+
 ```bash
-# HTML report (recommended)
+# HTML report (recommended for local development)
 ./run_tests.sh --coverage
 
-# Open report
-open htmlcov/index.html  # macOS
-# or
-xdg-open htmlcov/index.html  # Linux
+# XML report (for CI/CD integration)
+python -m pytest --cov=app --cov-report=xml
+
+# JSON report (for programmatic analysis)
+python -m pytest --cov=app --cov-report=json
+
+# LCOV format (for some tools)
+python -m pytest --cov=app --cov-report=lcov
+
+# Multiple formats at once
+python -m pytest --cov=app --cov-report=html --cov-report=xml --cov-report=json
+
+# Terminal report with missing lines
+python -m pytest --cov=app --cov-report=term-missing
+```
+
+### Coverage Report Files
+
+All coverage report files are automatically ignored by Git:
+
+#### HTML Reports
+- `htmlcov/` - Main HTML coverage directory
+- `coverage-reports/` - Alternative HTML coverage directory
+
+#### Data Files
+- `.coverage` - Main coverage.py data file
+- `.coverage.*` - Coverage data files with suffixes
+
+#### Report Files
+- `coverage.xml` - XML format (Jenkins, GitLab CI, etc.)
+- `coverage.json` - JSON format (programmatic access)
+- `lcov.info` - LCOV format (VS Code extensions)
+- `coverage.lcov` - Alternative LCOV format
+
+#### Compressed Reports
+- `coverage-report.tar.gz` - Compressed coverage archive
+- `coverage-*.tar.gz` - Pattern for coverage archives
+- `coverage-*.zip` - Pattern for coverage ZIP files
+- `htmlcov.tar.gz` - Compressed HTML coverage
+- `htmlcov.zip` - Zipped HTML coverage
+
+### Viewing Coverage Reports
+
+#### HTML Reports (Best for Development)
+```bash
+# Generate and open HTML report
+./run_tests.sh --coverage
+open htmlcov/index.html     # macOS
+xdg-open htmlcov/index.html # Linux
+start htmlcov/index.html    # Windows
+```
+
+#### Terminal Reports
+```bash
+# Show coverage summary in terminal
+python -m pytest --cov=app --cov-report=term
+
+# Show missing lines in terminal
+python -m pytest --cov=app --cov-report=term-missing
 ```
 
 ### Coverage Targets
@@ -198,6 +237,8 @@ xdg-open htmlcov/index.html  # Linux
 - **API Endpoints**: Target > 95%
 - **Business Logic**: Target > 95%
 - **Error Handling**: Target > 85%
+- **Database Models**: Target > 90%
+- **Utilities**: Target > 85%
 
 ### Coverage Configuration
 
@@ -210,11 +251,61 @@ omit =
     */tests/*
     */migrations/*
     */alembic/*
+    */conftest.py
+    */main.py
 
 [coverage:report]
 show_missing = True
 precision = 2
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[coverage:html]
+directory = htmlcov
+title = FastAPI Demo Coverage Report
 ```
+
+### Coverage Analysis
+
+#### Analyzing Coverage Data
+```bash
+# Generate detailed coverage report
+python -m pytest --cov=app --cov-report=html --cov-report=term-missing
+
+# Check coverage for specific module
+python -m pytest --cov=app.api.orders --cov-report=term-missing
+
+# Generate coverage report with branch coverage
+python -m pytest --cov=app --cov-branch --cov-report=html
+```
+
+#### Coverage Thresholds
+```bash
+# Fail if coverage drops below threshold
+python -m pytest --cov=app --cov-fail-under=90
+
+# Check coverage without running tests (if .coverage exists)
+coverage report --show-missing
+coverage html
+```
+
+### Coverage Best Practices
+
+1. **Regular Monitoring**: Check coverage after each feature
+2. **Quality over Quantity**: Focus on meaningful tests, not just coverage percentage
+3. **Branch Coverage**: Use `--cov-branch` for more thorough coverage
+4. **Exclude Irrelevant Code**: Use `# pragma: no cover` for debug code
+5. **Review Missing Lines**: Use `--cov-report=term-missing` to identify gaps
+6. **Integration Coverage**: Test workflows, not just individual functions
 
 ## Test Categories
 
@@ -366,92 +457,6 @@ test:
         path: coverage.xml
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-#### Services Not Starting
-
-```bash
-# Check Docker status
-docker info
-
-# Check service logs
-docker-compose logs backend
-docker-compose logs database
-
-# Restart services
-docker-compose down
-docker-compose up -d
-```
-
-#### Test Database Issues
-
-```bash
-# Reset test database
-docker-compose down -v
-docker-compose up -d database
-docker-compose exec backend alembic upgrade head
-```
-
-#### Permission Issues
-
-```bash
-# Make script executable
-chmod +x run_tests.sh
-
-# Fix Docker permissions (Linux)
-sudo usermod -aG docker $USER
-```
-
-#### Port Conflicts
-
-```bash
-# Check port usage
-lsof -i :5432  # PostgreSQL
-lsof -i :6379  # Redis
-lsof -i :8000  # FastAPI
-
-# Stop conflicting services
-sudo systemctl stop postgresql
-sudo systemctl stop redis
-```
-
-### Debug Mode
-
-```bash
-# Run tests with debug output
-./run_tests.sh --verbose --keep
-
-# Access running container
-docker-compose exec backend sh
-
-# Check service status
-docker-compose ps
-```
-
-### Performance Issues
-
-```bash
-# Run tests sequentially if parallel execution fails
-./run_tests.sh --sequential
-
-# Increase timeout for slow tests
-./run_tests.sh --timeout 600
-
-# Run specific test subset
-./run_tests.sh --pattern "not slow"
-```
-
-### Memory Issues
-
-```bash
-# Clean up Docker resources
-docker system prune -f
-
-# Increase Docker memory limits
-# Edit Docker Desktop settings or daemon.json
-```
 
 ## Test Maintenance
 
