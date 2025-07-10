@@ -6,6 +6,8 @@ export * from './ActionButton';
 
 // Data Display Components
 export * from './DataList';
+export * from './DataGrid';
+export * from './DataGridToolbar';
 
 // Re-export commonly used Mantine components with consistent naming
 export { 

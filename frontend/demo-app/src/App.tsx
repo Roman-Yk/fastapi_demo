@@ -12,9 +12,9 @@ import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
 import { ThemeProvider, createTheme as createMuiTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Navbar } from './components/Navbar';
-import { OrderFiltersComponent } from './components/OrderFilters';
-import { OrderGrid } from './components/OrderGrid';
+import { Navbar } from './components/layout';
+import { OrderFiltersComponent } from './components/features/orders';
+import { OrderGrid } from './components/features/orders';
 import { mockOrders, filterOrders } from './utils/mockData';
 import { OrderFilters, DateFilterOption } from './types/order';
 
@@ -90,6 +90,28 @@ const AppContent = () => {
     }, 300);
   };
 
+  // Toolbar action handlers
+  const handleRefresh = () => {
+    setLoading(true);
+    // Simulate refresh API call
+    setTimeout(() => {
+      setLoading(false);
+      console.log('Orders refreshed');
+    }, 1000);
+  };
+
+  const handleImport = () => {
+    console.log('Import orders dialog would open here');
+  };
+
+  const handleExport = () => {
+    console.log('Export orders with current filters:', filters);
+  };
+
+  const handleCreateOrder = () => {
+    console.log('Create new order dialog would open here');
+  };
+
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
@@ -112,6 +134,10 @@ const AppContent = () => {
               <OrderGrid
                 orders={filteredOrders}
                 loading={loading}
+                onRefresh={handleRefresh}
+                onImport={handleImport}
+                onExport={handleExport}
+                onCreate={handleCreateOrder}
               />
             </Stack>
           </Container>

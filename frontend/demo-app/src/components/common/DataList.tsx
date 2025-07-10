@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { CreateButton, ExportButton, RefreshButton } from './ActionButton';
 import { SearchField } from './FormField';
-import { IconType } from '@tabler/icons-react';
+import { TablerIconsProps } from '@tabler/icons-react';
 
 interface DataListProps<T> {
   data: T[];
@@ -171,7 +171,7 @@ interface SimpleListItemProps {
   subtitle?: string;
   badge?: { text: string; color?: string };
   actions?: ReactNode;
-  icon?: IconType;
+  icon?: React.FC<TablerIconsProps>;
 }
 
 export const SimpleListItem: React.FC<SimpleListItemProps> = ({

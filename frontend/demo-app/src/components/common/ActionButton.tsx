@@ -5,11 +5,11 @@ import {
   Group, 
   Tooltip 
 } from '@mantine/core';
-import { IconType } from '@tabler/icons-react';
+import { TablerIconsProps } from '@tabler/icons-react';
 
 interface BaseButtonProps {
   label?: string;
-  icon?: IconType;
+  icon?: React.FC<TablerIconsProps>;
   color?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   disabled?: boolean;

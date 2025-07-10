@@ -1,5 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Group, Text } from '@mantine/core';
+import { 
+  Paper,
+  Group,
+  Button,
+  Badge,
+  Switch,
+  ActionIcon,
+  Text,
+  Box,
+  TextInput,
+  Menu,
+  Select,
+  Flex,
+  Divider
+} from '@mantine/core';
 import { 
   IconFilter, 
   IconMapPin, 
@@ -12,22 +25,20 @@ import {
   IconWorld,
   IconBuilding
 } from '@tabler/icons-react';
+import { useState, useEffect } from 'react';
 import { 
-  OrderFilters, 
-  DateFilterOption, 
-  DateFilterLabels, 
-  LocationFilter, 
+  OrderFilters,
+  DateFilterOption,
+  DateFilterLabels,
+  LocationFilter,
   LocationFilterLabels,
-  StatusFilter, 
+  StatusFilter,
   StatusFilterLabels,
-  OrderService, 
+  OrderService,
   OrderServiceLabels,
-  CommodityType, 
-  CommodityLabels 
+  CommodityType,
+  CommodityLabels
 } from '../../../types/order';
-import { FilterBar } from '../../common/FilterBar';
-import { FilterOption } from '../../common/FilterDropdown';
-import { FormField } from '../../common/FormField';
 
 interface OrderFiltersProps {
   filters: OrderFilters;
@@ -45,21 +56,21 @@ export const OrderFiltersComponent = ({
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   useEffect(() => {
-    const active = [];
-    if (filters.locationFilter !== null) active.push('location');
-    if (filters.statusFilter !== null) active.push('status');
-    if (filters.serviceFilter !== null) active.push('service');
-    if (filters.commodityFilter !== null) active.push('commodity');
-    if (filters.priorityFilter !== null) active.push('priority');
-    if (filters.searchText !== '') active.push('search');
-    if (filters.inTerminal) active.push('terminal');
-    setActiveFilters(active);
-  }, [filters]);
+    if (!filters.dateFilter) {
+      onFiltersChange({
+        ...filters,
+        dateFilter: DateFilterOption.TODAY,
+        locationFilter: null,
+        statusFilter: null,
+        inTerminal: false
+      });
+    }
+  }, []);
 
-  const handleDateFilterChange = (option: string) => {
+  const handleDateFilterChange = (option: DateFilterOption) => {
     onFiltersChange({
       ...filters,
-      dateFilter: option as DateFilterOption
+      dateFilter: option
     });
   };
 
@@ -94,7 +105,7 @@ export const OrderFiltersComponent = ({
   const handlePriorityChange = (checked: boolean) => {
     onFiltersChange({
       ...filters,
-      priorityFilter: checked
+      priorityFilter: checked ? true : null
     });
   };
 
@@ -113,64 +124,54 @@ export const OrderFiltersComponent = ({
   };
 
   const addFilter = (filterType: string) => {
-    setActiveFilters([...activeFilters, filterType]);
+    if (!activeFilters.includes(filterType)) {
+      setActiveFilters([...activeFilters, filterType]);
+    }
   };
 
   const removeFilter = (filterType: string) => {
-    const newActiveFilters = activeFilters.filter(f => f !== filterType);
-    setActiveFilters(newActiveFilters);
-    
-    // Reset the filter value
-    const updatedFilters = { ...filters };
+    setActiveFilters(activeFilters.filter(f => f !== filterType));
+    // Clear the filter value when removing
     switch (filterType) {
       case 'location':
-        updatedFilters.locationFilter = null;
+        handleLocationFilterChange(null);
         break;
       case 'status':
-        updatedFilters.statusFilter = null;
+        handleStatusFilterChange(null);
         break;
       case 'service':
-        updatedFilters.serviceFilter = null;
+        handleServiceChange(null);
         break;
       case 'commodity':
-        updatedFilters.commodityFilter = null;
+        handleCommodityChange(null);
         break;
       case 'priority':
-        updatedFilters.priorityFilter = null;
+        handlePriorityChange(false);
         break;
       case 'terminal':
-        updatedFilters.inTerminal = false;
+        handleInTerminalChange(false);
         break;
       case 'search':
-        updatedFilters.searchText = '';
+        handleSearchChange('');
         break;
     }
-    onFiltersChange(updatedFilters);
   };
 
   const clearFilters = () => {
-    setActiveFilters([]);
     onFiltersChange({
-      ...filters,
+      dateFilter: DateFilterOption.TODAY,
       locationFilter: null,
       statusFilter: null,
       serviceFilter: null,
       commodityFilter: null,
       priorityFilter: null,
       searchText: '',
-      inTerminal: false,
+      inTerminal: false
     });
+    setActiveFilters([]);
   };
 
-  // Convert date filter options to common format
-  const dateFilterOptions: CommonDateFilterOption[] = Object.entries(DateFilterLabels).map(([value, label]) => ({
-    value,
-    label,
-    color: 'blue'
-  }));
-
-  // Available filter options
-  const availableFilters: FilterOption[] = [
+  const availableFilters = [
     { value: 'location', label: 'Location', icon: IconMapPin },
     { value: 'status', label: 'Status', icon: IconStatusChange },
     { value: 'service', label: 'Service Type', icon: IconTruck },
@@ -209,133 +210,243 @@ export const OrderFiltersComponent = ({
                           filters.inTerminal ||
                           activeFilters.length > 0;
 
-  // Active filters content
-  const activeFiltersContent = activeFilters.length > 0 ? (
-    <Group gap="md">
-      <Text size="sm" fw={500} c="dimmed">Active Filters:</Text>
-      
-      {activeFilters.includes('location') && (
-        <FormField
-          type="select"
-          value={filters.locationFilter}
-          onChange={handleLocationFilterChange}
-          data={locationOptions}
-          placeholder="Select Location"
-          leftSection={<IconMapPin size={16} />}
-          clearable
-          width={180}
-          onRemove={() => removeFilter('location')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('status') && (
-        <FormField
-          type="select"
-          value={filters.statusFilter}
-          onChange={handleStatusFilterChange}
-          data={statusOptions}
-          placeholder="Select Status"
-          leftSection={<IconStatusChange size={16} />}
-          clearable
-          width={180}
-          onRemove={() => removeFilter('status')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('service') && (
-        <FormField
-          type="select"
-          value={filters.serviceFilter?.toString() || null}
-          onChange={handleServiceChange}
-          data={serviceOptions}
-          placeholder="Service Type"
-          leftSection={<IconTruck size={16} />}
-          clearable
-          width={180}
-          onRemove={() => removeFilter('service')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('commodity') && (
-        <FormField
-          type="select"
-          value={filters.commodityFilter}
-          onChange={handleCommodityChange}
-          data={commodityOptions}
-          placeholder="Commodity"
-          leftSection={<IconBox size={16} />}
-          clearable
-          width={180}
-          onRemove={() => removeFilter('commodity')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('priority') && (
-        <FormField
-          type="switch"
-          checked={filters.priorityFilter === true}
-          onChange={handlePriorityChange}
-          label="Priority Orders Only"
-          color="orange"
-          thumbIcon={filters.priorityFilter === true ? <IconStar size={10} /> : null}
-          onRemove={() => removeFilter('priority')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('terminal') && (
-        <FormField
-          type="switch"
-          checked={filters.inTerminal}
-          onChange={handleInTerminalChange}
-          label="In Terminal"
-          color="green"
-          onRemove={() => removeFilter('terminal')}
-          showRemove
-        />
-      )}
-
-      {activeFilters.includes('search') && (
-        <FormField
-          type="text"
-          value={filters.searchText}
-          onChange={handleSearchChange}
-          placeholder="Search orders..."
-          leftSection={<IconSearch size={16} />}
-          width={250}
-          onRemove={() => removeFilter('search')}
-          showRemove
-        />
-      )}
-    </Group>
-  ) : undefined;
-
   return (
-    <FilterBar
-      dateFilter={{
-        label: "ETA Date:",
-        options: dateFilterOptions,
-        value: filters.dateFilter,
-        onChange: handleDateFilterChange,
-        todayValue: DateFilterOption.TODAY
-      }}
-      additionalFilters={{
-        label: "Add Filter",
-        options: availableFilters,
-        onAdd: addFilter
-      }}
-      activeFilters={activeFiltersContent}
-      summary={{
-        filtered: filteredOrders,
-        total: totalOrders,
-        label: "orders"
-      }}
-      onClearAll={clearFilters}
-      showClearAll={hasActiveFilters}
-    />
+    <Box>
+      {/* Main Filter Bar */}
+      <Paper p="sm" radius="md" withBorder mb="sm">
+        <Flex gap="md" align="center" wrap="wrap">
+          {/* Date Filter Pills */}
+          <Group gap="xs">
+            <Text size="sm" fw={500} c="dimmed">ETA Date:</Text>
+            {Object.entries(DateFilterLabels).map(([value, label]) => (
+              <Button
+                key={value}
+                variant={filters.dateFilter === value ? "filled" : "light"}
+                onClick={() => handleDateFilterChange(value as DateFilterOption)}
+                size="sm"
+                radius="xl"
+                color={filters.dateFilter === value ? 
+                  (value === DateFilterOption.TODAY ? "green" : "blue") : "gray"}
+              >
+                {label}
+              </Button>
+            ))}
+          </Group>
+
+          <Divider orientation="vertical" />
+
+          {/* Add Filter Menu */}
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Button
+                variant="light"
+                leftSection={<IconFilter size={16} />}
+                size="sm"
+                color="gray"
+              >
+                Add Filter
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {availableFilters.map((filter) => (
+                <Menu.Item
+                  key={filter.value}
+                  leftSection={<filter.icon size={16} />}
+                  onClick={() => addFilter(filter.value)}
+                >
+                  {filter.label}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* Quick Actions */}
+          <Group gap="xs" ml="auto">
+            <Badge variant="light" color="blue" size="lg">
+              {filteredOrders} of {totalOrders} orders
+            </Badge>
+            
+            {hasActiveFilters && (
+              <Button
+                variant="subtle"
+                leftSection={<IconFilterOff size={16} />}
+                onClick={clearFilters}
+                size="sm"
+                color="red"
+              >
+                Clear All
+              </Button>
+            )}
+          </Group>
+        </Flex>
+      </Paper>
+
+      {/* Active Filters */}
+      {activeFilters.length > 0 && (
+        <Paper p="sm" radius="md" withBorder mb="sm">
+          <Group gap="md">
+            <Text size="sm" fw={500} c="dimmed">Active Filters:</Text>
+            
+            {activeFilters.includes('location') && (
+              <Group gap="xs">
+                <Select
+                  placeholder="Select Location"
+                  data={locationOptions}
+                  value={filters.locationFilter || null}
+                  onChange={handleLocationFilterChange}
+                  leftSection={<IconMapPin size={16} />}
+                  clearable
+                  size="sm"
+                  w={180}
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('location')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('status') && (
+              <Group gap="xs">
+                <Select
+                  placeholder="Select Status"
+                  data={statusOptions}
+                  value={filters.statusFilter || null}
+                  onChange={handleStatusFilterChange}
+                  leftSection={<IconStatusChange size={16} />}
+                  clearable
+                  size="sm"
+                  w={180}
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('status')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('service') && (
+              <Group gap="xs">
+                <Select
+                  placeholder="Service Type"
+                  data={serviceOptions}
+                  value={filters.serviceFilter?.toString() || null}
+                  onChange={handleServiceChange}
+                  leftSection={<IconTruck size={16} />}
+                  clearable
+                  size="sm"
+                  w={180}
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('service')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('commodity') && (
+              <Group gap="xs">
+                <Select
+                  placeholder="Commodity"
+                  data={commodityOptions}
+                  value={filters.commodityFilter || null}
+                  onChange={handleCommodityChange}
+                  leftSection={<IconBox size={16} />}
+                  clearable
+                  size="sm"
+                  w={180}
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('commodity')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('priority') && (
+              <Group gap="xs">
+                <Switch
+                  label="Priority Orders Only"
+                  checked={filters.priorityFilter === true}
+                  onChange={(event) => handlePriorityChange(event.currentTarget.checked)}
+                  color="orange"
+                  size="sm"
+                  thumbIcon={
+                    filters.priorityFilter === true ? (
+                      <IconStar size={10} />
+                    ) : null
+                  }
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('priority')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('terminal') && (
+              <Group gap="xs">
+                <Switch
+                  label="In Terminal"
+                  checked={filters.inTerminal}
+                  onChange={(event) => handleInTerminalChange(event.currentTarget.checked)}
+                  color="green"
+                  size="sm"
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('terminal')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {activeFilters.includes('search') && (
+              <Group gap="xs">
+                <TextInput
+                  placeholder="Search orders..."
+                  value={filters.searchText}
+                  onChange={(event) => handleSearchChange(event.currentTarget.value)}
+                  leftSection={<IconSearch size={16} />}
+                  size="sm"
+                  w={250}
+                />
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  size="sm"
+                  onClick={() => removeFilter('search')}
+                >
+                  <IconFilterOff size={14} />
+                </ActionIcon>
+              </Group>
+            )}
+          </Group>
+        </Paper>
+      )}
+    </Box>
   );
 }; 

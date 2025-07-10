@@ -4,13 +4,10 @@ import {
   Select, 
   Switch, 
   NumberInput,
-  Textarea,
-  DateInput,
-  Group,
-  Text,
-  Box
+  Textarea
 } from '@mantine/core';
-import { IconType } from '@tabler/icons-react';
+import { DateInput } from '@mantine/dates';
+import { TablerIconsProps } from '@tabler/icons-react';
 
 interface BaseFieldProps {
   label?: string;
@@ -19,7 +16,7 @@ interface BaseFieldProps {
   error?: string;
   description?: string;
   disabled?: boolean;
-  icon?: IconType;
+  icon?: React.FC<TablerIconsProps>;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
@@ -42,7 +39,7 @@ interface SelectFieldProps extends BaseFieldProps {
 interface NumberFieldProps extends BaseFieldProps {
   type: 'number';
   value: number | '';
-  onChange: (value: number | '') => void;
+  onChange: (value: string | number) => void;
   min?: number;
   max?: number;
   step?: number;
