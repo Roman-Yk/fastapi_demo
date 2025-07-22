@@ -1,40 +1,41 @@
 {
-  "name": "demo-app-v2",
+  "name": "fastapi-demo-frontend-v2",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --ext js,jsx --fix"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
     "@mantine/core": "^7.12.2",
     "@mantine/dates": "^7.12.2",
     "@mantine/form": "^7.12.2",
     "@mantine/hooks": "^7.12.2",
     "@mantine/notifications": "^7.12.2",
-    "@mui/icons-material": "^5.15.21",
-    "@mui/material": "^5.15.21",
-    "@mui/x-data-grid": "^7.12.1",
-    "@tabler/icons-react": "^3.11.0",
-    "dayjs": "^1.11.12",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.0.1",
-    "uuid": "^10.0.0"
+    "@mui/icons-material": "^5.15.0",
+    "@mui/material": "^5.15.0",
+    "@mui/x-data-grid": "^6.18.0",
+    "@tabler/icons-react": "^2.44.0",
+    "dayjs": "^1.11.10",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.6.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.34.3",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
-    "vite": "^5.3.4"
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "vite": "^5.0.8"
   }
 }
