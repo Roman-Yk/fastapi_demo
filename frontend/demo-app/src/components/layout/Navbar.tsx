@@ -1,29 +1,21 @@
 import { 
   AppShell,
   Group,
-  Text,
   Title,
   ActionIcon,
   useMantineColorScheme,
-  rem,
-  Button,
-  Avatar,
-  Menu,
-  UnstyledButton,
   Box
 } from '@mantine/core';
 import { 
   IconSun, 
   IconMoon, 
-  IconTruck,
-  IconUser,
-  IconSettings,
-  IconLogout,
-  IconChevronDown
+  IconTruck
 } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const navigate = useNavigate();
 
   return (
     <AppShell.Header h={84}>
@@ -39,7 +31,9 @@ export const Navbar = () => {
               height: 40,
               borderRadius: 8,
               backgroundColor: 'var(--mantine-color-blue-6)',
+              cursor: 'pointer',
             }}
+            onClick={() => navigate('/')}
           >
             <IconTruck size={24} color="white" />
           </Box>
@@ -50,13 +44,17 @@ export const Navbar = () => {
               style={{ 
                 lineHeight: 1.2,
                 marginBottom: 2,
-                color: 'var(--mantine-color-text)'
+                color: 'var(--mantine-color-text)',
+                cursor: 'pointer',
               }}
+              onClick={() => navigate('/')}
             >
               FastAPI Demo
             </Title>
           </div>
         </Group>
+
+
 
         {/* Right Side Navigation */}
         <Group gap="sm">         
@@ -78,8 +76,6 @@ export const Navbar = () => {
             )}
           </ActionIcon>
 
-
-        
         </Group>
       </Group>
     </AppShell.Header>

@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { 
   MantineProvider, 
   AppShell, 
-  Container, 
-  Stack,
   createTheme,
   MantineColorsTuple,
   useMantineColorScheme
@@ -13,10 +12,7 @@ import { Notifications } from '@mantine/notifications';
 import { ThemeProvider, createTheme as createMuiTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Navbar } from './components/layout';
-import { OrderFiltersComponent } from './components/features/orders';
-import { OrderGrid } from './components/features/orders';
-import { mockOrders, filterOrders } from './utils/mockData';
-import { OrderFilters, DateFilterOption } from './types/order';
+import { AppRoutes } from './components/common';
 
 // Custom color palette
 const customBlue: MantineColorsTuple = [
@@ -62,56 +58,6 @@ const AppContent = () => {
     },
   }), [colorScheme]);
 
-  const [filters, setFilters] = useState<OrderFilters>({
-    dateFilter: DateFilterOption.TODAY, // Default to today
-    locationFilter: null,
-    statusFilter: null,
-    serviceFilter: null,
-    commodityFilter: null,
-    priorityFilter: null,
-    searchText: '',
-    inTerminal: false,
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  // Filter orders based on current filters
-  const filteredOrders = useMemo(() => {
-    return filterOrders(mockOrders, filters);
-  }, [filters]);
-
-  const handleFiltersChange = (newFilters: OrderFilters) => {
-    setLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setFilters(newFilters);
-      setLoading(false);
-    }, 300);
-  };
-
-  // Toolbar action handlers
-  const handleRefresh = () => {
-    setLoading(true);
-    // Simulate refresh API call
-    setTimeout(() => {
-      setLoading(false);
-      console.log('Orders refreshed');
-    }, 1000);
-  };
-
-  const handleImport = () => {
-    console.log('Import orders dialog would open here');
-  };
-
-  const handleExport = () => {
-    console.log('Export orders with current filters:', filters);
-  };
-
-  const handleCreateOrder = () => {
-    console.log('Create new order dialog would open here');
-  };
-
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
@@ -122,25 +68,7 @@ const AppContent = () => {
         <Navbar />
         
         <AppShell.Main>
-          <Container size="100%" px="xl" py="sm">
-            <Stack gap="sm">
-              <OrderFiltersComponent
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                totalOrders={mockOrders.length}
-                filteredOrders={filteredOrders.length}
-              />
-              
-              <OrderGrid
-                orders={filteredOrders}
-                loading={loading}
-                onRefresh={handleRefresh}
-                onImport={handleImport}
-                onExport={handleExport}
-                onCreate={handleCreateOrder}
-              />
-            </Stack>
-          </Container>
+          <AppRoutes />
         </AppShell.Main>
       </AppShell>
     </ThemeProvider>
@@ -149,12 +77,14 @@ const AppContent = () => {
 
 function App() {
   return (
-    <MantineProvider theme={mantineTheme}>
-      <DatesProvider settings={{ firstDayOfWeek: 1 }}>
-        <Notifications />
-        <AppContent />
-      </DatesProvider>
-    </MantineProvider>
+    <BrowserRouter>
+      <MantineProvider theme={mantineTheme}>
+        <DatesProvider settings={{ firstDayOfWeek: 1 }}>
+          <Notifications />
+          <AppContent />
+        </DatesProvider>
+      </MantineProvider>
+    </BrowserRouter>
   );
 }
 

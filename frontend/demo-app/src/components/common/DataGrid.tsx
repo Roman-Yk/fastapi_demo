@@ -204,7 +204,9 @@ export const DataGrid = <T extends GridValidRowModel = GridValidRowModel>({
         disableColumnFilter={!filterable}
         disableColumnSelector={!sortable}
         disableDensitySelector={false}
+        disableColumnMenu={true}
         disableRowSelectionOnClick={!selectable}
+        sortingOrder={['asc', 'desc']}
         
         // Pagination
         pagination={pageable}

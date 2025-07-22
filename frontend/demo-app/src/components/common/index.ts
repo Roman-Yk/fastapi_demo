@@ -9,6 +9,9 @@ export * from './DataList';
 export * from './DataGrid';
 export * from './DataGridToolbar';
 
+// Routing Components
+export * from './AppRoutes';
+
 // Re-export commonly used Mantine components with consistent naming
 export { 
   Paper as Card,

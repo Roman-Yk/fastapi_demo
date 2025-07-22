@@ -5,12 +5,14 @@ import {
   Text,
   Chip,
   Stack,
-  Tooltip
+  Tooltip,
+  ActionIcon
 } from '@mantine/core';
 import { 
   IconUser, 
   IconTruck, 
-  IconStar 
+  IconStar,
+  IconEdit
 } from '@tabler/icons-react';
 import { 
   Order, 
@@ -27,10 +29,30 @@ interface OrderGridProps {
   onImport?: () => void;
   onExport?: () => void;
   onCreate?: () => void;
+  onEdit?: (orderId: string) => void;
 }
 
 // Order grid column definitions
-const createOrderColumns = (): DataGridColumn<Order>[] => {
+const createOrderColumns = (onEdit?: (orderId: string) => void): DataGridColumn<Order>[] => {
+  const renderActions = (params: GridRenderCellParams<Order>) => {
+    const order = params.row;
+    return (
+      <Group gap="xs">
+        {onEdit && (
+          <ActionIcon
+            variant="subtle"
+            color="blue"
+            size="sm"
+            onClick={() => onEdit(order.reference)}
+            title="Edit Order"
+          >
+            <IconEdit size={14} />
+          </ActionIcon>
+        )}
+      </Group>
+    );
+  };
+
   const renderPriority = (params: GridRenderCellParams<Order>) => {
     const order = params.row;
     return order.priority ? (
@@ -127,6 +149,14 @@ const createOrderColumns = (): DataGridColumn<Order>[] => {
 
   return [
     {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 80,
+      renderCell: renderActions,
+      sortable: false,
+      filterable: false
+    },
+    {
       field: 'priority',
       headerName: '',
       width: 60,
@@ -216,9 +246,10 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
   onRefresh, 
   onImport, 
   onExport, 
-  onCreate 
+  onCreate,
+  onEdit
 }) => {
-  const columns = createOrderColumns();
+  const columns = createOrderColumns(onEdit);
   
   return (
     <DataGrid<Order>
