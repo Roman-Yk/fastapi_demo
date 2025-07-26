@@ -87,7 +87,7 @@ export enum DateFilterOption {
   THIS_WEEK = 'this_week',
   THIS_MONTH = 'this_month',
   LAST_WEEK = 'last_week',
-  ALL = 'all'
+  ALL = 'All'
 }
 
 export const DateFilterLabels = {
@@ -104,7 +104,7 @@ export const DateFilterLabels = {
 export enum LocationFilter {
   OSLO = 'oslo',
   WSC = 'wsc',
-  ALL = 'all'
+  ALL = 'All'
 }
 
 export const LocationFilterLabels = {

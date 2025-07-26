@@ -49,7 +49,7 @@ export const DateFilterOption = {
   THIS_WEEK: 'thisWeek',
   NEXT_WEEK: 'nextWeek',
   THIS_MONTH: 'thisMonth',
-  ALL: 'all',
+  ALL: 'All',
 };
 
 export const DateFilterLabels = {
@@ -58,7 +58,7 @@ export const DateFilterLabels = {
   [DateFilterOption.THIS_WEEK]: 'This Week',
   [DateFilterOption.NEXT_WEEK]: 'Next Week',
   [DateFilterOption.THIS_MONTH]: 'This Month',
-  [DateFilterOption.ALL]: 'all',
+  [DateFilterOption.ALL]: 'All',
 };
 
 // Location Filters

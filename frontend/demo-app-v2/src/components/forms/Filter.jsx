@@ -1,6 +1,6 @@
-import { useState, Children, cloneElement } from 'react';
-import PropTypes from 'prop-types';
-import { 
+import { useState, Children, cloneElement, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import {
   Paper,
   Group,
   Button,
@@ -10,21 +10,25 @@ import {
   Box,
   Menu,
   Flex,
-  Divider
-} from '@mantine/core';
-import { 
-  IconFilter, 
-  IconFilterOff
-} from '@tabler/icons-react';
+  Divider,
+} from "@mantine/core";
+import { IconFilter, IconFilterOff } from "@tabler/icons-react";
 
-export const Filter = ({ 
+export const Filter = ({
   children,
-  filters, 
-  onFiltersChange, 
-  totalRecords, 
-  filteredRecords 
+  filters,
+  onFiltersChange,
+  totalRecords,
+  filteredRecords,
 }) => {
   const [visibleFilters, setVisibleFilters] = useState([]);
+
+  // Capture default filters only once on mount to later not show wrong clear filters button
+  const defaultFiltersRef = useRef(null);
+  if (defaultFiltersRef.current === null) {
+    defaultFiltersRef.current = { ...filters };
+  }
+  const defaultFilters = defaultFiltersRef.current;
 
   // Generic filter change handler
   const handleFilterChange = (source, value) => {
@@ -36,8 +40,12 @@ export const Filter = ({
 
   // Get always-on and optional filter children
   const childrenArray = Children.toArray(children);
-  const alwaysOnFilters = childrenArray.filter(child => child.props?.alwaysOn);
-  const optionalFilters = childrenArray.filter(child => !child.props?.alwaysOn);
+  const alwaysOnFilters = childrenArray.filter(
+    (child) => child.props?.alwaysOn
+  );
+  const optionalFilters = childrenArray.filter(
+    (child) => !child.props?.alwaysOn
+  );
 
   // Add filter to visible list
   const addFilter = (filterIndex) => {
@@ -50,7 +58,7 @@ export const Filter = ({
   const removeFilter = (filterIndex) => {
     const filter = optionalFilters[filterIndex];
     if (filter) {
-      setVisibleFilters(visibleFilters.filter(i => i !== filterIndex));
+      setVisibleFilters(visibleFilters.filter((i) => i !== filterIndex));
       handleFilterChange(filter.props.source, null);
     }
   };
@@ -58,10 +66,11 @@ export const Filter = ({
   // Clear all filters
   const clearAllFilters = () => {
     const clearedFilters = {};
-    childrenArray.forEach(child => {
+    childrenArray.forEach((child) => {
       if (child.props?.source) {
-        clearedFilters[child.props.source] = child.props.alwaysOn ? 
-          (child.props.defaultValue ?? null) : null;
+        clearedFilters[child.props.source] = child.props.alwaysOn
+          ? child.props.defaultValue ?? null
+          : null;
       }
     });
     onFiltersChange(clearedFilters);
@@ -70,69 +79,67 @@ export const Filter = ({
 
   // Count active filters
   const getActiveFiltersCount = () => {
-    return Object.values(filters).filter(value => 
-      value !== null && value !== undefined && value !== ''
-    ).length;
+    let count = 0;
+    for(const [key, value] of Object.entries(filters)) {
+      if (defaultFilters && defaultFilters[key] === value) continue;
+      if (value !== null && value !== undefined && value !== "") {
+        count++;
+      }
+    }
+    return count;
   };
 
   const activeFiltersCount = getActiveFiltersCount();
   const hasActiveFilters = activeFiltersCount > 0;
 
+  // Reset visible filters if no active filters (handles page refresh)
+  useEffect(() => {
+    if (!hasActiveFilters && visibleFilters.length > 0) {
+      setVisibleFilters([]);
+    }
+  }, [hasActiveFilters, visibleFilters.length]);
+
   return (
     <Paper withBorder p="md">
       <Flex direction="column" gap="sm">
-        {/* Header with counts and clear all */}
-        <Group justify="space-between" align="center">
-          <Group gap="sm">
-            <Text size="sm" fw={500}>
-              Showing {filteredRecords} of {totalRecords} records
-            </Text>
-            {hasActiveFilters && (
-              <Badge variant="filled" color="blue" size="sm">
-                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-          </Group>
-          
-          {hasActiveFilters && (
-            <Button
-              variant="subtle"
-              color="red"
-              size="sm"
-              leftSection={<IconFilterOff size={14} />}
-              onClick={clearAllFilters}
-            >
-              Clear All
-            </Button>
-          )}
-        </Group>
-
-        <Divider />
-
         {/* Always-on filters */}
         {alwaysOnFilters.length > 0 && (
           <Group gap="md" wrap="wrap" align="end">
-            {alwaysOnFilters.map((child, index) => 
+            {alwaysOnFilters.map((child, index) =>
               cloneElement(child, {
                 key: `always-${index}`,
                 value: filters[child.props.source],
-                onChange: (value) => handleFilterChange(child.props.source, value),
+                onChange: (value) =>
+                  handleFilterChange(child.props.source, value),
               })
             )}
-            
+
             {/* Add Filter dropdown */}
             {optionalFilters.length > 0 && (
               <Menu shadow="md" width={200}>
-                <Menu.Target>
-                  <Button
-                    variant="light"
-                    color="gray"
-                    size="sm"
-                    leftSection={<IconFilter size={16} />}
-                  >
-                    Add Filter
-                  </Button>
-                </Menu.Target>
+                <Group>
+                  <Menu.Target>
+                    <Button
+                      variant="light"
+                      color="gray"
+                      size="sm"
+                      leftSection={<IconFilter size={16} />}
+                    >
+                      Add Filter
+                    </Button>
+                  </Menu.Target>
+                  {hasActiveFilters && (
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="sm"
+                      leftSection={<IconFilterOff size={14} />}
+                      onClick={clearAllFilters}
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </Group>
                 <Menu.Dropdown>
                   {optionalFilters.map((child, index) => (
                     <Menu.Item
@@ -158,7 +165,8 @@ export const Filter = ({
                 <Group key={filterIndex} gap="xs" align="end">
                   {cloneElement(child, {
                     value: filters[child.props.source],
-                    onChange: (value) => handleFilterChange(child.props.source, value),
+                    onChange: (value) =>
+                      handleFilterChange(child.props.source, value),
                   })}
                   <ActionIcon
                     variant="subtle"
@@ -173,7 +181,6 @@ export const Filter = ({
             })}
           </Group>
         )}
-
       </Flex>
     </Paper>
   );

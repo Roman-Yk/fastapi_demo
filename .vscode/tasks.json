@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Demo App V2 Dev Server",
+			"type": "shell",
+			"command": "cd /home/roma/job_act/test_apps/fastapi_demo/frontend/demo-app-v2 && npm install && npm run dev",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

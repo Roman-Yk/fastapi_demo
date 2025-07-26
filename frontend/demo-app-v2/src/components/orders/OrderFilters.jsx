@@ -5,7 +5,6 @@ import {
   LocationFilterField, 
   StatusFilterField, 
   ServiceFilterField, 
-  TextFilterField, 
   SwitchFilterField 
 } from '../forms/filters';
 
@@ -25,10 +24,9 @@ export const OrderFilters = ({
       {/* Always-on filters */}
       <DateFilterField 
         source="dateFilter" 
+        label=""
         alwaysOn 
-        label="ETA Date"
       />
-
       {/* Optional filters that can be added/removed */}
       <LocationFilterField 
         source="locationFilter" 
@@ -44,13 +42,6 @@ export const OrderFilters = ({
       <ServiceFilterField 
         source="serviceFilter" 
         label="Service Type"
-      />
-
-      <TextFilterField 
-        source="searchText" 
-        label="Search"
-        placeholder="Search by reference, driver, truck..."
-        alwaysOn
       />
 
       <SwitchFilterField 

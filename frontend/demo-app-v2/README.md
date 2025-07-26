@@ -127,12 +127,6 @@ const MyFilters = ({ filters, onFiltersChange }) => {
     >
       <Grid>
         <Grid.Col span={6}>
-          <SearchField
-            value={filters.search}
-            onChange={(value) => onFiltersChange({ ...filters, search: value })}
-          />
-        </Grid.Col>
-        <Grid.Col span={6}>
           <SelectField
             value={filters.status}
             onChange={(value) => onFiltersChange({ ...filters, status: value })}

@@ -11,7 +11,6 @@ import {
   Flex
 } from '@mantine/core';
 import { CreateButton, ExportButton, RefreshButton } from './ActionButton';
-import { SearchField } from './FormField';
 import { TablerIconsProps } from '@tabler/icons-react';
 
 interface DataListProps<T> {
@@ -107,15 +106,7 @@ export const DataList = <T,>({
       {/* Filters and Search */}
       <Paper p="md" withBorder>
         <Flex gap="md" align="center" wrap="wrap">
-          {searchable && (
-            <SearchField
-              value={localSearchValue}
-              onChange={handleSearchChange}
-              placeholder={searchPlaceholder}
-              size="sm"
-              style={{ minWidth: 250 }}
-            />
-          )}
+          
           
           {renderFilters?.()}
           

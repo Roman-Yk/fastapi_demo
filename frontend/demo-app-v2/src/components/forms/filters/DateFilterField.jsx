@@ -1,14 +1,17 @@
-import PropTypes from 'prop-types';
-import { Group, Button, Box, Text } from '@mantine/core';
-import { DateFilterOption, DateFilterLabels } from '../../../constants/orderConstants';
+import PropTypes from "prop-types";
+import { Group, Button, Box, Text } from "@mantine/core";
+import {
+  DateFilterOption,
+  DateFilterLabels,
+} from "../../../constants/orderConstants";
 
-export const DateFilterField = ({ 
-  source, 
-  value, 
-  onChange, 
+export const DateFilterField = ({
+  source,
+  value,
+  onChange,
   alwaysOn = false,
   defaultValue = DateFilterOption.TODAY,
-  label = 'Date Filter'
+  label = "Date Filter",
 }) => {
   const currentValue = value || defaultValue;
 
@@ -17,22 +20,40 @@ export const DateFilterField = ({
   };
 
   return (
-    <Box>
-      <Text size="sm" fw={500} mb="xs">{label}</Text>
-      <Group gap="xs">
-        {Object.entries(DateFilterLabels).map(([optionValue, label]) => (
-          <Button
-            key={optionValue}
-            variant={currentValue === optionValue ? 'filled' : 'light'}
-            color={currentValue === optionValue ? 'green' : 'gray'}
-            size="sm"
-            onClick={() => handleChange(optionValue)}
-          >
-            {label}
-          </Button>
-        ))}
-      </Group>
+  <Box>
+    <Text size="sm" fw={500} mb="xs">
+      {label}
+    </Text>
+    <Box style={{ display: 'inline-flex', border: '1px solid #ccc', borderRadius: 999 }}>
+      {Object.entries(DateFilterLabels).map(
+        ([optionValue, label], index, arr) => {
+          const isFirst = index === 0;
+          const isLast = index === arr.length - 1;
+
+          return (
+            <Button
+              key={optionValue}
+              variant={currentValue === optionValue ? "filled" : "default"}
+              color={currentValue === optionValue ? "green" : "gray"}
+              size="sm"
+              radius={0}
+              style={{
+                border: 'none', // Remove Mantine's internal border
+                borderLeft: isFirst ? 'none' : '1px solid #ccc', // only inner lines
+                borderTopLeftRadius: isFirst ? 999 : 0,
+                borderBottomLeftRadius: isFirst ? 999 : 0,
+                borderTopRightRadius: isLast ? 999 : 0,
+                borderBottomRightRadius: isLast ? 999 : 0,
+              }}
+              onClick={() => handleChange(optionValue)}
+            >
+              {label}
+            </Button>
+          );
+        }
+      )}
     </Box>
+  </Box>
   );
 };
 

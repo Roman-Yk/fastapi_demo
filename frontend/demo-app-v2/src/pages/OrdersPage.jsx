@@ -15,7 +15,7 @@ export const OrdersPage = () => {
     commodityFilter: null,
     priorityFilter: null,
     searchText: '',
-    inTerminal: false,
+    inTerminal: null,
   });
 
   const [loading, setLoading] = useState(false);
