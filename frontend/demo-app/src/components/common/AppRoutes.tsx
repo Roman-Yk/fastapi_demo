@@ -1,15 +1,15 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { 
-  OrdersPage, 
+  OrdersPage,
   CreateOrderPage, 
-  EditOrderPage 
+  EditOrderPage
 } from '../../pages';
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Orders Routes */}
+      {/* Orders Routes - Now using react-admin style as default */}
       <Route path="/" element={<OrdersPage />} />
       <Route path="/orders" element={<Navigate to="/" replace />} />
       <Route path="/orders/create" element={<CreateOrderPage />} />

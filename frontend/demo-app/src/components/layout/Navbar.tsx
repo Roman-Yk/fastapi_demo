@@ -57,8 +57,7 @@ export const Navbar = () => {
 
 
         {/* Right Side Navigation */}
-        <Group gap="sm">         
-
+        <Group gap="sm">
           {/* Theme Toggle */}
           <ActionIcon
             variant="default"
