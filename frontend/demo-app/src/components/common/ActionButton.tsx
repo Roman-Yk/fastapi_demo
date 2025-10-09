@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   Button, 
   ActionIcon, 
-  Group, 
   Tooltip 
 } from '@mantine/core';
 import { TablerIconsProps } from '@tabler/icons-react';

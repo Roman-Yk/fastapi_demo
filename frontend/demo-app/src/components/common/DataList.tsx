@@ -6,8 +6,6 @@ import {
   Paper, 
   Badge, 
   Pagination,
-  Box,
-  Divider,
   Flex
 } from '@mantine/core';
 import { CreateButton, ExportButton, RefreshButton } from './ActionButton';

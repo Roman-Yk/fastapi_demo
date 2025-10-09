@@ -1,4 +1,4 @@
 // Orders Pages
-export * from './OrdersAdminPage';
+export * from './OrdersPage';
 export * from './CreateOrderPage';
 export * from './EditOrderPage'; 

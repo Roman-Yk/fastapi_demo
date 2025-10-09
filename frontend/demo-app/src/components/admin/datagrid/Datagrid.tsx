@@ -10,19 +10,10 @@ import {
   GridValidRowModel
 } from '@mui/x-data-grid';
 import { Paper, Stack, Text } from '@mantine/core';
-import { DataGridToolbar } from '../../common/DataGridToolbar';
+import { DatagridToolbar, ToolbarAction } from './DatagridToolbar';
 import { FieldProps } from '../fields';
 
-export interface DatagridToolbarAction {
-  key: string;
-  label: string;
-  icon: React.FC<any>;
-  variant?: 'filled' | 'light' | 'outline' | 'default' | 'subtle';
-  color?: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-}
+export interface DatagridToolbarAction extends ToolbarAction {}
 
 export interface DatagridProps<T extends GridValidRowModel = GridValidRowModel> {
   // Data
@@ -179,7 +170,7 @@ export const Datagrid = <T extends GridValidRowModel = GridValidRowModel>({
   
   // Build toolbar component
   const CustomToolbar = showToolbar ? () => (
-    <DataGridToolbar
+    <DatagridToolbar
       actions={toolbarActions}
       onRefresh={onRefresh}
       onImport={onImport}
