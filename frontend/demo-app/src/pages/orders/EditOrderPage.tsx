@@ -5,91 +5,223 @@ import {
   Text, 
   Stack, 
   Button, 
+  Switch, 
   Group,
-  Box
+  Box,
+  Paper
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconDeviceFloppy, IconTrash } from '@tabler/icons-react';
-import { CommodityType, CommodityLabels, Order } from '../../types/order';
+import { IconArrowLeft, IconDeviceFloppy, IconTrash, IconEdit } from '@tabler/icons-react';
+import { OrderService, CommodityType, OrderServiceLabels, CommodityLabels } from '../../types/order';
 import ApiService from '../../services/apiService';
 import { 
-  Form, 
   Grid, 
   GridCol, 
   GroupGrid, 
   TextField, 
-  SelectField
+  SelectField, 
+  TimePicker 
 } from '../../components/admin/forms';
 
 interface EditOrderForm {
+  reference: string;
+  service: OrderService | null;
+  eta_date: Date | null;
+  eta_time: string;
+  etd_date: Date | null;
+  etd_time: string;
   commodity: CommodityType | null;
   pallets: string | number;
   boxes: string | number;
   kilos: string | number;
+  notes: string;
+  priority: boolean;
+  terminal_id: string;
+  // ETA fields - ID or manual, not both
   eta_driver_id: string;
+  eta_truck_id: string;
   eta_trailer_id: string;
-  etd_driver: string;
-  etd_driver_phone: string;
-  etd_truck: string;
-  etd_trailer: string;
+  eta_driver: string;      // Manual driver name
+  eta_driver_phone: string; // Manual driver phone
+  eta_truck: string;       // Manual truck name
+  eta_trailer: string;     // Manual trailer name
+  // ETD fields - ID or manual, not both
+  etd_driver_id: string;
+  etd_truck_id: string;
+  etd_trailer_id: string;
+  etd_driver: string;      // Manual driver name
+  etd_driver_phone: string; // Manual driver phone
+  etd_truck: string;       // Manual truck name
+  etd_trailer: string;     // Manual trailer name
 }
-
-// Mock data - replace with actual API calls
-const mockDrivers = [
-  { value: '1', label: 'John Doe', phone: '+311111111111' },
-  { value: '2', label: 'Jane Smith', phone: '+312222222222' },
-  { value: '3', label: 'Mike Johnson', phone: '+313333333333' },
-];
-
-const mockTrailers = [
-  { value: '1', label: 'Trailer ABC-123', truck: 'Volvo FH16' },
-  { value: '2', label: 'Trailer DEF-456', truck: 'Scania R450' },
-  { value: '3', label: 'Trailer GHI-789', truck: 'Mercedes Actros' },
-];
 
 export const EditOrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { orderId } = useParams<{ orderId: string }>();
   
+  // Form state
   const [form, setForm] = useState<EditOrderForm>({
+    priority: false,
+    reference: '',
+    service: null,
+    eta_date: null,
+    eta_time: '',
+    etd_date: null,
+    etd_time: '',
     commodity: null,
     pallets: '',
     boxes: '',
     kilos: '',
+    notes: '',
+    terminal_id: '',
+    // ETA fields
     eta_driver_id: '',
+    eta_truck_id: '',
     eta_trailer_id: '',
+    eta_driver: '',
+    eta_driver_phone: '',
+    eta_truck: '',
+    eta_trailer: '',
+    // ETD fields
+    etd_driver_id: '',
+    etd_truck_id: '',
+    etd_trailer_id: '',
     etd_driver: '',
     etd_driver_phone: '',
     etd_truck: '',
-    etd_trailer: '',
+    etd_trailer: ''
   });
 
-  // Load order data from API
+  const [terminals, setTerminals] = useState<Array<{value: string, label: string}>>([]);
+  const [drivers, setDrivers] = useState<Array<{value: string, label: string, phone: string}>>([]);
+  const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
+  const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
+  const [loading, setLoading] = useState(true);
+  const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
+  const [etdDriverManualMode, setEtdDriverManualMode] = useState(false);
+  const [etaTruckManualMode, setEtaTruckManualMode] = useState(false);
+  const [etdTruckManualMode, setEtdTruckManualMode] = useState(false);
+  const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
+  const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
+
+  // Load terminals and order data from API
   useEffect(() => {
-    const loadOrder = async () => {
-      if (orderId) {
-        try {
-          const order = await ApiService.getOrder(orderId);
+    const loadData = async () => {
+      try {
+        const [orderData, terminalsData, driversData, trucksData, trailersData] = await Promise.all([
+          orderId ? ApiService.getOrder(orderId) : null,
+          ApiService.getTerminals(),
+          ApiService.getDrivers(),
+          ApiService.getTrucks(),
+          ApiService.getTrailers()
+        ]);
+        
+        const terminalOptions = terminalsData.map(terminal => ({
+          value: terminal.id,
+          label: terminal.name
+        }));
+        setTerminals(terminalOptions);
+        
+        const driverOptions = [
+          { value: '', label: '-- Select Driver --', phone: '' },
+          ...driversData.map(driver => ({
+            value: driver.id,
+            label: driver.name,
+            phone: driver.phone || ''
+          }))
+        ];
+        setDrivers(driverOptions);
+        
+        const truckOptions = [
+          { value: '', label: '-- Select Truck --' },
+          ...trucksData.map(truck => ({
+            value: truck.id,
+            label: `${truck.make || ''} ${truck.model || ''}`.trim() || truck.truck_number || truck.license_plate || truck.id
+          }))
+        ];
+        setTrucks(truckOptions);
+        
+        const trailerOptions = [
+          { value: '', label: '-- Select Trailer --' },
+          ...trailersData.map(trailer => ({
+            value: trailer.id,
+            label: trailer.trailer_number || trailer.id
+          }))
+        ];
+        setTrailers(trailerOptions);
+
+        // If editing existing order, populate form
+        if (orderData) {
           setForm({
-            commodity: order.commodity,
-            pallets: order.pallets || '',
-            boxes: order.boxes || '',
-            kilos: order.kilos || '',
-            eta_driver_id: order.eta_driver_id || '',
-            eta_trailer_id: order.eta_trailer_id || '',
-            etd_driver: order.etd_driver || '',
-            etd_driver_phone: order.etd_driver_phone || '',
-            etd_truck: order.etd_truck || '',
-            etd_trailer: order.etd_trailer || '',
+            reference: orderData.reference || '',
+            service: orderData.service || null,
+            eta_date: orderData.eta_date ? new Date(orderData.eta_date) : null,
+            eta_time: orderData.eta_time || '',
+            etd_date: orderData.etd_date ? new Date(orderData.etd_date) : null,
+            etd_time: orderData.etd_time || '',
+            commodity: orderData.commodity || null,
+            pallets: orderData.pallets || '',
+            boxes: orderData.boxes || '',
+            kilos: orderData.kilos || '',
+            notes: orderData.notes || '',
+            priority: orderData.priority || false,
+            terminal_id: orderData.terminal_id || '',
+            // ETA fields
+            eta_driver_id: orderData.eta_driver_id || '',
+            eta_truck_id: orderData.eta_truck_id || '',
+            eta_trailer_id: orderData.eta_trailer_id || '',
+            eta_driver: orderData.eta_driver || '',
+            eta_driver_phone: orderData.eta_driver_phone || '',
+            eta_truck: orderData.eta_truck || '',
+            eta_trailer: orderData.eta_trailer || '',
+            // ETD fields
+            etd_driver_id: orderData.etd_driver_id || '',
+            etd_truck_id: orderData.etd_truck_id || '',
+            etd_trailer_id: orderData.etd_trailer_id || '',
+            etd_driver: orderData.etd_driver || '',
+            etd_driver_phone: orderData.etd_driver_phone || '',
+            etd_truck: orderData.etd_truck || '',
+            etd_trailer: orderData.etd_trailer || '',
           });
-        } catch (error) {
-          console.error('Failed to load order:', error);
-          // TODO: Show error notification
+
+          // Set manual mode based on whether manual fields have data
+          setEtaDriverManualMode(!!(orderData.eta_driver || orderData.eta_driver_phone));
+          setEtdDriverManualMode(!!(orderData.etd_driver || orderData.etd_driver_phone));
+          setEtaTruckManualMode(!!orderData.eta_truck);
+          setEtdTruckManualMode(!!orderData.etd_truck);
+          setEtaTrailerManualMode(!!orderData.eta_trailer);
+          setEtdTrailerManualMode(!!orderData.etd_trailer);
         }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        // Fallback to default options
+        setTerminals([
+          { value: 'dc170a0a-a896-411e-9b5a-f466d834ec77', label: 'Terminal 1' },
+          { value: '004f7daa-50dc-48f4-acb5-9dfe69b2e92c', label: 'Terminal 2' },
+          { value: '0f74eb29-4dd7-4139-8718-db7eef530dbf', label: 'Terminal 3' }
+        ]);
+        setDrivers([
+          { value: '', label: '-- Select Driver --', phone: '' },
+          { value: '1', label: 'John Doe', phone: '+47123456789' },
+          { value: '2', label: 'Jane Smith', phone: '+47987654321' },
+        ]);
+        setTrucks([
+          { value: '', label: '-- Select Truck --' },
+          { value: '1', label: 'Truck 001' },
+          { value: '2', label: 'Truck 002' },
+        ]);
+        setTrailers([
+          { value: '', label: '-- Select Trailer --' },
+          { value: '1', label: 'Trailer 001' },
+          { value: '2', label: 'Trailer 002' },
+        ]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadOrder();
+    loadData();
   }, [orderId]);
 
   const handleBack = () => {
@@ -102,12 +234,31 @@ export const EditOrderPage: React.FC = () => {
     try {
       // Convert form data to API format
       const orderData = {
+        reference: form.reference || undefined,
+        service: form.service || undefined,
+        terminal_id: form.terminal_id || undefined,
+        eta_date: form.eta_date ? form.eta_date.toISOString().split('T')[0] : undefined,
+        eta_time: form.eta_time || undefined,
+        etd_date: form.etd_date ? form.etd_date.toISOString().split('T')[0] : undefined,
+        etd_time: form.etd_time || undefined,
         commodity: form.commodity || undefined,
         pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : undefined),
         boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : undefined),
         kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : undefined),
+        notes: form.notes || undefined,
+        priority: form.priority,
+        // ETA fields - either ID or manual, never both
         eta_driver_id: form.eta_driver_id || undefined,
+        eta_truck_id: form.eta_truck_id || undefined,
         eta_trailer_id: form.eta_trailer_id || undefined,
+        eta_driver: form.eta_driver || undefined,
+        eta_driver_phone: form.eta_driver_phone || undefined,
+        eta_truck: form.eta_truck || undefined,
+        eta_trailer: form.eta_trailer || undefined,
+        // ETD fields - either ID or manual, never both
+        etd_driver_id: form.etd_driver_id || undefined,
+        etd_truck_id: form.etd_truck_id || undefined,
+        etd_trailer_id: form.etd_trailer_id || undefined,
         etd_driver: form.etd_driver || undefined,
         etd_driver_phone: form.etd_driver_phone || undefined,
         etd_truck: form.etd_truck || undefined,
@@ -121,52 +272,6 @@ export const EditOrderPage: React.FC = () => {
       console.error('Failed to update order:', error);
       // TODO: Show error notification
     }
-  };
-
-  // Auto-populate ETD driver info when driver is selected
-  const handleDriverChange = (driverId: string | null) => {
-    if (driverId) {
-      const selectedDriver = mockDrivers.find(d => d.value === driverId);
-      if (selectedDriver) {
-        setForm(prev => ({
-          ...prev,
-          eta_driver_id: driverId,
-          etd_driver: selectedDriver.label,
-          etd_driver_phone: selectedDriver.phone,
-        }));
-        return;
-      }
-    }
-    
-    setForm(prev => ({
-      ...prev,
-      eta_driver_id: driverId || '',
-      etd_driver: '',
-      etd_driver_phone: '',
-    }));
-  };
-
-  // Auto-populate ETD truck/trailer info when trailer is selected
-  const handleTrailerChange = (trailerId: string | null) => {
-    if (trailerId) {
-      const selectedTrailer = mockTrailers.find(t => t.value === trailerId);
-      if (selectedTrailer) {
-        setForm(prev => ({
-          ...prev,
-          eta_trailer_id: trailerId,
-          etd_truck: selectedTrailer.truck,
-          etd_trailer: selectedTrailer.label,
-        }));
-        return;
-      }
-    }
-    
-    setForm(prev => ({
-      ...prev,
-      eta_trailer_id: trailerId || '',
-      etd_truck: '',
-      etd_trailer: '',
-    }));
   };
 
   const handleDelete = async () => {
@@ -184,19 +289,14 @@ export const EditOrderPage: React.FC = () => {
     }
   };
 
-  const commodityOptions = Object.entries(CommodityLabels).map(([value, label]) => ({
+  const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
     value,
     label
   }));
 
-  const driverOptions = mockDrivers.map(driver => ({
-    value: driver.value,
-    label: driver.label
-  }));
-
-  const trailerOptions = mockTrailers.map(trailer => ({
-    value: trailer.value,
-    label: trailer.label
+  const commodityOptions = Object.entries(CommodityLabels).map(([value, label]) => ({
+    value,
+    label
   }));
 
   return (
@@ -205,145 +305,507 @@ export const EditOrderPage: React.FC = () => {
         <Stack gap="sm">
           {/* Header */}
           <Stack gap="xs">
-            <Button 
-              variant="subtle" 
-              leftSection={<IconArrowLeft size={16} />}
-              onClick={handleBack}
-              size="sm"
-              style={{ alignSelf: 'flex-start' }}
-            >
-              Back to Orders
-            </Button>
+            <Group>
+              <Button 
+                variant="subtle" 
+                leftSection={<IconArrowLeft size={16} />}
+                onClick={handleBack}
+              >
+                Back to Orders
+              </Button>
+            </Group>
             
-            <Title order={2}>Edit Order {orderId}</Title>
-            <Text c="dimmed">Update order details</Text>
+            <Title order={1} fw={600}>
+              Edit Order {orderId}
+            </Title>
+            <Text c="dimmed" size="sm">
+              Update the order details below.
+            </Text>
           </Stack>
 
-          {/* Form */}
-          <Form>
-            {/* Cargo Details */}
+          {/* Form Content */}
+          <Paper withBorder p="md" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Stack gap="md">
+              <GroupGrid title="Order Information">
+                <Grid>
+                  <GridCol span={6}>
+                    <TextField
+                      label="Reference"
+                      placeholder="Enter order reference"
+                      required
+                      value={form.reference}
+                      onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
+                    />
+                  </GridCol>
+                  <GridCol span={6}>
+                    <SelectField
+                      label="Service Type"
+                      placeholder="Select service"
+                      required
+                      data={serviceOptions}
+                      value={form.service?.toString() || ''}
+                      onChange={(value) => setForm(prev => ({ 
+                        ...prev, 
+                        service: value ? parseInt(value) as OrderService : null 
+                      }))}
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
+
+
             <GroupGrid title="Cargo Details">
               <Grid>
-                <GridCol span={3}>
+                <GridCol span={6}>
                   <SelectField
-                    label="Commodity"
+                    label="Commodity Type"
                     placeholder="Select commodity"
                     data={commodityOptions}
-                    value={form.commodity}
+                    value={form.commodity || ''}
                     onChange={(value) => setForm(prev => ({ 
                       ...prev, 
                       commodity: value as CommodityType || null 
                     }))}
-                    required
                   />
                 </GridCol>
-                <GridCol span={3}>
+              </Grid>
+              
+              <Grid>
+                <GridCol span={4}>
                   <TextField
                     label="Pallets"
-                    placeholder="11"
-                    value={form.pallets}
-                    onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
+                    placeholder="Number of pallets"
                     type="number"
-                    min={0}
-                    required
+                    value={form.pallets.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
                   />
                 </GridCol>
-                <GridCol span={3}>
+                <GridCol span={4}>
                   <TextField
                     label="Boxes"
-                    placeholder="44"
-                    value={form.boxes}
-                    onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
+                    placeholder="Number of boxes"
                     type="number"
-                    min={0}
-                    required
+                    value={form.boxes.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
+                  />
+                </GridCol>
+                <GridCol span={4}>
+                  <TextField
+                    label="Weight (kg)"
+                    placeholder="Weight in kilograms"
+                    type="number"
+                    value={form.kilos.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
+                  />
+                </GridCol>
+              </Grid>
+            </GroupGrid>
+
+            <GroupGrid title="Additional Information">
+              <Grid>
+                <GridCol span={9}>
+                  <TextField
+                    label="Notes"
+                    placeholder="Some notes..."
+                    value={form.notes}
+                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
+                    multiline
+                    rows={2}
                   />
                 </GridCol>
                 <GridCol span={3}>
-                  <TextField
-                    label="Kilos"
-                    placeholder="450.5"
-                    value={form.kilos}
-                    onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
-                    type="number"
-                    min={0}
-                    decimalScale={2}
-                    required
-                  />
+                  <Stack gap="md" pt="lg">
+                    <Switch
+                      label="Priority Order"
+                      checked={form.priority}
+                      onChange={(e) => setForm(prev => ({ ...prev, priority: e.target.checked }))}
+                      size="md"
+                    />
+                  </Stack>
                 </GridCol>
               </Grid>
             </GroupGrid>
 
             {/* ETA Assignment */}
-            <GroupGrid title="ETA Assignment">
+            <GroupGrid title="ETA — ARRIVAL — TRUCK">
               <Grid>
-                <GridCol span={6}>
-                  <SelectField
-                    label="ETA Driver"
-                    placeholder="Select driver"
-                    data={driverOptions}
-                    value={form.eta_driver_id || null}
-                    onChange={handleDriverChange}
+                <GridCol span={3}>
+                  <DateInput
+                    label="ETA-A date *"
+                    placeholder="Select ETA date"
+                    value={form.eta_date}
+                    onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
                     required
                   />
                 </GridCol>
-                <GridCol span={6}>
-                  <SelectField
-                    label="ETA Trailer"
-                    placeholder="Select trailer"
-                    data={trailerOptions}
-                    value={form.eta_trailer_id || null}
-                    onChange={handleTrailerChange}
-                    required
+                <GridCol span={3}>
+                  <TimePicker
+                    label="ETA-A time"
+                    placeholder="Select ETA time"
+                    value={form.eta_time}
+                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
                   />
+                </GridCol>
+                <GridCol span={3}>
+                  <TimePicker
+                    label="ETA-A slot time"
+                    placeholder="Slot time"
+                    value={form.eta_time}
+                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
+                  />
+                </GridCol>
+                <GridCol span={3}>
+                  <TextField
+                    label="Place from"
+                    placeholder="Origin location"
+                    value={form.notes}
+                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
+                  />
+                </GridCol>
+              </Grid>
+
+              <Grid>
+                <GridCol span={3}>
+                  <Switch
+                    label="ETA-A show SMS"
+                    checked={true}
+                    onChange={() => {}}
+                    size="sm"
+                  />
+                </GridCol>
+                <GridCol span={6}>
+                  <Group gap="xs">
+                    {!etaDriverManualMode ? (
+                      <SelectField
+                        label="ETA-A driver"
+                        placeholder="Select driver"
+                        data={drivers}
+                        value={form.eta_driver_id}
+                        onChange={(driverId) => {
+                          setForm(prev => ({ 
+                            ...prev, 
+                            eta_driver_id: driverId || '',
+                            // Clear manual fields when using selection
+                            eta_driver: '',
+                            eta_driver_phone: ''
+                          }));
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETA-A driver"
+                        placeholder="Enter driver name"
+                        value={form.eta_driver}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          eta_driver: value,
+                          // Clear ID field when editing manual entry
+                          eta_driver_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtaDriverManualMode(!etaDriverManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
+                </GridCol>
+              </Grid>
+
+              <Grid>
+                <GridCol span={6}>
+                  <TextField
+                    label="ETA-A driver phone"
+                    placeholder="+47"
+                    value={etaDriverManualMode ? form.eta_driver_phone : 
+                           (form.eta_driver_id && form.eta_driver_id !== '' ? (drivers.find(d => d.value === form.eta_driver_id)?.phone || '') : '')}
+                    onChange={(value) => {
+                      if (etaDriverManualMode) {
+                        setForm(prev => ({ 
+                          ...prev, 
+                          eta_driver_phone: value,
+                          // Clear ID field when editing manual entry
+                          eta_driver_id: ''
+                        }));
+                      }
+                    }}
+                  />
+                </GridCol>
+                <GridCol span={6}>
+                  <Group gap="xs">
+                    {!etaTruckManualMode ? (
+                      <SelectField
+                        label="ETA-A truck"
+                        placeholder="Select truck"
+                        data={trucks}
+                        value={form.eta_truck_id}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          eta_truck_id: value || '',
+                          eta_truck: '' // Clear manual field
+                        }))}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETA-A truck"
+                        placeholder="Enter truck name"
+                        value={form.eta_truck}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          eta_truck: value,
+                          // Clear ID field when editing manual entry
+                          eta_truck_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtaTruckManualMode(!etaTruckManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
+                </GridCol>
+              </Grid>
+
+              <Grid>
+                <GridCol span={6}>
+                  <Group gap="xs">
+                    {!etaTrailerManualMode ? (
+                      <SelectField
+                        label="ETA-A trailer"
+                        placeholder="Select trailer"
+                        data={trailers}
+                        value={form.eta_trailer_id}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          eta_trailer_id: value || '',
+                          eta_trailer: '' // Clear manual field
+                        }))}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETA-A trailer"
+                        placeholder="Enter trailer name"
+                        value={form.eta_trailer}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          eta_trailer: value,
+                          // Clear ID field when editing manual entry
+                          eta_trailer_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtaTrailerManualMode(!etaTrailerManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
                 </GridCol>
               </Grid>
             </GroupGrid>
 
-            {/* ETD Information (Auto-populated) */}
-            <GroupGrid title="ETD Information">
+            {/* ETD Assignment */}
+            <GroupGrid title="ETD — DEPARTURE — TRUCK">
+              <Grid>
+                <GridCol span={3}>
+                  <DateInput
+                    label="ETD-D date *"
+                    placeholder="Select ETD date"
+                    value={form.etd_date}
+                    onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
+                    required
+                  />
+                </GridCol>
+                <GridCol span={3}>
+                  <TimePicker
+                    label="ETD-D time"
+                    placeholder="Select ETD time"
+                    value={form.etd_time}
+                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
+                  />
+                </GridCol>
+                <GridCol span={3}>
+                  <TimePicker
+                    label="ETD-D slot time"
+                    placeholder="Slot time"
+                    value={form.etd_time}
+                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
+                  />
+                </GridCol>
+                <GridCol span={3}>
+                  <TextField
+                    label="Place to"
+                    placeholder="Destination location"
+                    value={form.notes}
+                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
+                  />
+                </GridCol>
+              </Grid>
+
+              <Grid>
+                <GridCol span={3}>
+                  <Switch
+                    label="ETD-D show SMS"
+                    checked={true}
+                    onChange={() => {}}
+                    size="sm"
+                  />
+                </GridCol>
+                <GridCol span={6}>
+                  <Group gap="xs">
+                    {!etdDriverManualMode ? (
+                      <SelectField
+                        label="ETD-D driver"
+                        placeholder="Select driver"
+                        data={drivers}
+                        value={form.etd_driver_id}
+                        onChange={(driverId) => {
+                          setForm(prev => ({ 
+                            ...prev, 
+                            etd_driver_id: driverId || '',
+                            // Clear manual fields when using selection
+                            etd_driver: '',
+                            etd_driver_phone: ''
+                          }));
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETD-D driver"
+                        placeholder="Enter driver name"
+                        value={form.etd_driver}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          etd_driver: value,
+                          // Clear ID field when editing manual entry
+                          etd_driver_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtdDriverManualMode(!etdDriverManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
+                </GridCol>
+              </Grid>
+
               <Grid>
                 <GridCol span={6}>
                   <TextField
-                    label="ETD Driver"
-                    placeholder="Driver name"
-                    value={form.etd_driver}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_driver: value }))}
-                    required
+                    label="ETD-D driver phone"
+                    placeholder="+47"
+                    value={etdDriverManualMode ? form.etd_driver_phone : 
+                           (form.etd_driver_id && form.etd_driver_id !== '' ? (drivers.find(d => d.value === form.etd_driver_id)?.phone || '') : '')}
+                    onChange={(value) => {
+                      if (etdDriverManualMode) {
+                        setForm(prev => ({ 
+                          ...prev, 
+                          etd_driver_phone: value,
+                          // Clear ID field when editing manual entry
+                          etd_driver_id: ''
+                        }));
+                      }
+                    }}
                   />
                 </GridCol>
                 <GridCol span={6}>
-                  <TextField
-                    label="ETD Driver Phone"
-                    placeholder="+311111111111"
-                    value={form.etd_driver_phone}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_driver_phone: value }))}
-                    required
-                  />
+                  <Group gap="xs">
+                    {!etdTruckManualMode ? (
+                      <SelectField
+                        label="ETD-D truck"
+                        placeholder="Select truck"
+                        data={trucks}
+                        value={form.etd_truck_id}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          etd_truck_id: value || '',
+                          etd_truck: '' // Clear manual field
+                        }))}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETD-D truck"
+                        placeholder="Enter truck name"
+                        value={form.etd_truck}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          etd_truck: value,
+                          // Clear ID field when editing manual entry
+                          etd_truck_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtdTruckManualMode(!etdTruckManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
                 </GridCol>
+              </Grid>
+
+              <Grid>
                 <GridCol span={6}>
-                  <TextField
-                    label="ETD Truck"
-                    placeholder="Truck model"
-                    value={form.etd_truck}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_truck: value }))}
-                    required
-                  />
-                </GridCol>
-                <GridCol span={6}>
-                  <TextField
-                    label="ETD Trailer"
-                    placeholder="Trailer identifier"
-                    value={form.etd_trailer}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_trailer: value }))}
-                    required
-                  />
+                  <Group gap="xs">
+                    {!etdTrailerManualMode ? (
+                      <SelectField
+                        label="ETD-D trailer"
+                        placeholder="Select trailer"
+                        data={trailers}
+                        value={form.etd_trailer_id}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          etd_trailer_id: value || '',
+                          etd_trailer: '' // Clear manual field
+                        }))}
+                      />
+                    ) : (
+                      <TextField
+                        label="ETD-D trailer"
+                        placeholder="Enter trailer name"
+                        value={form.etd_trailer}
+                        onChange={(value) => setForm(prev => ({ 
+                          ...prev, 
+                          etd_trailer: value,
+                          // Clear ID field when editing manual entry
+                          etd_trailer_id: ''
+                        }))}
+                      />
+                    )}
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onClick={() => setEtdTrailerManualMode(!etdTrailerManualMode)}
+                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                    >
+                      <IconEdit size={16} />
+                    </Button>
+                  </Group>
                 </GridCol>
               </Grid>
             </GroupGrid>
 
             {/* Actions */}
-            <Group justify="space-between" mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+            <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
               <Button 
                 variant="light"
                 color="red"
@@ -357,13 +819,15 @@ export const EditOrderPage: React.FC = () => {
                 leftSection={<IconDeviceFloppy size={16} />}
                 onClick={handleSave}
                 size="md"
+                loading={loading}
               >
                 Update Order
               </Button>
             </Group>
-          </Form>
+            </Stack>
+          </Paper>
         </Stack>
       </Container>
     </Box>
   );
-}; 
+};

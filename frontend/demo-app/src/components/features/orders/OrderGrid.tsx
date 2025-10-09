@@ -42,7 +42,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
     <Datagrid
       data={orders}
       loading={loading}
-      getRowId={(row) => row.reference}
+      getRowId={(row) => row.id}
       onRefresh={onRefresh}
       onImport={onImport}
       onExport={onExport}
@@ -70,7 +70,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
             color: 'blue',
             variant: 'subtle',
             tooltip: 'Edit Order',
-            onClick: (record) => onEdit?.(record.reference)
+            onClick: (record) => onEdit?.(record.id)
           }
         ]}
       />
@@ -87,7 +87,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       <LinkField 
         source="reference" 
         label="Reference" 
-        to="/orders/{reference}/edit"
+        to="/orders/{id}/edit"
         width={140}
       />
       
