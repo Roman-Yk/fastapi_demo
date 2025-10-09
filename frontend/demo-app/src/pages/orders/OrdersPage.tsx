@@ -1,12 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List } from '../../components/admin';
 import { OrderFiltersComponent, OrderGrid } from '../../components/features/orders';
-import { mockOrders, filterOrders } from '../../utils/mockData';
+import { filterOrders } from '../../utils/mockData';
 import { OrderFilters, DateFilterOption } from '../../types/order';
+import { Order } from '../../types/order';
+import ApiService from '../../services/apiService';
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<OrderFilters>({
     dateFilter: DateFilterOption.TODAY,
     locationFilter: null,
@@ -18,31 +22,54 @@ export const OrdersPage: React.FC = () => {
     inTerminal: false,
   });
 
-  const [loading, setLoading] = useState(false);
+  // Load orders from API
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        const ordersData = await ApiService.getOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+        // Show error notification here if needed
+        // Fallback to empty array on error
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
 
   // Filter orders based on current filters
   const filteredOrders = useMemo(() => {
-    return filterOrders(mockOrders, filters);
-  }, [filters]);
+    return filterOrders(orders, filters);
+  }, [orders, filters]);
 
-  const handleFiltersChange = (newFilters: OrderFilters) => {
+  const handleFiltersChange = async (newFilters: OrderFilters) => {
     setLoading(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      setFilters(newFilters);
-      setLoading(false);
-    }, 300);
+    // Apply filters immediately for client-side filtering
+    // In production, you might want to send filter parameters to the API
+    setFilters(newFilters);
+    setLoading(false);
   };
 
   // Toolbar action handlers
-  const handleRefresh = () => {
-    setLoading(true);
-    // Simulate refresh API call
-    setTimeout(() => {
-      setLoading(false);
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      const ordersData = await ApiService.getOrders();
+      setOrders(ordersData);
       console.log('Orders refreshed');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to refresh orders:', error);
+      // Fallback to empty array on error
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImport = () => {
@@ -67,7 +94,7 @@ export const OrdersPage: React.FC = () => {
         <OrderFiltersComponent
           filters={filters}
           onFiltersChange={handleFiltersChange}
-          totalOrders={mockOrders.length}
+          totalOrders={orders.length}
           filteredOrders={filteredOrders.length}
         />
       }

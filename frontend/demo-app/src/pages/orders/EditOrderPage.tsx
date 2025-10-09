@@ -10,7 +10,8 @@ import {
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconTrash } from '@tabler/icons-react';
-import { CommodityType, CommodityLabels } from '../../types/order';
+import { CommodityType, CommodityLabels, Order } from '../../types/order';
+import ApiService from '../../services/apiService';
 import { 
   Form, 
   Grid, 
@@ -63,47 +64,63 @@ export const EditOrderPage: React.FC = () => {
     etd_trailer: '',
   });
 
-  // Load order data - replace with actual API call
+  // Load order data from API
   useEffect(() => {
-    if (orderId) {
-      // Mock loading existing order data
-      setForm({
-        commodity: 'general_cargo' as CommodityType,
-        pallets: 11,
-        boxes: 44,
-        kilos: 450.5,
-        eta_driver_id: '1',
-        eta_trailer_id: '1',
-        etd_driver: 'A driver',
-        etd_driver_phone: '+311111111111',
-        etd_truck: 'Some Truck',
-        etd_trailer: 'Some Trailer',
-      });
-    }
+    const loadOrder = async () => {
+      if (orderId) {
+        try {
+          const order = await ApiService.getOrder(orderId);
+          setForm({
+            commodity: order.commodity,
+            pallets: order.pallets || '',
+            boxes: order.boxes || '',
+            kilos: order.kilos || '',
+            eta_driver_id: order.eta_driver_id || '',
+            eta_trailer_id: order.eta_trailer_id || '',
+            etd_driver: order.etd_driver || '',
+            etd_driver_phone: order.etd_driver_phone || '',
+            etd_truck: order.etd_truck || '',
+            etd_trailer: order.etd_trailer || '',
+          });
+        } catch (error) {
+          console.error('Failed to load order:', error);
+          // TODO: Show error notification
+        }
+      }
+    };
+
+    loadOrder();
   }, [orderId]);
 
   const handleBack = () => {
     navigate('/');
   };
 
-  const handleSave = () => {
-    // Convert form data to API format
-    const orderData = {
-      commodity: form.commodity,
-      pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : null),
-      boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : null),
-      kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : null),
-      eta_driver_id: parseInt(form.eta_driver_id) || null,
-      eta_trailer_id: parseInt(form.eta_trailer_id) || null,
-      etd_driver: form.etd_driver,
-      etd_driver_phone: form.etd_driver_phone,
-      etd_truck: form.etd_truck,
-      etd_trailer: form.etd_trailer,
-    };
+  const handleSave = async () => {
+    if (!orderId) return;
     
-    console.log('Updating order:', orderData);
-    // TODO: Implement API call
-    navigate('/');
+    try {
+      // Convert form data to API format
+      const orderData = {
+        commodity: form.commodity || undefined,
+        pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : undefined),
+        boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : undefined),
+        kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : undefined),
+        eta_driver_id: form.eta_driver_id || undefined,
+        eta_trailer_id: form.eta_trailer_id || undefined,
+        etd_driver: form.etd_driver || undefined,
+        etd_driver_phone: form.etd_driver_phone || undefined,
+        etd_truck: form.etd_truck || undefined,
+        etd_trailer: form.etd_trailer || undefined,
+      };
+      
+      console.log('Updating order:', orderData);
+      await ApiService.updateOrder(orderId, orderData);
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to update order:', error);
+      // TODO: Show error notification
+    }
   };
 
   // Auto-populate ETD driver info when driver is selected
@@ -152,11 +169,18 @@ export const EditOrderPage: React.FC = () => {
     }));
   };
 
-  const handleDelete = () => {
-    // TODO: Implement order deletion logic
+  const handleDelete = async () => {
+    if (!orderId) return;
+    
     if (window.confirm('Are you sure you want to delete this order?')) {
-      console.log('Delete order:', orderId);
-      navigate('/');
+      try {
+        console.log('Delete order:', orderId);
+        await ApiService.deleteOrder(orderId);
+        navigate('/');
+      } catch (error) {
+        console.error('Failed to delete order:', error);
+        // TODO: Show error notification
+      }
     }
   };
 

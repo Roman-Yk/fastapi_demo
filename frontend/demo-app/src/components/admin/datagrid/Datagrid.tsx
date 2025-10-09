@@ -190,7 +190,9 @@ export const Datagrid = <T extends GridValidRowModel = GridValidRowModel>({
   if (!loading && data.length === 0) {
     return (
       <Paper withBorder style={{ height, minHeight, maxHeight }}>
-        <Stack align="center" justify="center" style={{ height: '100%' }} gap="md">
+        {/* Show toolbar even in empty state */}
+        {showToolbar && CustomToolbar && <CustomToolbar />}
+        <Stack align="center" justify="center" style={{ height: showToolbar ? 'calc(100% - 64px)' : '100%' }} gap="md">
           <Text size="lg" fw={600} c="dimmed">
             {emptyStateTitle}
           </Text>

@@ -38,6 +38,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
         validate_assignment=True,
+        extra="allow",  # Allow extra environment variables not defined in the model
     )
     
 settings = Settings()

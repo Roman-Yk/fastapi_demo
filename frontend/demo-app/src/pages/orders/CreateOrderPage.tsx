@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, 
   Title, 
@@ -7,14 +7,15 @@ import {
   Button, 
   Switch, 
   Group,
-  Box
+  Box,
+  Paper
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
 import { OrderService, CommodityType, OrderServiceLabels, CommodityLabels } from '../../types/order';
+import ApiService from '../../services/apiService';
 import { 
-  Form, 
   Grid, 
   GridCol, 
   GroupGrid, 
@@ -55,34 +56,68 @@ export const CreateOrderPage: React.FC = () => {
     kilos: '',
     notes: '',
     priority: false,
-    terminal_id: ''
+    terminal_id: '',
   });
+
+  const [terminals, setTerminals] = useState<Array<{value: string, label: string}>>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load terminals from API
+  useEffect(() => {
+    const loadTerminals = async () => {
+      try {
+        const terminalsData = await ApiService.getTerminals();
+        const terminalOptions = terminalsData.map(terminal => ({
+          value: terminal.id,
+          label: terminal.name
+        }));
+        setTerminals(terminalOptions);
+      } catch (error) {
+        console.error('Failed to load terminals:', error);
+        // Fallback to default options
+        setTerminals([
+          { value: 'dc170a0a-a896-411e-9b5a-f466d834ec77', label: 'Terminal 1' },
+          { value: '004f7daa-50dc-48f4-acb5-9dfe69b2e92c', label: 'Terminal 2' },
+          { value: '0f74eb29-4dd7-4139-8718-db7eef530dbf', label: 'Terminal 3' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTerminals();
+  }, []);
 
   const handleBack = () => {
     navigate('/');
   };
 
-  const handleSave = () => {
-    // Convert form data to API format
-    const orderData = {
-      reference: form.reference,
-      service: form.service,
-      eta_date: form.eta_date?.toISOString().split('T')[0] || null,
-      eta_time: form.eta_time || null,
-      etd_date: form.etd_date?.toISOString().split('T')[0] || null,
-      etd_time: form.etd_time || null,
-      commodity: form.commodity,
-      pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : null),
-      boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : null),
-      kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : null),
-      notes: form.notes || null,
-      priority: form.priority,
-      terminal_id: parseInt(form.terminal_id) || 1
-    };
-    
-    console.log('Creating order:', orderData);
-    // TODO: Implement API call
-    navigate('/');
+  const handleSave = async () => {
+    try {
+      // Convert form data to API format
+      const orderData = {
+        reference: form.reference,
+        service: form.service!,
+        terminal_id: form.terminal_id,
+        eta_date: form.eta_date?.toISOString().split('T')[0],
+        eta_time: form.eta_time || undefined,
+        etd_date: form.etd_date?.toISOString().split('T')[0],
+        etd_time: form.etd_time || undefined,
+        commodity: form.commodity || undefined,
+        pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : undefined),
+        boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : undefined),
+        kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : undefined),
+        notes: form.notes || undefined,
+        priority: form.priority,
+      };
+      
+      console.log('Creating order:', orderData);
+      await ApiService.createOrder(orderData);
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      // TODO: Show error notification to user
+    }
   };
 
   const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
@@ -95,158 +130,158 @@ export const CreateOrderPage: React.FC = () => {
     label
   }));
 
-  const terminalOptions = [
-    { value: '1', label: 'Terminal 1' },
-    { value: '2', label: 'Terminal 2' },
-    { value: '3', label: 'Terminal 3' }
-  ];
-
   return (
     <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Container size="lg" px="md" py="sm" style={{ flex: 1 }}>
         <Stack gap="sm">
           {/* Header */}
           <Stack gap="xs">
-            <Button 
-              variant="subtle" 
-              leftSection={<IconArrowLeft size={16} />}
-              onClick={handleBack}
-              size="sm"
-              style={{ alignSelf: 'flex-start' }}
-            >
-              Back to Orders
-            </Button>
+            <Group>
+              <Button 
+                variant="subtle" 
+                leftSection={<IconArrowLeft size={16} />}
+                onClick={handleBack}
+              >
+                Back to Orders
+              </Button>
+            </Group>
             
-            <Title order={2}>Create New Order</Title>
-            <Text c="dimmed">Fill in the details to create a new order</Text>
+            <Title order={1} fw={600}>
+              Create New Order
+            </Title>
+            <Text c="dimmed" size="sm">
+              Fill in the order details below to create a new shipping order.
+            </Text>
           </Stack>
 
-          {/* Form */}
-          <Form>
-            {/* Basic Information */}
-            <GroupGrid title="Basic Information">
-              <Grid>
-                <GridCol span={4}>
-                  <TextField
-                    label="Reference"
-                    placeholder="Order reference"
-                    value={form.reference}
-                    onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
-                    required
-                  />
-                </GridCol>
-                <GridCol span={4}>
-                  <SelectField
-                    label="Service"
-                    placeholder="Select service"
-                    data={serviceOptions}
-                    value={form.service?.toString() || null}
-                    onChange={(value) => setForm(prev => ({ 
-                      ...prev, 
-                      service: value ? parseInt(value) as OrderService : null 
-                    }))}
-                    required
-                  />
-                </GridCol>
-                <GridCol span={4}>
-                  <SelectField
-                    label="Terminal"
-                    placeholder="Select terminal"
-                    data={terminalOptions}
-                    value={form.terminal_id || null}
-                    onChange={(value) => setForm(prev => ({ ...prev, terminal_id: value || '' }))}
-                    required
-                  />
-                </GridCol>
-              </Grid>
-            </GroupGrid>
+          {/* Form Content */}
+          <Paper withBorder p="md" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Stack gap="md">
+              <GroupGrid title="Order Information">
+                <Grid>
+                  <GridCol span={6}>
+                    <TextField
+                      label="Reference"
+                      placeholder="Enter order reference"
+                      required
+                      value={form.reference}
+                      onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
+                    />
+                  </GridCol>
+                  <GridCol span={6}>
+                    <SelectField
+                      label="Service Type"
+                      placeholder="Select service"
+                      required
+                      data={serviceOptions}
+                      value={form.service?.toString() || ''}
+                      onChange={(value) => setForm(prev => ({ 
+                        ...prev, 
+                        service: value ? parseInt(value) as OrderService : null 
+                      }))}
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
 
-            {/* Dates & Times */}
-            <GroupGrid title="Schedule">
+              <GroupGrid title="Location & Schedule">
+                <Grid>
+                  <GridCol span={6}>
+                    <SelectField
+                      label="Terminal"
+                      placeholder={loading ? "Loading terminals..." : "Select terminal"}
+                      required
+                      data={terminals}
+                      value={form.terminal_id}
+                      onChange={(value) => setForm(prev => ({ ...prev, terminal_id: value || '' }))}
+                    />
+                  </GridCol>
+                </Grid>
+              
               <Grid>
                 <GridCol span={3}>
                   <DateInput
                     label="ETA Date"
                     placeholder="Select ETA date"
                     value={form.eta_date}
-                    onChange={(date) => setForm(prev => ({ ...prev, eta_date: date }))}
+                    onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
                   />
                 </GridCol>
                 <GridCol span={3}>
                   <TimePicker
                     label="ETA Time"
+                    placeholder="Select ETA time"
                     value={form.eta_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value }))}
+                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
                   />
                 </GridCol>
+                
                 <GridCol span={3}>
                   <DateInput
                     label="ETD Date"
                     placeholder="Select ETD date"
                     value={form.etd_date}
-                    onChange={(date) => setForm(prev => ({ ...prev, etd_date: date }))}
+                    onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
                   />
                 </GridCol>
                 <GridCol span={3}>
                   <TimePicker
                     label="ETD Time"
+                    placeholder="Select ETD time"
                     value={form.etd_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value }))}
+                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
                   />
                 </GridCol>
               </Grid>
             </GroupGrid>
 
-            {/* Commodity & Quantities */}
             <GroupGrid title="Cargo Details">
               <Grid>
-                <GridCol span={3}>
+                <GridCol span={6}>
                   <SelectField
-                    label="Commodity"
+                    label="Commodity Type"
                     placeholder="Select commodity"
                     data={commodityOptions}
-                    value={form.commodity}
+                    value={form.commodity || ''}
                     onChange={(value) => setForm(prev => ({ 
                       ...prev, 
                       commodity: value as CommodityType || null 
                     }))}
                   />
                 </GridCol>
-                <GridCol span={3}>
+              </Grid>
+              
+              <Grid>
+                <GridCol span={4}>
                   <TextField
                     label="Pallets"
-                    placeholder="10"
-                    value={form.pallets}
-                    onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
+                    placeholder="Number of pallets"
                     type="number"
-                    min={0}
+                    value={form.pallets.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
                   />
                 </GridCol>
-                <GridCol span={3}>
+                <GridCol span={4}>
                   <TextField
                     label="Boxes"
-                    placeholder="40"
-                    value={form.boxes}
-                    onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
+                    placeholder="Number of boxes"
                     type="number"
-                    min={0}
+                    value={form.boxes.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
                   />
                 </GridCol>
-                <GridCol span={3}>
+                <GridCol span={4}>
                   <TextField
-                    label="Kilos"
-                    placeholder="200.5"
-                    value={form.kilos}
-                    onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
+                    label="Weight (kg)"
+                    placeholder="Weight in kilograms"
                     type="number"
-                    min={0}
-                    decimalScale={2}
+                    value={form.kilos.toString()}
+                    onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
                   />
                 </GridCol>
               </Grid>
             </GroupGrid>
 
-            {/* Notes & Priority */}
             <GroupGrid title="Additional Information">
               <Grid>
                 <GridCol span={9}>
@@ -272,7 +307,7 @@ export const CreateOrderPage: React.FC = () => {
               </Grid>
             </GroupGrid>
 
-            {/* Actions - Sticking to the bottom */}
+            {/* Actions */}
             <Group justify="space-between" mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
               <Button 
                 variant="light" 
@@ -285,13 +320,15 @@ export const CreateOrderPage: React.FC = () => {
                 leftSection={<IconDeviceFloppy size={16} />}
                 onClick={handleSave}
                 size="md"
+                disabled={!form.reference || !form.service || !form.terminal_id}
               >
                 Create Order
               </Button>
             </Group>
-          </Form>
+            </Stack>
+          </Paper>
         </Stack>
       </Container>
     </Box>
   );
-}; 
+};
