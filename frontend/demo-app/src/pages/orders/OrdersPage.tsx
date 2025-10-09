@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Stack, Container } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import { List } from '../../components/admin';
 import { OrderFiltersComponent, OrderGrid } from '../../components/features/orders';
 import { mockOrders, filterOrders } from '../../utils/mockData';
 import { OrderFilters, DateFilterOption } from '../../types/order';
@@ -62,25 +62,25 @@ export const OrdersPage: React.FC = () => {
   };
 
   return (
-    <Container size="100%" px="xl" py="sm">
-      <Stack gap="sm">
+    <List
+      filters={
         <OrderFiltersComponent
           filters={filters}
           onFiltersChange={handleFiltersChange}
           totalOrders={mockOrders.length}
           filteredOrders={filteredOrders.length}
         />
-        
-        <OrderGrid
-          orders={filteredOrders}
-          loading={loading}
-          onRefresh={handleRefresh}
-          onImport={handleImport}
-          onExport={handleExport}
-          onCreate={handleCreateOrder}
-          onEdit={handleEditOrder}
-        />
-      </Stack>
-    </Container>
+      }
+    >
+      <OrderGrid
+        orders={filteredOrders}
+        loading={loading}
+        onRefresh={handleRefresh}
+        onImport={handleImport}
+        onExport={handleExport}
+        onCreate={handleCreateOrder}
+        onEdit={handleEditOrder}
+      />
+    </List>
   );
 }; 

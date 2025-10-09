@@ -1,26 +1,21 @@
 import React from 'react';
+import { IconEdit } from '@tabler/icons-react';
 import { 
-  Badge,
-  Group,
-  Text,
-  Chip,
-  Stack,
-  Tooltip,
-  ActionIcon
-} from '@mantine/core';
-import { 
-  IconUser, 
-  IconTruck, 
-  IconStar,
-  IconEdit
-} from '@tabler/icons-react';
+  Datagrid,
+  TextField,
+  LinkField,
+  BadgeField,
+  ActionField,
+  CombinedDateTimeField,
+  DriverField,
+  VehicleField,
+  PriorityField
+} from '../../admin';
 import { 
   Order, 
-  OrderServiceLabels, 
   CommodityLabels,
   OrderServiceShortLabels 
 } from '../../../types/order';
-import { DataGrid, DataGridColumn, GridRenderCellParams } from '../../common';
 
 interface OrderGridProps {
   orders: Order[];
@@ -32,214 +27,6 @@ interface OrderGridProps {
   onEdit?: (orderId: string) => void;
 }
 
-// Order grid column definitions
-const createOrderColumns = (onEdit?: (orderId: string) => void): DataGridColumn<Order>[] => {
-  const renderActions = (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    return (
-      <Group gap="xs">
-        {onEdit && (
-          <ActionIcon
-            variant="subtle"
-            color="blue"
-            size="sm"
-            onClick={() => onEdit(order.reference)}
-            title="Edit Order"
-          >
-            <IconEdit size={14} />
-          </ActionIcon>
-        )}
-      </Group>
-    );
-  };
-
-  const renderPriority = (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    return order.priority ? (
-      <Tooltip label="Priority Order">
-        <IconStar size={16} color="orange" />
-      </Tooltip>
-    ) : null;
-  };
-
-  const renderService = (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    return (
-      <Tooltip label={OrderServiceLabels[order.service]}>
-        <Badge variant="light" color="blue" size="sm">
-          {OrderServiceShortLabels[order.service]}
-        </Badge>
-      </Tooltip>
-    );
-  };
-
-  const renderCommodity = (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    return order.commodity ? (
-      <Badge variant="outline" color="green" size="sm">
-        {CommodityLabels[order.commodity]}
-      </Badge>
-    ) : null;
-  };
-
-  const renderDateTime = (dateField: string, timeField: string) => (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    const date = order[dateField as keyof Order] as string;
-    const time = order[timeField as keyof Order] as string;
-    
-    if (!date) return null;
-    
-    return (
-      <Stack gap={2}>
-        <Text size="sm" fw={500}>
-          {new Date(date).toLocaleDateString()}
-        </Text>
-        {time && (
-          <Text size="xs" c="dimmed">
-            {time.substring(0, 5)}
-          </Text>
-        )}
-      </Stack>
-    );
-  };
-
-  const renderDriver = (prefix: 'eta' | 'etd') => (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    const driver = order[`${prefix}_driver` as keyof Order] as string;
-    const phone = order[`${prefix}_driver_phone` as keyof Order] as string;
-    
-    if (!driver) return null;
-    
-    return (
-      <Stack gap={2}>
-        <Group gap="xs">
-          <IconUser size={12} />
-          <Text size="sm">{driver}</Text>
-        </Group>
-        {phone && (
-          <Text size="xs" c="dimmed">
-            {phone}
-          </Text>
-        )}
-      </Stack>
-    );
-  };
-
-  const renderVehicle = (prefix: 'eta' | 'etd') => (params: GridRenderCellParams<Order>) => {
-    const order = params.row;
-    const truck = order[`${prefix}_truck` as keyof Order] as string;
-    const trailer = order[`${prefix}_trailer` as keyof Order] as string;
-    
-    return (
-      <Stack gap={2}>
-        {truck && (
-          <Group gap="xs">
-            <IconTruck size={12} />
-            <Text size="sm">{truck}</Text>
-          </Group>
-        )}
-        {trailer && (
-          <Text size="xs" c="dimmed">
-            {trailer}
-          </Text>
-        )}
-      </Stack>
-    );
-  };
-
-  return [
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 80,
-      renderCell: renderActions,
-      sortable: false,
-      filterable: false
-    },
-    {
-      field: 'priority',
-      headerName: '',
-      width: 60,
-      renderCell: renderPriority,
-      sortable: false,
-      filterable: false
-    },
-    {
-      field: 'reference',
-      headerName: 'Reference',
-      width: 140,
-    },
-    {
-      field: 'service',
-      headerName: 'Service',
-      width: 120,
-      renderCell: renderService,
-    },
-    {
-      field: 'eta_date',
-      headerName: 'ETA',
-      width: 140,
-      renderCell: renderDateTime('eta_date', 'eta_time'),
-    },
-    {
-      field: 'etd_date',
-      headerName: 'ETD',
-      width: 140,
-      renderCell: renderDateTime('etd_date', 'etd_time'),
-    },
-    {
-      field: 'commodity',
-      headerName: 'Commodity',
-      width: 150,
-      renderCell: renderCommodity,
-    },
-    {
-      field: 'eta_driver',
-      headerName: 'ETA Driver',
-      width: 160,
-      renderCell: renderDriver('eta'),
-    },
-    {
-      field: 'eta_vehicle',
-      headerName: 'ETA Vehicle',
-      width: 160,
-      renderCell: renderVehicle('eta'),
-      sortable: false,
-      filterable: false
-    },
-    {
-      field: 'etd_driver',
-      headerName: 'ETD Driver',
-      width: 160,
-      renderCell: renderDriver('etd'),
-    },
-    {
-      field: 'etd_vehicle',
-      headerName: 'ETD Vehicle',
-      width: 160,
-      renderCell: renderVehicle('etd'),
-      sortable: false,
-      filterable: false
-    },
-    {
-      field: 'notes',
-      headerName: 'Notes',
-      width: 250,
-      flex: 1,
-      renderCell: (params: GridRenderCellParams<Order>) => {
-        const order = params.row;
-        return order.notes ? (
-          <Tooltip label={order.notes}>
-            <Text size="sm" lineClamp={2}>
-              {order.notes}
-            </Text>
-          </Tooltip>
-        ) : null;
-      },
-    },
-  ];
-};
-
 export const OrderGrid: React.FC<OrderGridProps> = ({ 
   orders, 
   loading = false, 
@@ -249,12 +36,9 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
   onCreate,
   onEdit
 }) => {
-  const columns = createOrderColumns(onEdit);
-  
   return (
-    <DataGrid<Order>
+    <Datagrid
       data={orders}
-      columns={columns}
       loading={loading}
       getRowId={(row) => row.reference}
       onRefresh={onRefresh}
@@ -269,6 +53,142 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       emptyStateDescription="There are no orders to display with the current filters."
       height={600}
       pageSize={25}
-    />
+    >
+      {/* Priority indicator */}
+      <PriorityField 
+        source="priority" 
+        label="" 
+        width={60}
+        sortable={false}
+        filterable={false}
+      />
+      
+      {/* Order reference as a link */}
+      <LinkField 
+        source="reference" 
+        label="Reference" 
+        to="/orders/{reference}/edit"
+        width={140}
+      />
+      
+      {/* Service with custom badge rendering */}
+      <BadgeField
+        source="service"
+        label="Service"
+        width={120}
+        variant="light"
+        color="blue"
+        size="sm"
+        valueMap={Object.fromEntries(
+          Object.entries(OrderServiceShortLabels).map(([key, label]) => [
+            key, 
+            { 
+              label, 
+              color: 'blue',
+              variant: 'light'
+            }
+          ])
+        )}
+      />
+      
+      {/* ETA Date & Time combined */}
+      <CombinedDateTimeField
+        source="eta_date"
+        label="ETA"
+        timeSource="eta_time"
+        width={140}
+      />
+      
+      {/* ETD Date & Time combined */}
+      <CombinedDateTimeField
+        source="etd_date"
+        label="ETD"
+        timeSource="etd_time"
+        width={140}
+      />
+      
+      {/* Commodity badge */}
+      <BadgeField
+        source="commodity"
+        label="Commodity"
+        width={150}
+        variant="outline"
+        color="green"
+        size="sm"
+        valueMap={Object.fromEntries(
+          Object.entries(CommodityLabels).map(([key, label]) => [
+            key, 
+            { 
+              label, 
+              color: 'green',
+              variant: 'outline'
+            }
+          ])
+        )}
+      />
+      
+      {/* ETA Driver */}
+      <DriverField
+        source="eta_driver"
+        label="ETA Driver"
+        prefix="eta"
+        width={160}
+      />
+      
+      {/* ETA Vehicle */}
+      <VehicleField
+        source="eta_vehicle"
+        label="ETA Vehicle"
+        prefix="eta"
+        width={160}
+        sortable={false}
+        filterable={false}
+      />
+      
+      {/* ETD Driver */}
+      <DriverField
+        source="etd_driver"
+        label="ETD Driver"
+        prefix="etd"
+        width={160}
+      />
+      
+      {/* ETD Vehicle */}
+      <VehicleField
+        source="etd_vehicle"
+        label="ETD Vehicle"
+        prefix="etd"
+        width={160}
+        sortable={false}
+        filterable={false}
+      />
+      
+      {/* Notes */}
+      <TextField
+        source="notes"
+        label="Notes"
+        width={250}
+        lineClamp={2}
+      />
+      
+      {/* Actions */}
+      <ActionField
+        source="actions"
+        label="Actions"
+        width={80}
+        sortable={false}
+        filterable={false}
+        actions={[
+          {
+            key: 'edit',
+            icon: IconEdit,
+            color: 'blue',
+            variant: 'subtle',
+            tooltip: 'Edit Order',
+            onClick: (record) => onEdit?.(record.reference)
+          }
+        ]}
+      />
+    </Datagrid>
   );
 }; 

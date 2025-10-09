@@ -28,3 +28,6 @@ export type { VehicleFieldProps } from './VehicleField';
 
 export { PriorityField } from './PriorityField';
 export type { PriorityFieldProps } from './PriorityField';
+
+export { LinkField } from './LinkField';
+export type { LinkFieldProps } from './LinkField';
