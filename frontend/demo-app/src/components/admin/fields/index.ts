@@ -31,3 +31,6 @@ export type { PriorityFieldProps } from './PriorityField';
 
 export { LinkField } from './LinkField';
 export type { LinkFieldProps } from './LinkField';
+
+export { TooltipField } from './TooltipField';
+export type { TooltipFieldProps } from './TooltipField';

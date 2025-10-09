@@ -9,14 +9,12 @@ from ...base_model import BASE_MODEL
 class OrderDocumentText(BASE_MODEL):
     __tablename__ = "order_document_text"
     
-    order_document_id = Column(UUID, ForeignKey("order_documents.id"), primary_key=True)
-    order_id = Column(UUID, ForeignKey("orders.id"), nullable=False)
-
-    order_created_at = Column(DateTime(timezone=False), nullable=False)
-    text_created_at = Column(DateTime(timezone=False), nullable=True)
     text = Column(Text())
-
+    order_id = Column(UUID, ForeignKey("orders.id"), nullable=False)
     process_status = Column(Enum(ProcessStatus), nullable=False, default=ProcessStatus.none)
+    text_created_at = Column(DateTime(timezone=False), nullable=True)
+    order_created_at = Column(DateTime(timezone=False), nullable=False)
+    order_document_id = Column(UUID, ForeignKey("order_documents.id"), primary_key=True)
 
     def __repr__(self):
         return f"OrderDocumentText({self.order_document_id}, {self.order_id})"

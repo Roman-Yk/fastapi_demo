@@ -9,12 +9,14 @@ import {
   CombinedDateTimeField,
   DriverField,
   VehicleField,
-  PriorityField
+  PriorityField,
+  TooltipField
 } from '../../admin';
 import { 
   Order, 
   CommodityLabels,
-  OrderServiceShortLabels 
+  OrderServiceShortLabels,
+  OrderServiceLabels
 } from '../../../types/order';
 
 interface OrderGridProps {
@@ -54,6 +56,24 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       height={600}
       pageSize={25}
     >
+      {/* Actions */}
+      <ActionField
+        source="actions"
+        label="Actions"
+        width={80}
+        sortable={false}
+        filterable={false}
+        actions={[
+          {
+            key: 'edit',
+            icon: IconEdit,
+            color: 'blue',
+            variant: 'subtle',
+            tooltip: 'Edit Order',
+            onClick: (record) => onEdit?.(record.reference)
+          }
+        ]}
+      />
       {/* Priority indicator */}
       <PriorityField 
         source="priority" 
@@ -71,21 +91,23 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
         width={140}
       />
       
-      {/* Service with custom badge rendering */}
-      <BadgeField
+      {/* Service with tooltip showing full service name */}
+      <TooltipField
         source="service"
         label="Service"
-        width={120}
-        variant="light"
-        color="blue"
+        width={80}
         size="sm"
+        weight={500}
+        color="blue"
+        maxWidth={70}
+        alwaysShowTooltip={true}
         valueMap={Object.fromEntries(
-          Object.entries(OrderServiceShortLabels).map(([key, label]) => [
+          Object.entries(OrderServiceShortLabels).map(([key, shortLabel]) => [
             key, 
             { 
-              label, 
-              color: 'blue',
-              variant: 'light'
+              label: shortLabel,
+              tooltip: OrderServiceLabels[key as unknown as keyof typeof OrderServiceLabels],
+              color: 'blue'
             }
           ])
         )}
@@ -171,24 +193,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
         lineClamp={2}
       />
       
-      {/* Actions */}
-      <ActionField
-        source="actions"
-        label="Actions"
-        width={80}
-        sortable={false}
-        filterable={false}
-        actions={[
-          {
-            key: 'edit',
-            icon: IconEdit,
-            color: 'blue',
-            variant: 'subtle',
-            tooltip: 'Edit Order',
-            onClick: (record) => onEdit?.(record.reference)
-          }
-        ]}
-      />
+
     </Datagrid>
   );
 }; 

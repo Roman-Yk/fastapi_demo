@@ -1,14 +1,14 @@
 import enum
 
 class CommodityType(str, enum.Enum):
+    OTHER = "other"
+    SCRIMP = "scrimp"
     SALMON = "salmon"
-    SALMON_PROD = "salmon_prod"
-    SALMON_MIX = "salmon_mix"
     TROUTH = "trouth"
-    WHITEFISH = "whitefish"
     BACALAO = "bacalao"
     DRYFISH = "dryfish"
-    SCRIMP = "scrimp"
-    OTHER = "other"
+    WHITEFISH = "whitefish"
+    SALMON_MIX = "salmon_mix"
+    SALMON_PROD = "salmon_prod"
 
 

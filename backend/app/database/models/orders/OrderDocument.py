@@ -9,11 +9,11 @@ class OrderDocument(BASE_MODEL):
     __tablename__ = "order_documents"
     
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
-    order_id = Column(UUID(), ForeignKey("orders.id"))
-    title = Column(String())
     src = Column(String())
-    thumbnail = Column(String())
     type = Column(Enum(OrderDocumentType), nullable=False)
+    title = Column(String())
+    order_id = Column(UUID(), ForeignKey("orders.id"))
+    thumbnail = Column(String())
     created_at = Column(DateTime(timezone=False))
     
     def __repr__(self):
