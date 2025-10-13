@@ -326,18 +326,19 @@ export const EditOrderPage: React.FC = () => {
           {/* Form Content */}
           <Paper withBorder p="md" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <Stack gap="md">
+              {/* Header Row with Basic Info */}
               <GroupGrid title="Order Information">
                 <Grid>
-                  <GridCol span={6}>
+                  <GridCol span={2}>
                     <TextField
                       label="Reference"
-                      placeholder="Enter order reference"
+                      placeholder="Order reference"
                       required
                       value={form.reference}
                       onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
                     />
                   </GridCol>
-                  <GridCol span={6}>
+                  <GridCol span={2}>
                     <SelectField
                       label="Service Type"
                       placeholder="Select service"
@@ -350,459 +351,410 @@ export const EditOrderPage: React.FC = () => {
                       }))}
                     />
                   </GridCol>
-                </Grid>
-              </GroupGrid>
-
-
-            <GroupGrid title="Cargo Details">
-              <Grid>
-                <GridCol span={6}>
-                  <SelectField
-                    label="Commodity Type"
-                    placeholder="Select commodity"
-                    data={commodityOptions}
-                    value={form.commodity || ''}
-                    onChange={(value) => setForm(prev => ({ 
-                      ...prev, 
-                      commodity: value as CommodityType || null 
-                    }))}
-                  />
-                </GridCol>
-              </Grid>
-              
-              <Grid>
-                <GridCol span={4}>
-                  <TextField
-                    label="Pallets"
-                    placeholder="Number of pallets"
-                    type="number"
-                    value={form.pallets.toString()}
-                    onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
-                  />
-                </GridCol>
-                <GridCol span={4}>
-                  <TextField
-                    label="Boxes"
-                    placeholder="Number of boxes"
-                    type="number"
-                    value={form.boxes.toString()}
-                    onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
-                  />
-                </GridCol>
-                <GridCol span={4}>
-                  <TextField
-                    label="Weight (kg)"
-                    placeholder="Weight in kilograms"
-                    type="number"
-                    value={form.kilos.toString()}
-                    onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
-                  />
-                </GridCol>
-              </Grid>
-            </GroupGrid>
-
-            <GroupGrid title="Additional Information">
-              <Grid>
-                <GridCol span={9}>
-                  <TextField
-                    label="Notes"
-                    placeholder="Some notes..."
-                    value={form.notes}
-                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
-                    multiline
-                    rows={2}
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <Stack gap="md" pt="lg">
+                  <GridCol span={2}>
                     <Switch
-                      label="Priority Order"
+                      label="Priority"
                       checked={form.priority}
                       onChange={(e) => setForm(prev => ({ ...prev, priority: e.target.checked }))}
                       size="md"
                     />
-                  </Stack>
-                </GridCol>
-              </Grid>
-            </GroupGrid>
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
 
-            {/* ETA Assignment */}
-            <GroupGrid title="ETA — ARRIVAL — TRUCK">
+              {/* ETA and ETD Sections Side by Side */}
               <Grid>
-                <GridCol span={3}>
-                  <DateInput
-                    label="ETA-A date *"
-                    placeholder="Select ETA date"
-                    value={form.eta_date}
-                    onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
-                    required
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <TimePicker
-                    label="ETA-A time"
-                    placeholder="Select ETA time"
-                    value={form.eta_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <TimePicker
-                    label="ETA-A slot time"
-                    placeholder="Slot time"
-                    value={form.eta_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <TextField
-                    label="Place from"
-                    placeholder="Origin location"
-                    value={form.notes}
-                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
-                  />
-                </GridCol>
-              </Grid>
+                {/* ETA Section */}
+                <GridCol span={6}>
+                  <GroupGrid title="ETA — ARRIVAL — TRUCK">
+                    <Grid>
+                      <GridCol span={6}>
+                        <DateInput
+                          label="ETA-A date"
+                          placeholder="Select date"
+                          value={form.eta_date}
+                          onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
+                          required
+                        />
+                      </GridCol>
+                      <GridCol span={6}>
+                        <TimePicker
+                          label="ETA-A time"
+                          placeholder="Select time"
+                          value={form.eta_time}
+                          onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
+                        />
+                      </GridCol>
+                    </Grid>
 
-              <Grid>
-                <GridCol span={3}>
-                  <Switch
-                    label="ETA-A show SMS"
-                    checked={true}
-                    onChange={() => {}}
-                    size="sm"
-                  />
-                </GridCol>
-                <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etaDriverManualMode ? (
-                      <SelectField
-                        label="ETA-A driver"
-                        placeholder="Select driver"
-                        data={drivers}
-                        value={form.eta_driver_id}
-                        onChange={(driverId) => {
-                          setForm(prev => ({ 
-                            ...prev, 
-                            eta_driver_id: driverId || '',
-                            // Clear manual fields when using selection
-                            eta_driver: '',
-                            eta_driver_phone: ''
-                          }));
-                        }}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETA-A driver"
-                        placeholder="Enter driver name"
-                        value={form.eta_driver}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          eta_driver: value,
-                          // Clear ID field when editing manual entry
-                          eta_driver_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtaDriverManualMode(!etaDriverManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
-                </GridCol>
-              </Grid>
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etaDriverManualMode ? (
+                            <SelectField
+                              label="ETA-A driver"
+                              placeholder="Select driver"
+                              data={drivers}
+                              value={form.eta_driver_id}
+                              onChange={(driverId) => {
+                                setForm(prev => ({ 
+                                  ...prev, 
+                                  eta_driver_id: driverId || '',
+                                  eta_driver: '',
+                                  eta_driver_phone: ''
+                                }));
+                              }}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETA-A driver"
+                              placeholder="Enter driver name"
+                              value={form.eta_driver}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                eta_driver: value,
+                                eta_driver_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtaDriverManualMode(!etaDriverManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
 
-              <Grid>
-                <GridCol span={6}>
-                  <TextField
-                    label="ETA-A driver phone"
-                    placeholder="+47"
-                    value={etaDriverManualMode ? form.eta_driver_phone : 
-                           (form.eta_driver_id && form.eta_driver_id !== '' ? (drivers.find(d => d.value === form.eta_driver_id)?.phone || '') : '')}
-                    onChange={(value) => {
-                      if (etaDriverManualMode) {
-                        setForm(prev => ({ 
-                          ...prev, 
-                          eta_driver_phone: value,
-                          // Clear ID field when editing manual entry
-                          eta_driver_id: ''
-                        }));
-                      }
-                    }}
-                  />
-                </GridCol>
-                <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etaTruckManualMode ? (
-                      <SelectField
-                        label="ETA-A truck"
-                        placeholder="Select truck"
-                        data={trucks}
-                        value={form.eta_truck_id}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          eta_truck_id: value || '',
-                          eta_truck: '' // Clear manual field
-                        }))}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETA-A truck"
-                        placeholder="Enter truck name"
-                        value={form.eta_truck}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          eta_truck: value,
-                          // Clear ID field when editing manual entry
-                          eta_truck_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtaTruckManualMode(!etaTruckManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
-                </GridCol>
-              </Grid>
+                    <Grid>
+                      <GridCol span={12}>
+                        <TextField
+                          label="ETA-A driver phone"
+                          placeholder="+47"
+                          value={etaDriverManualMode ? form.eta_driver_phone : 
+                                 (form.eta_driver_id && form.eta_driver_id !== '' ? (drivers.find(d => d.value === form.eta_driver_id)?.phone || '') : '')}
+                          onChange={(value) => {
+                            if (etaDriverManualMode) {
+                              setForm(prev => ({ 
+                                ...prev, 
+                                eta_driver_phone: value,
+                                eta_driver_id: ''
+                              }));
+                            }
+                          }}
+                        />
+                      </GridCol>
+                    </Grid>
 
-              <Grid>
-                <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etaTrailerManualMode ? (
-                      <SelectField
-                        label="ETA-A trailer"
-                        placeholder="Select trailer"
-                        data={trailers}
-                        value={form.eta_trailer_id}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          eta_trailer_id: value || '',
-                          eta_trailer: '' // Clear manual field
-                        }))}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETA-A trailer"
-                        placeholder="Enter trailer name"
-                        value={form.eta_trailer}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          eta_trailer: value,
-                          // Clear ID field when editing manual entry
-                          eta_trailer_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtaTrailerManualMode(!etaTrailerManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
-                </GridCol>
-              </Grid>
-            </GroupGrid>
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etaTruckManualMode ? (
+                            <SelectField
+                              label="ETA-A truck"
+                              placeholder="Select truck"
+                              data={trucks}
+                              value={form.eta_truck_id}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                eta_truck_id: value || '',
+                                eta_truck: ''
+                              }))}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETA-A truck"
+                              placeholder="Enter truck name"
+                              value={form.eta_truck}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                eta_truck: value,
+                                eta_truck_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtaTruckManualMode(!etaTruckManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
 
-            {/* ETD Assignment */}
-            <GroupGrid title="ETD — DEPARTURE — TRUCK">
-              <Grid>
-                <GridCol span={3}>
-                  <DateInput
-                    label="ETD-D date *"
-                    placeholder="Select ETD date"
-                    value={form.etd_date}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
-                    required
-                  />
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etaTrailerManualMode ? (
+                            <SelectField
+                              label="ETA-A trailer"
+                              placeholder="Select trailer"
+                              data={trailers}
+                              value={form.eta_trailer_id}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                eta_trailer_id: value || '',
+                                eta_trailer: ''
+                              }))}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETA-A trailer"
+                              placeholder="Enter trailer name"
+                              value={form.eta_trailer}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                eta_trailer: value,
+                                eta_trailer_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtaTrailerManualMode(!etaTrailerManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
+                  </GroupGrid>
                 </GridCol>
-                <GridCol span={3}>
-                  <TimePicker
-                    label="ETD-D time"
-                    placeholder="Select ETD time"
-                    value={form.etd_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <TimePicker
-                    label="ETD-D slot time"
-                    placeholder="Slot time"
-                    value={form.etd_time}
-                    onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
-                  />
-                </GridCol>
-                <GridCol span={3}>
-                  <TextField
-                    label="Place to"
-                    placeholder="Destination location"
-                    value={form.notes}
-                    onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
-                  />
-                </GridCol>
-              </Grid>
 
-              <Grid>
-                <GridCol span={3}>
-                  <Switch
-                    label="ETD-D show SMS"
-                    checked={true}
-                    onChange={() => {}}
-                    size="sm"
-                  />
-                </GridCol>
+                {/* ETD Section */}
                 <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etdDriverManualMode ? (
-                      <SelectField
-                        label="ETD-D driver"
-                        placeholder="Select driver"
-                        data={drivers}
-                        value={form.etd_driver_id}
-                        onChange={(driverId) => {
-                          setForm(prev => ({ 
-                            ...prev, 
-                            etd_driver_id: driverId || '',
-                            // Clear manual fields when using selection
-                            etd_driver: '',
-                            etd_driver_phone: ''
-                          }));
-                        }}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETD-D driver"
-                        placeholder="Enter driver name"
-                        value={form.etd_driver}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          etd_driver: value,
-                          // Clear ID field when editing manual entry
-                          etd_driver_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtdDriverManualMode(!etdDriverManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
-                </GridCol>
-              </Grid>
+                  <GroupGrid title="ETD — DEPARTURE — TRUCK">
+                    <Grid>
+                      <GridCol span={6}>
+                        <DateInput
+                          label="ETD-D date"
+                          placeholder="Select date"
+                          value={form.etd_date}
+                          onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
+                          required
+                        />
+                      </GridCol>
+                      <GridCol span={6}>
+                        <TimePicker
+                          label="ETD-D time"
+                          placeholder="Select time"
+                          value={form.etd_time}
+                          onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
+                        />
+                      </GridCol>
+                    </Grid>
 
-              <Grid>
-                <GridCol span={6}>
-                  <TextField
-                    label="ETD-D driver phone"
-                    placeholder="+47"
-                    value={etdDriverManualMode ? form.etd_driver_phone : 
-                           (form.etd_driver_id && form.etd_driver_id !== '' ? (drivers.find(d => d.value === form.etd_driver_id)?.phone || '') : '')}
-                    onChange={(value) => {
-                      if (etdDriverManualMode) {
-                        setForm(prev => ({ 
-                          ...prev, 
-                          etd_driver_phone: value,
-                          // Clear ID field when editing manual entry
-                          etd_driver_id: ''
-                        }));
-                      }
-                    }}
-                  />
-                </GridCol>
-                <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etdTruckManualMode ? (
-                      <SelectField
-                        label="ETD-D truck"
-                        placeholder="Select truck"
-                        data={trucks}
-                        value={form.etd_truck_id}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          etd_truck_id: value || '',
-                          etd_truck: '' // Clear manual field
-                        }))}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETD-D truck"
-                        placeholder="Enter truck name"
-                        value={form.etd_truck}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          etd_truck: value,
-                          // Clear ID field when editing manual entry
-                          etd_truck_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtdTruckManualMode(!etdTruckManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etdDriverManualMode ? (
+                            <SelectField
+                              label="ETD-D driver"
+                              placeholder="Select driver"
+                              data={drivers}
+                              value={form.etd_driver_id}
+                              onChange={(driverId) => {
+                                setForm(prev => ({ 
+                                  ...prev, 
+                                  etd_driver_id: driverId || '',
+                                  etd_driver: '',
+                                  etd_driver_phone: ''
+                                }));
+                              }}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETD-D driver"
+                              placeholder="Enter driver name"
+                              value={form.etd_driver}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                etd_driver: value,
+                                etd_driver_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtdDriverManualMode(!etdDriverManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
+
+                    <Grid>
+                      <GridCol span={12}>
+                        <TextField
+                          label="ETD-D driver phone"
+                          placeholder="+47"
+                          value={etdDriverManualMode ? form.etd_driver_phone : 
+                                 (form.etd_driver_id && form.etd_driver_id !== '' ? (drivers.find(d => d.value === form.etd_driver_id)?.phone || '') : '')}
+                          onChange={(value) => {
+                            if (etdDriverManualMode) {
+                              setForm(prev => ({ 
+                                ...prev, 
+                                etd_driver_phone: value,
+                                etd_driver_id: ''
+                              }));
+                            }
+                          }}
+                        />
+                      </GridCol>
+                    </Grid>
+
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etdTruckManualMode ? (
+                            <SelectField
+                              label="ETD-D truck"
+                              placeholder="Select truck"
+                              data={trucks}
+                              value={form.etd_truck_id}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                etd_truck_id: value || '',
+                                etd_truck: ''
+                              }))}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETD-D truck"
+                              placeholder="Enter truck name"
+                              value={form.etd_truck}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                etd_truck: value,
+                                etd_truck_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtdTruckManualMode(!etdTruckManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
+
+                    <Grid>
+                      <GridCol span={12}>
+                        <Group gap="xs">
+                          {!etdTrailerManualMode ? (
+                            <SelectField
+                              label="ETD-D trailer"
+                              placeholder="Select trailer"
+                              data={trailers}
+                              value={form.etd_trailer_id}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                etd_trailer_id: value || '',
+                                etd_trailer: ''
+                              }))}
+                            />
+                          ) : (
+                            <TextField
+                              label="ETD-D trailer"
+                              placeholder="Enter trailer name"
+                              value={form.etd_trailer}
+                              onChange={(value) => setForm(prev => ({ 
+                                ...prev, 
+                                etd_trailer: value,
+                                etd_trailer_id: ''
+                              }))}
+                            />
+                          )}
+                          <Button
+                            variant="light"
+                            size="sm"
+                            onClick={() => setEtdTrailerManualMode(!etdTrailerManualMode)}
+                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
+                          >
+                            <IconEdit size={16} />
+                          </Button>
+                        </Group>
+                      </GridCol>
+                    </Grid>
+                  </GroupGrid>
                 </GridCol>
               </Grid>
 
-              <Grid>
-                <GridCol span={6}>
-                  <Group gap="xs">
-                    {!etdTrailerManualMode ? (
-                      <SelectField
-                        label="ETD-D trailer"
-                        placeholder="Select trailer"
-                        data={trailers}
-                        value={form.etd_trailer_id}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          etd_trailer_id: value || '',
-                          etd_trailer: '' // Clear manual field
-                        }))}
-                      />
-                    ) : (
-                      <TextField
-                        label="ETD-D trailer"
-                        placeholder="Enter trailer name"
-                        value={form.etd_trailer}
-                        onChange={(value) => setForm(prev => ({ 
-                          ...prev, 
-                          etd_trailer: value,
-                          // Clear ID field when editing manual entry
-                          etd_trailer_id: ''
-                        }))}
-                      />
-                    )}
-                    <Button
-                      variant="light"
-                      size="sm"
-                      onClick={() => setEtdTrailerManualMode(!etdTrailerManualMode)}
-                      style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </Group>
-                </GridCol>
-              </Grid>
-            </GroupGrid>
+              {/* Cargo Details */}
+              <GroupGrid title="Cargo Details">
+                <Grid>
+                  <GridCol span={3}>
+                    <SelectField
+                      label="Commodity"
+                      placeholder="Select commodity"
+                      data={commodityOptions}
+                      value={form.commodity || ''}
+                      onChange={(value) => setForm(prev => ({ 
+                        ...prev, 
+                        commodity: value as CommodityType || null 
+                      }))}
+                    />
+                  </GridCol>
+                  <GridCol span={3}>
+                    <TextField
+                      label="Pallets"
+                      placeholder="Number of pallets"
+                      type="number"
+                      value={form.pallets.toString()}
+                      onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
+                    />
+                  </GridCol>
+                  <GridCol span={3}>
+                    <TextField
+                      label="Boxes"
+                      placeholder="Number of boxes"
+                      type="number"
+                      value={form.boxes.toString()}
+                      onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
+                    />
+                  </GridCol>
+                  <GridCol span={3}>
+                    <TextField
+                      label="Kilos"
+                      placeholder="Weight in kg"
+                      type="number"
+                      value={form.kilos.toString()}
+                      onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
+
+              {/* Notes */}
+              <GroupGrid title="Additional Information">
+                <Grid>
+                  <GridCol span={12}>
+                    <TextField
+                      label="Notes"
+                      placeholder="Order notes..."
+                      value={form.notes}
+                      onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
+                      multiline
+                      rows={3}
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
 
             {/* Actions */}
             <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
