@@ -26,6 +26,12 @@ export type { DriverFieldProps } from './DriverField';
 export { VehicleField } from './VehicleField';
 export type { VehicleFieldProps } from './VehicleField';
 
+export { ReferenceDriverField } from './ReferenceDriverField';
+export type { ReferenceDriverFieldProps } from './ReferenceDriverField';
+
+export { ReferenceVehicleField } from './ReferenceVehicleField';
+export type { ReferenceVehicleFieldProps } from './ReferenceVehicleField';
+
 export { PriorityField } from './PriorityField';
 export type { PriorityFieldProps } from './PriorityField';
 

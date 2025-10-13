@@ -93,7 +93,6 @@ export const EditOrderPage: React.FC = () => {
     etd_trailer: ''
   });
 
-  const [terminals, setTerminals] = useState<Array<{value: string, label: string}>>([]);
   const [drivers, setDrivers] = useState<Array<{value: string, label: string, phone: string}>>([]);
   const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
   const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
@@ -109,19 +108,12 @@ export const EditOrderPage: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [orderData, terminalsData, driversData, trucksData, trailersData] = await Promise.all([
+        const [orderData, driversData, trucksData, trailersData] = await Promise.all([
           orderId ? ApiService.getOrder(orderId) : null,
-          ApiService.getTerminals(),
           ApiService.getDrivers(),
           ApiService.getTrucks(),
           ApiService.getTrailers()
         ]);
-        
-        const terminalOptions = terminalsData.map(terminal => ({
-          value: terminal.id,
-          label: terminal.name
-        }));
-        setTerminals(terminalOptions);
         
         const driverOptions = [
           { value: '', label: '-- Select Driver --', phone: '' },
@@ -146,7 +138,7 @@ export const EditOrderPage: React.FC = () => {
           { value: '', label: '-- Select Trailer --' },
           ...trailersData.map(trailer => ({
             value: trailer.id,
-            label: trailer.trailer_number || trailer.id
+            label: trailer.license_plate || trailer.id
           }))
         ];
         setTrailers(trailerOptions);
@@ -196,11 +188,6 @@ export const EditOrderPage: React.FC = () => {
       } catch (error) {
         console.error('Failed to load data:', error);
         // Fallback to default options
-        setTerminals([
-          { value: 'dc170a0a-a896-411e-9b5a-f466d834ec77', label: 'Terminal 1' },
-          { value: '004f7daa-50dc-48f4-acb5-9dfe69b2e92c', label: 'Terminal 2' },
-          { value: '0f74eb29-4dd7-4139-8718-db7eef530dbf', label: 'Terminal 3' }
-        ]);
         setDrivers([
           { value: '', label: '-- Select Driver --', phone: '' },
           { value: '1', label: 'John Doe', phone: '+47123456789' },

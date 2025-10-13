@@ -18,3 +18,18 @@ export { ContextFormSelectField } from './ContextFormSelectField';
 export { ContextFormDateField } from './ContextFormDateField';
 export { ContextFormSwitchField } from './ContextFormSwitchField';
 export { ContextFormTimePicker } from './ContextFormTimePicker';
+
+// Reference field components (React Admin style)
+export { ReferenceField } from './ReferenceField';
+export { 
+  DriverReferenceField, 
+  TerminalReferenceField, 
+  TruckReferenceField, 
+  TrailerReferenceField 
+} from './ReferenceFields';
+export { 
+  DriverDisplay, 
+  TerminalDisplay, 
+  TruckDisplay, 
+  TrailerDisplay 
+} from './ReferenceDisplay';

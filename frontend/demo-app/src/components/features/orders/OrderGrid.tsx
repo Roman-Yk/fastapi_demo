@@ -7,11 +7,12 @@ import {
   BadgeField,
   ActionField,
   CombinedDateTimeField,
-  DriverField,
-  VehicleField,
+  ReferenceDriverField,
+  ReferenceVehicleField,
   PriorityField,
   TooltipField
 } from '../../admin';
+import { ReferenceDataProvider } from '../../../context/ReferenceDataContext';
 import { 
   Order, 
   CommodityLabels,
@@ -39,23 +40,24 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
   onEdit
 }) => {
   return (
-    <Datagrid
-      data={orders}
-      loading={loading}
-      getRowId={(row) => row.id}
-      onRefresh={onRefresh}
-      onImport={onImport}
-      onExport={onExport}
-      onCreate={onCreate}
-      createLabel="New Order"
-      refreshLabel="Refresh Orders"
-      importLabel="Import Orders"
-      exportLabel="Export Orders"
-      emptyStateTitle="No orders found"
-      emptyStateDescription="There are no orders to display with the current filters."
-      height={600}
-      pageSize={25}
-    >
+    <ReferenceDataProvider>
+      <Datagrid
+        data={orders}
+        loading={loading}
+        getRowId={(row) => row.id}
+        onRefresh={onRefresh}
+        onImport={onImport}
+        onExport={onExport}
+        onCreate={onCreate}
+        createLabel="New Order"
+        refreshLabel="Refresh Orders"
+        importLabel="Import Orders"
+        exportLabel="Export Orders"
+        emptyStateTitle="No orders found"
+        emptyStateDescription="There are no orders to display with the current filters."
+        height={600}
+        pageSize={25}
+      >
       {/* Actions */}
       <ActionField
         source="actions"
@@ -150,7 +152,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       />
       
       {/* ETA Driver */}
-      <DriverField
+      <ReferenceDriverField
         source="eta_driver"
         label="ETA Driver"
         prefix="eta"
@@ -158,7 +160,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       />
       
       {/* ETA Vehicle */}
-      <VehicleField
+      <ReferenceVehicleField
         source="eta_vehicle"
         label="ETA Vehicle"
         prefix="eta"
@@ -168,7 +170,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       />
       
       {/* ETD Driver */}
-      <DriverField
+      <ReferenceDriverField
         source="etd_driver"
         label="ETD Driver"
         prefix="etd"
@@ -176,7 +178,7 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       />
       
       {/* ETD Vehicle */}
-      <VehicleField
+      <ReferenceVehicleField
         source="etd_vehicle"
         label="ETD Vehicle"
         prefix="etd"
@@ -195,5 +197,6 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       
 
     </Datagrid>
+    </ReferenceDataProvider>
   );
 }; 

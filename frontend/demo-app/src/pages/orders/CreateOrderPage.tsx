@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Container, 
   Title, 
@@ -14,6 +14,7 @@ import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
 import { OrderService, CommodityType, OrderServiceLabels, CommodityLabels } from '../../types/order';
 import ApiService from '../../services/apiService';
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
+import { ReferenceDataProvider } from '../../context/ReferenceDataContext';
 import { 
   Grid, 
   GridCol, 
@@ -22,7 +23,11 @@ import {
   ContextFormSelectField,
   ContextFormDateField,
   ContextFormTimePicker,
-  ContextFormSwitchField
+  ContextFormSwitchField,
+  DriverReferenceField,
+  TruckReferenceField,
+  TrailerReferenceField,
+  TerminalReferenceField
 } from '../../components/admin/forms';
 
 interface CreateOrderForm {
@@ -39,14 +44,20 @@ interface CreateOrderForm {
   notes: string;
   priority: boolean;
   terminal_id: string;
+  // ETA reference fields
+  eta_driver_id: string | null;
+  eta_truck_id: string | null;
+  eta_trailer_id: string | null;
+  // ETD reference fields
+  etd_driver_id: string | null;
+  etd_truck_id: string | null;
+  etd_trailer_id: string | null;
 }
 
 // Form content component that uses the context
 const CreateOrderFormContent: React.FC<{
-  terminals: Array<{value: string, label: string}>;
-  loading: boolean;
   onBack: () => void;
-}> = ({ terminals, loading, onBack }) => {
+}> = ({ onBack }) => {
   const navigate = useNavigate();
   const { formData } = useFormContext<CreateOrderForm>();
 
@@ -67,6 +78,14 @@ const CreateOrderFormContent: React.FC<{
         kilos: typeof formData.kilos === 'number' ? formData.kilos : (formData.kilos ? parseFloat(formData.kilos.toString()) : undefined),
         notes: formData.notes || undefined,
         priority: formData.priority,
+        // ETA vehicle assignments
+        eta_driver_id: formData.eta_driver_id || undefined,
+        eta_truck_id: formData.eta_truck_id || undefined,
+        eta_trailer_id: formData.eta_trailer_id || undefined,
+        // ETD vehicle assignments  
+        etd_driver_id: formData.etd_driver_id || undefined,
+        etd_truck_id: formData.etd_truck_id || undefined,
+        etd_trailer_id: formData.etd_trailer_id || undefined,
       };
       
       console.log('Creating order:', orderData);
@@ -141,12 +160,11 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Location & Schedule">
                 <Grid>
                   <GridCol span={6}>
-                    <ContextFormSelectField
+                    <TerminalReferenceField
                       label="Terminal"
                       source="terminal_id"
-                      placeholder={loading ? "Loading terminals..." : "Select terminal"}
+                      placeholder="Select terminal"
                       required
-                      data={terminals}
                     />
                   </GridCol>
                 </Grid>
@@ -179,6 +197,58 @@ const CreateOrderFormContent: React.FC<{
                       label="ETD Time"
                       source="etd_time"
                       placeholder="Select ETD time"
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
+
+              <GroupGrid title="ETA Vehicle & Driver">
+                <Grid>
+                  <GridCol span={4}>
+                    <DriverReferenceField
+                      label="ETA Driver"
+                      source="eta_driver_id"
+                      placeholder="Select driver"
+                    />
+                  </GridCol>
+                  <GridCol span={4}>
+                    <TruckReferenceField
+                      label="ETA Truck"
+                      source="eta_truck_id"
+                      placeholder="Select truck"
+                    />
+                  </GridCol>
+                  <GridCol span={4}>
+                    <TrailerReferenceField
+                      label="ETA Trailer"
+                      source="eta_trailer_id"
+                      placeholder="Select trailer"
+                    />
+                  </GridCol>
+                </Grid>
+              </GroupGrid>
+
+              <GroupGrid title="ETD Vehicle & Driver">
+                <Grid>
+                  <GridCol span={4}>
+                    <DriverReferenceField
+                      label="ETD Driver"
+                      source="etd_driver_id"
+                      placeholder="Select driver"
+                    />
+                  </GridCol>
+                  <GridCol span={4}>
+                    <TruckReferenceField
+                      label="ETD Truck"
+                      source="etd_truck_id"
+                      placeholder="Select truck"
+                    />
+                  </GridCol>
+                  <GridCol span={4}>
+                    <TrailerReferenceField
+                      label="ETD Trailer"
+                      source="etd_trailer_id"
+                      placeholder="Select trailer"
                     />
                   </GridCol>
                 </Grid>
@@ -273,8 +343,6 @@ const CreateOrderFormContent: React.FC<{
 
 export const CreateOrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const [terminals, setTerminals] = useState<Array<{value: string, label: string}>>([]);
-  const [loading, setLoading] = useState(true);
 
   const initialFormData: CreateOrderForm = {
     reference: '',
@@ -290,45 +358,25 @@ export const CreateOrderPage: React.FC = () => {
     notes: '',
     priority: false,
     terminal_id: '',
+    eta_driver_id: null,
+    eta_truck_id: null,
+    eta_trailer_id: null,
+    etd_driver_id: null,
+    etd_truck_id: null,
+    etd_trailer_id: null,
   };
-
-  // Load terminals from API
-  useEffect(() => {
-    const loadTerminals = async () => {
-      try {
-        const terminalsData = await ApiService.getTerminals();
-        const terminalOptions = terminalsData.map(terminal => ({
-          value: terminal.id,
-          label: terminal.name
-        }));
-        setTerminals(terminalOptions);
-      } catch (error) {
-        console.error('Failed to load terminals:', error);
-        // Fallback to default options
-        setTerminals([
-          { value: 'dc170a0a-a896-411e-9b5a-f466d834ec77', label: 'Terminal 1' },
-          { value: '004f7daa-50dc-48f4-acb5-9dfe69b2e92c', label: 'Terminal 2' },
-          { value: '0f74eb29-4dd7-4139-8718-db7eef530dbf', label: 'Terminal 3' }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTerminals();
-  }, []);
 
   const handleBack = () => {
     navigate('/');
   };
 
   return (
-    <FormProvider initialData={initialFormData}>
-      <CreateOrderFormContent 
-        terminals={terminals}
-        loading={loading}
-        onBack={handleBack}
-      />
-    </FormProvider>
+    <ReferenceDataProvider>
+      <FormProvider initialData={initialFormData}>
+        <CreateOrderFormContent 
+          onBack={handleBack}
+        />
+      </FormProvider>
+    </ReferenceDataProvider>
   );
 };

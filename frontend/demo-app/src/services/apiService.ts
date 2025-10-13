@@ -22,7 +22,7 @@ interface Terminal {
 
 interface Trailer {
   id: string;
-  trailer_number: string;
+  license_plate: string;
   type: string | null;
   capacity: number | null;
 }
@@ -50,6 +50,14 @@ interface CreateOrderRequest {
   kilos?: number;
   notes?: string;
   priority?: boolean;
+  // ETA vehicle assignments
+  eta_driver_id?: string;
+  eta_truck_id?: string;
+  eta_trailer_id?: string;
+  // ETD vehicle assignments  
+  etd_driver_id?: string;
+  etd_truck_id?: string;
+  etd_trailer_id?: string;
 }
 
 interface UpdateOrderRequest extends Partial<CreateOrderRequest> {
