@@ -63,6 +63,21 @@ export interface Truck {
 // Service implementations
 class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOrderRequest> {
   protected endpoint = '/orders';
+
+  async getAll(filters?: Record<string, any>, options?: { page?: number; perPage?: number; sort?: string; order?: 'ASC' | 'DESC' }) {
+    // Build query params
+    const params = new URLSearchParams();
+    if (filters && Object.keys(filters).length > 0) {
+      params.append('filter', JSON.stringify(filters));
+    }
+    if (options?.page !== undefined) params.append('page', String(options.page));
+    if (options?.perPage !== undefined) params.append('perPage', String(options.perPage));
+    if (options?.sort) params.append('sort', options.sort);
+    if (options?.order) params.append('order', options.order);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.makeRequest<Order[]>(query);
+  }
 }
 
 class DriverApiService extends BaseApiService<Driver> {

@@ -1,87 +1,73 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { List } from '../../components/admin';
-import { OrderFiltersComponent, OrderGrid } from '../../components/features/orders';
-import { filterOrders } from '../../utils/mockData';
-import { OrderFilters, DateFilterOption } from '../../types/order';
-import { Order } from '../../types/order';
-import ApiService from '../../services/apiService';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { List } from "../../components/admin";
+import {
+  OrderFiltersComponent,
+  OrderGrid,
+} from "../../components/features/orders";
+import { OrderFilters, DateFilterOption } from "../../types/order";
+import { Order } from "../../types/order";
+import { orderApi } from "../../services/apiServices";
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<OrderFilters>({
-    dateFilter: DateFilterOption.TODAY,
-    locationFilter: null,
-    statusFilter: null,
-    serviceFilter: null,
-    commodityFilter: null,
-    priorityFilter: null,
-    searchText: '',
-    inTerminal: false,
-  });
+  // Use a generic filter object for flexibility
+  const [filters, setFilters] = useState<Record<string, any>>({});
 
-  // Load orders from API
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setLoading(true);
-        const ordersData = await ApiService.getOrders();
-        setOrders(ordersData);
-      } catch (error) {
-        console.error('Failed to load orders:', error);
-        // Show error notification here if needed
-        // Fallback to empty array on error
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOrders();
-  }, []);
-
-  // Filter orders based on current filters
-  const filteredOrders = useMemo(() => {
-    return filterOrders(orders, filters);
-  }, [orders, filters]);
-
-  const handleFiltersChange = async (newFilters: OrderFilters) => {
+  // Load orders from API with filters
+  const fetchOrders = async (activeFilters: Record<string, any>) => {
     setLoading(true);
-    
-    // Apply filters immediately for client-side filtering
-    // In production, you might want to send filter parameters to the API
-    setFilters(newFilters);
-    setLoading(false);
-  };
-
-  // Toolbar action handlers
-  const handleRefresh = async () => {
     try {
-      setLoading(true);
-      const ordersData = await ApiService.getOrders();
+      // Automatically map frontend filters to backend filter fields
+      const backendFilters: Record<string, any> = {};
+      Object.entries(activeFilters).forEach(([key, value]) => {
+        if (value !== null && value !== "" && value !== false) {
+          // Rename fields if needed
+          if (key === "dateFilter") {
+            backendFilters["date_range"] = value;
+          } else {
+            backendFilters[key.replace(/Filter$/, "")] = value;
+          }
+        }
+      });
+
+      console.log("Sending filters to backend:", backendFilters);
+      const ordersData = await orderApi.getAll(backendFilters);
       setOrders(ordersData);
-      console.log('Orders refreshed');
     } catch (error) {
-      console.error('Failed to refresh orders:', error);
-      // Fallback to empty array on error
+      console.error("Failed to load orders:", error);
       setOrders([]);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchOrders(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  const handleFiltersChange = async (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+  };
+
+  // Toolbar action handlers
+  const handleRefresh = async () => {
+    fetchOrders(filters);
+  };
+
   const handleImport = () => {
-    console.log('Import orders dialog would open here');
+    console.log("Import orders dialog would open here");
   };
 
   const handleExport = () => {
-    console.log('Export orders with current filters:', filters);
+    console.log("Export orders with current filters:", filters);
   };
 
   const handleCreateOrder = () => {
-    navigate('/orders/create');
+    navigate("/orders/create");
   };
 
   const handleEditOrder = (orderId: string) => {
@@ -95,12 +81,12 @@ export const OrdersPage: React.FC = () => {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           totalOrders={orders.length}
-          filteredOrders={filteredOrders.length}
+          filteredOrders={orders.length}
         />
       }
     >
       <OrderGrid
-        orders={filteredOrders}
+        orders={orders}
         loading={loading}
         onRefresh={handleRefresh}
         onImport={handleImport}
@@ -110,4 +96,4 @@ export const OrdersPage: React.FC = () => {
       />
     </List>
   );
-}; 
+};

@@ -28,7 +28,7 @@ export class BaseApiError extends Error implements ApiError {
 export abstract class BaseApiService<T, CreateT = Omit<T, 'id'>, UpdateT = Partial<CreateT>> {
   protected abstract endpoint: string;
 
-  private async makeRequest<R>(
+  protected async makeRequest<R>(
     path: string,
     options: RequestInit = {}
   ): Promise<R> {

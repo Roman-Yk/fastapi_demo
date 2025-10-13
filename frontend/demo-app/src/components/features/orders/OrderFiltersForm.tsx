@@ -38,32 +38,13 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
   filteredOrders 
 }) => {
   
+  // Accept Record<string, any> and cast to OrderFilters
   const handleFiltersChange = (newFilters: Record<string, any>) => {
-    // Create a proper OrderFilters object with default values
-    const updatedFilters: OrderFilters = {
-      dateFilter: newFilters.dateFilter || DateFilterOption.ALL,
-      locationFilter: newFilters.locationFilter || null,
-      statusFilter: newFilters.statusFilter || null,
-      serviceFilter: newFilters.serviceFilter || null,
-      commodityFilter: newFilters.commodityFilter || null,
-      priorityFilter: newFilters.priorityFilter || null,
-      searchText: newFilters.searchText || '',
-      inTerminal: newFilters.inTerminal || false
-    };
-    onFiltersChange(updatedFilters);
+    onFiltersChange(newFilters as OrderFilters);
   };
-  
-  // Convert current filters to simple key-value format
-  const currentFilters: Record<string, any> = {
-    dateFilter: filters.dateFilter,
-    ...(filters.locationFilter && { locationFilter: filters.locationFilter }),
-    ...(filters.statusFilter && { statusFilter: filters.statusFilter }),
-    ...(filters.serviceFilter && { serviceFilter: filters.serviceFilter }),
-    ...(filters.commodityFilter && { commodityFilter: filters.commodityFilter }),
-    ...(filters.priorityFilter && { priorityFilter: filters.priorityFilter }),
-    ...(filters.searchText && { searchText: filters.searchText }),
-    ...(filters.inTerminal && { inTerminal: filters.inTerminal })
-  };
+
+  // Use filters object directly
+  const currentFilters = filters;
   
   return (
     <ListFilters
@@ -132,6 +113,7 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         source="inTerminal"
         label="In Terminal"
         color="green"
+        thumbIcon={<IconStar size={10} />}
       />
     </ListFilters>
   );
