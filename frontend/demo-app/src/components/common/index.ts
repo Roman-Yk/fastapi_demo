@@ -5,6 +5,9 @@ export * from './ActionButton';
 // Routing Components
 export * from './AppRoutes';
 
+// Error Handling Components
+export * from './ErrorBoundary';
+
 // Re-export commonly used Mantine components with consistent naming
 export { 
   Paper as Card,
