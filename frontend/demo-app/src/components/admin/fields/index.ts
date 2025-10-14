@@ -20,17 +20,18 @@ export type { ActionFieldProps, ActionButtonConfig } from './ActionField';
 export { CombinedDateTimeField } from './CombinedDateTimeField';
 export type { CombinedDateTimeFieldProps } from './CombinedDateTimeField';
 
-export { DriverField } from './DriverField';
-export type { DriverFieldProps } from './DriverField';
-
-export { VehicleField } from './VehicleField';
-export type { VehicleFieldProps } from './VehicleField';
-
 export { ReferenceDriverField } from './ReferenceDriverField';
 export type { ReferenceDriverFieldProps } from './ReferenceDriverField';
 
 export { ReferenceVehicleField } from './ReferenceVehicleField';
 export type { ReferenceVehicleFieldProps } from './ReferenceVehicleField';
+
+// Optimized versions for grids with many rows
+export { ReferenceDriverFieldOptimized } from './ReferenceDriverFieldOptimized';
+export type { ReferenceDriverFieldOptimizedProps } from './ReferenceDriverFieldOptimized';
+
+export { ReferenceVehicleFieldOptimized } from './ReferenceVehicleFieldOptimized';
+export type { ReferenceVehicleFieldOptimizedProps } from './ReferenceVehicleFieldOptimized';
 
 export { PriorityField } from './PriorityField';
 export type { PriorityFieldProps } from './PriorityField';

@@ -14,7 +14,6 @@ import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
 import { OrderService, CommodityType, OrderServiceLabels, CommodityLabels } from '../../types/order';
 import ApiService from '../../services/apiService';
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
-import { ReferenceDataProvider } from '../../context/ReferenceDataContext';
 import { 
   Grid, 
   GridCol, 
@@ -304,12 +303,10 @@ export const CreateOrderPage: React.FC = () => {
   };
 
   return (
-    <ReferenceDataProvider>
-      <FormProvider initialData={{}}>
-        <CreateOrderFormContent 
-          onBack={handleBack}
-        />
-      </FormProvider>
-    </ReferenceDataProvider>
+    <FormProvider initialData={{}}>
+      <CreateOrderFormContent 
+        onBack={handleBack}
+      />
+    </FormProvider>
   );
 };

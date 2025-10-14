@@ -7,12 +7,12 @@ import {
   BadgeField,
   ActionField,
   CombinedDateTimeField,
-  ReferenceDriverField,
-  ReferenceVehicleField,
   PriorityField,
   TooltipField
 } from '../../admin';
-import { ReferenceDataProvider } from '../../../context/ReferenceDataContext';
+import { ReferenceDriverFieldOptimized } from '../../admin/fields/ReferenceDriverFieldOptimized';
+import { ReferenceVehicleFieldOptimized } from '../../admin/fields/ReferenceVehicleFieldOptimized';
+import { useReferenceDataForGrid } from '../../../hooks/useReferenceDataMany';
 import { 
   Order, 
   CommodityLabels,
@@ -39,25 +39,28 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
   onCreate,
   onEdit
 }) => {
+  // Fetch only the reference data needed for the current orders
+  // This will automatically collect IDs and fetch with filter parameter
+  const { getDriver, getTruck, getTrailer, loading: loadingReferenceData } = useReferenceDataForGrid(orders);
+  
   return (
-    <ReferenceDataProvider>
-      <Datagrid
-        data={orders}
-        loading={loading}
-        getRowId={(row) => row.id}
-        onRefresh={onRefresh}
-        onImport={onImport}
-        onExport={onExport}
-        onCreate={onCreate}
-        createLabel="New Order"
-        refreshLabel="Refresh Orders"
-        importLabel="Import Orders"
-        exportLabel="Export Orders"
-        emptyStateTitle="No orders found"
-        emptyStateDescription="There are no orders to display with the current filters."
-        height={600}
-        pageSize={25}
-      >
+    <Datagrid
+      data={orders}
+      loading={loading || loadingReferenceData}
+      getRowId={(row) => row.id}
+      onRefresh={onRefresh}
+      onImport={onImport}
+      onExport={onExport}
+      onCreate={onCreate}
+      createLabel="New Order"
+      refreshLabel="Refresh Orders"
+      importLabel="Import Orders"
+      exportLabel="Export Orders"
+      emptyStateTitle="No orders found"
+      emptyStateDescription="There are no orders to display with the current filters."
+      height={600}
+      pageSize={25}
+    >
       {/* Actions */}
       <ActionField
         source="actions"
@@ -152,39 +155,45 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       />
       
       {/* ETA Driver */}
-      <ReferenceDriverField
+      <ReferenceDriverFieldOptimized
         source="eta_driver"
         label="ETA Driver"
         prefix="eta"
         width={160}
+        getDriver={getDriver}
       />
       
       {/* ETA Vehicle */}
-      <ReferenceVehicleField
+      <ReferenceVehicleFieldOptimized
         source="eta_vehicle"
         label="ETA Vehicle"
         prefix="eta"
         width={160}
         sortable={false}
         filterable={false}
+        getTruck={getTruck}
+        getTrailer={getTrailer}
       />
       
       {/* ETD Driver */}
-      <ReferenceDriverField
+      <ReferenceDriverFieldOptimized
         source="etd_driver"
         label="ETD Driver"
         prefix="etd"
         width={160}
+        getDriver={getDriver}
       />
       
       {/* ETD Vehicle */}
-      <ReferenceVehicleField
+      <ReferenceVehicleFieldOptimized
         source="etd_vehicle"
         label="ETD Vehicle"
         prefix="etd"
         width={160}
         sortable={false}
         filterable={false}
+        getTruck={getTruck}
+        getTrailer={getTrailer}
       />
       
       {/* Notes */}
@@ -195,8 +204,6 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
         lineClamp={2}
       />
       
-
     </Datagrid>
-    </ReferenceDataProvider>
   );
 }; 

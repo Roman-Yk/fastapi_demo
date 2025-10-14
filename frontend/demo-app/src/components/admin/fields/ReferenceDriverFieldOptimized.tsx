@@ -1,23 +1,41 @@
 import React from 'react';
-import { Text, Stack, Group, Skeleton } from '@mantine/core';
+import { Text, Stack, Group } from '@mantine/core';
 import { IconUser } from '@tabler/icons-react';
-import { useDriver } from '../../../hooks/useReferenceData';
 import { FieldProps } from './types';
 
-export interface ReferenceDriverFieldProps extends FieldProps {
+export interface ReferenceDriverFieldOptimizedProps extends FieldProps {
   prefix?: 'eta' | 'etd';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showIcon?: boolean;
   showPhone?: boolean;
+  getDriver: (id: string | null | undefined) => any;
 }
 
-export const ReferenceDriverField: React.FC<ReferenceDriverFieldProps> = ({ 
+/**
+ * Optimized driver field for grids with many rows
+ * 
+ * Instead of calling useDriver() for each row (which would be inefficient),
+ * this component receives a getDriver function from a parent that batched
+ * all the data fetching.
+ * 
+ * Usage in OrderGrid:
+ * ```tsx
+ * const { getDriver, loading } = useDriversMany();
+ * 
+ * <ReferenceDriverFieldOptimized
+ *   record={record}
+ *   getDriver={getDriver}
+ * />
+ * ```
+ */
+export const ReferenceDriverFieldOptimized: React.FC<ReferenceDriverFieldOptimizedProps> = ({ 
   record,
   source,
   prefix,
   size = 'sm',
   showIcon = true,
   showPhone = true,
+  getDriver,
   ...props 
 }) => {
   // Derive the field names
@@ -29,15 +47,11 @@ export const ReferenceDriverField: React.FC<ReferenceDriverFieldProps> = ({
   const driverName = record?.[driverNameField];
   const phone = record?.[phoneField];
   
-  // Use optimized hook - only fetches drivers data, with caching
-  const { driver: driverRecord, loading } = useDriver(driverId);
+  // Get driver from lookup - no API call, instant!
+  const driverRecord = getDriver(driverId);
 
   const displayName = driverName || driverRecord?.name;
   const displayPhone = phone || driverRecord?.phone;
-
-  if (loading) {
-    return <Skeleton height={20} width={100} />;
-  }
 
   if (!displayName && !driverId) {
     return <Text size={size} c="dimmed">-</Text>;

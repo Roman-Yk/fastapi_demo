@@ -21,15 +21,7 @@ export { ContextFormTimePicker } from './ContextFormTimePicker';
 
 // Reference field components (React Admin style)
 export { ReferenceField } from './ReferenceField';
-export { 
-  DriverReferenceField, 
-  TerminalReferenceField, 
-  TruckReferenceField, 
-  TrailerReferenceField 
-} from './ReferenceFields';
-export { 
-  DriverDisplay, 
-  TerminalDisplay, 
-  TruckDisplay, 
-  TrailerDisplay 
-} from './ReferenceDisplay';
+export { DriverReferenceField } from './DriverReferenceField';
+export { TerminalReferenceField } from './TerminalReferenceField';
+export { TruckReferenceField } from './TruckReferenceField';
+export { TrailerReferenceField } from './TrailerReferenceField';
