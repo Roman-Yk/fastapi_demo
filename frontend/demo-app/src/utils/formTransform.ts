@@ -40,13 +40,17 @@ export function transformFormData<T = any>(
   } = config;
 
   return Object.entries(formData).reduce((acc, [key, value]) => {
-    // Skip empty values if configured
-    if (skipEmpty && (value === '' || value === null || value === undefined)) {
+    // Skip empty strings and undefined if configured, but keep null values
+    if (skipEmpty && (value === '' || value === undefined)) {
       return acc;
     }
 
+    // Explicitly include null values (to clear fields in API)
+    if (value === null) {
+      acc[key] = null;
+    }
     // Handle Date objects
-    if (value instanceof Date) {
+    else if (value instanceof Date) {
       acc[key] = value.toISOString().split('T')[0];
     }
     // Handle configured date fields
@@ -100,9 +104,14 @@ export function populateFormFromApi<T = any>(
     if (dateFields.includes(key) && value) {
       acc[key] = new Date(value);
     }
-    // Convert null/undefined to empty string
-    else if (value === null || value === undefined) {
-      acc[key] = '';
+    // Keep null as null (don't convert to empty string)
+    // This allows us to distinguish between "no value from API" and "user cleared field"
+    else if (value === null) {
+      acc[key] = null;
+    }
+    // Convert undefined to null for consistency
+    else if (value === undefined) {
+      acc[key] = null;
     }
     // Pass through all other values
     else {

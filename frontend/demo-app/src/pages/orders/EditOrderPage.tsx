@@ -111,7 +111,6 @@ const EditOrderFormContent: React.FC<{
       // Transform form data to API format automatically
       const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
       
-      console.log('Updating order:', apiData);
       await ApiService.updateOrder(orderId, apiData);
       navigate('/');
     } catch (error) {
@@ -242,9 +241,9 @@ const EditOrderFormContent: React.FC<{
                               onChange={(driverId) => {
                                 setForm(prev => ({ 
                                   ...prev, 
-                                  eta_driver_id: driverId || '',
-                                  eta_driver: '',
-                                  eta_driver_phone: ''
+                                  eta_driver_id: driverId || null,
+                                  eta_driver: null,
+                                  eta_driver_phone: null
                                 }));
                               }}
                             />
@@ -256,7 +255,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_driver: value,
-                                eta_driver_id: ''
+                                eta_driver_id: null
                               }))}
                             />
                           )}
@@ -284,7 +283,7 @@ const EditOrderFormContent: React.FC<{
                               setForm(prev => ({ 
                                 ...prev, 
                                 eta_driver_phone: value,
-                                eta_driver_id: ''
+                                eta_driver_id: null
                               }));
                             }
                           }}
@@ -303,8 +302,8 @@ const EditOrderFormContent: React.FC<{
                               value={formData.eta_truck_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                eta_truck_id: value || '',
-                                eta_truck: ''
+                                eta_truck_id: value || null,
+                                eta_truck: null
                               }))}
                             />
                           ) : (
@@ -315,7 +314,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_truck: value,
-                                eta_truck_id: ''
+                                eta_truck_id: null
                               }))}
                             />
                           )}
@@ -342,8 +341,8 @@ const EditOrderFormContent: React.FC<{
                               value={formData.eta_trailer_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                eta_trailer_id: value || '',
-                                eta_trailer: ''
+                                eta_trailer_id: value || null,
+                                eta_trailer: null
                               }))}
                             />
                           ) : (
@@ -354,7 +353,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_trailer: value,
-                                eta_trailer_id: ''
+                                eta_trailer_id: null
                               }))}
                             />
                           )}
@@ -407,9 +406,9 @@ const EditOrderFormContent: React.FC<{
                               onChange={(driverId) => {
                                 setForm(prev => ({ 
                                   ...prev, 
-                                  etd_driver_id: driverId || '',
-                                  etd_driver: '',
-                                  etd_driver_phone: ''
+                                  etd_driver_id: driverId || null,
+                                  etd_driver: null,
+                                  etd_driver_phone: null
                                 }));
                               }}
                             />
@@ -421,7 +420,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_driver: value,
-                                etd_driver_id: ''
+                                etd_driver_id: null
                               }))}
                             />
                           )}
@@ -449,7 +448,7 @@ const EditOrderFormContent: React.FC<{
                               setForm(prev => ({ 
                                 ...prev, 
                                 etd_driver_phone: value,
-                                etd_driver_id: ''
+                                etd_driver_id: null
                               }));
                             }
                           }}
@@ -468,8 +467,8 @@ const EditOrderFormContent: React.FC<{
                               value={formData.etd_truck_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                etd_truck_id: value || '',
-                                etd_truck: ''
+                                etd_truck_id: value || null,
+                                etd_truck: null
                               }))}
                             />
                           ) : (
@@ -480,7 +479,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_truck: value,
-                                etd_truck_id: ''
+                                etd_truck_id: null
                               }))}
                             />
                           )}
@@ -507,8 +506,8 @@ const EditOrderFormContent: React.FC<{
                               value={formData.etd_trailer_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                etd_trailer_id: value || '',
-                                etd_trailer: ''
+                                etd_trailer_id: value || null,
+                                etd_trailer: null
                               }))}
                             />
                           ) : (
@@ -519,7 +518,7 @@ const EditOrderFormContent: React.FC<{
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_trailer: value,
-                                etd_trailer_id: ''
+                                etd_trailer_id: null
                               }))}
                             />
                           )}

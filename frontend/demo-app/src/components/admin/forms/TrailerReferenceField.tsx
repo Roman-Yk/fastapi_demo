@@ -8,7 +8,6 @@ interface TrailerReferenceFieldProps<K extends string> {
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  clearable?: boolean;
 }
 
 export function TrailerReferenceField<K extends string>({
@@ -17,21 +16,25 @@ export function TrailerReferenceField<K extends string>({
   placeholder = 'Select trailer',
   required = false,
   searchable = true,
-  clearable = true,
 }: TrailerReferenceFieldProps<K>) {
   const { formData, updateField } = useFormContext();
   const { data: trailers, loading } = useTrailers();
 
   const value = formData[source];
 
-  const options = trailers.map(trailer => ({
-    value: trailer.id.toString(),
-    label: trailer.license_plate,
-  }));
+  const options = [
+    { value: '', label: '-- Select Trailer --' },
+    ...trailers.map(trailer => ({
+      value: trailer.id.toString(),
+      label: trailer.license_plate,
+    }))
+  ];
 
   const handleChange = (newValue: string | null) => {
-    const numericValue = newValue ? parseInt(newValue, 10) : null;
-    updateField(source, numericValue);
+    // If cleared (null, empty string, or '-- Select --'), set to null
+    // Otherwise keep as string (for UUID support)
+    const fieldValue = newValue && newValue !== '' ? newValue : null;
+    updateField(source, fieldValue);
   };
 
   return (
@@ -39,11 +42,11 @@ export function TrailerReferenceField<K extends string>({
       label={label}
       placeholder={loading ? 'Loading trailers...' : placeholder}
       data={options}
-      value={value?.toString() || ''}
+      value={value ? value.toString() : ''}
       onChange={handleChange}
       required={required}
       searchable={searchable}
-      clearable={clearable}
+      clearable={false}
       disabled={loading}
       rightSection={loading ? <Loader size="xs" /> : undefined}
       maxDropdownHeight={200}

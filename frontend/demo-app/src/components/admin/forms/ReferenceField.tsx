@@ -57,6 +57,8 @@ export function ReferenceField<K extends string>({
   }));
 
   const handleChange = (newValue: string | null) => {
+    // If cleared (null or empty string), pass null through transform
+    // Otherwise pass the value through transform
     updateField(source, newValue, transform);
   };
 
@@ -65,7 +67,7 @@ export function ReferenceField<K extends string>({
       label={label}
       placeholder={loading ? `Loading ${resource}...` : placeholder}
       data={options}
-      value={value?.toString() || ''}
+      value={value ? value.toString() : null}
       onChange={handleChange}
       required={required}
       searchable={searchable}

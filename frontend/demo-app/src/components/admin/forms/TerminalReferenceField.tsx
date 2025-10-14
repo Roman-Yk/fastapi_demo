@@ -8,7 +8,6 @@ interface TerminalReferenceFieldProps<K extends string> {
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  clearable?: boolean;
 }
 
 export function TerminalReferenceField<K extends string>({
@@ -17,21 +16,25 @@ export function TerminalReferenceField<K extends string>({
   placeholder = 'Select terminal',
   required = false,
   searchable = true,
-  clearable = true,
 }: TerminalReferenceFieldProps<K>) {
   const { formData, updateField } = useFormContext();
   const { data: terminals, loading } = useTerminals();
 
   const value = formData[source];
 
-  const options = terminals.map(terminal => ({
-    value: terminal.id.toString(),
-    label: terminal.name,
-  }));
+  const options = [
+    { value: '', label: '-- Select Terminal --' },
+    ...terminals.map(terminal => ({
+      value: terminal.id.toString(),
+      label: terminal.name,
+    }))
+  ];
 
   const handleChange = (newValue: string | null) => {
-    const numericValue = newValue ? parseInt(newValue, 10) : null;
-    updateField(source, numericValue);
+    // If cleared (null, empty string, or '-- Select --'), set to null
+    // Otherwise keep as string (for UUID support)
+    const fieldValue = newValue && newValue !== '' ? newValue : null;
+    updateField(source, fieldValue);
   };
 
   return (
@@ -39,11 +42,11 @@ export function TerminalReferenceField<K extends string>({
       label={label}
       placeholder={loading ? 'Loading terminals...' : placeholder}
       data={options}
-      value={value?.toString() || ''}
+      value={value ? value.toString() : ''}
       onChange={handleChange}
       required={required}
       searchable={searchable}
-      clearable={clearable}
+      clearable={false}
       disabled={loading}
       rightSection={loading ? <Loader size="xs" /> : undefined}
       maxDropdownHeight={200}

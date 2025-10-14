@@ -8,7 +8,6 @@ interface DriverReferenceFieldProps<K extends string> {
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  clearable?: boolean;
 }
 
 export function DriverReferenceField<K extends string>({
@@ -17,21 +16,25 @@ export function DriverReferenceField<K extends string>({
   placeholder = 'Select driver',
   required = false,
   searchable = true,
-  clearable = true,
 }: DriverReferenceFieldProps<K>) {
   const { formData, updateField } = useFormContext();
   const { data: drivers, loading } = useDrivers();
 
   const value = formData[source];
 
-  const options = drivers.map(driver => ({
-    value: driver.id.toString(),
-    label: driver.name,
-  }));
+  const options = [
+    { value: '', label: '-- Select Driver --' },
+    ...drivers.map(driver => ({
+      value: driver.id.toString(),
+      label: driver.name,
+    }))
+  ];
 
   const handleChange = (newValue: string | null) => {
-    const numericValue = newValue ? parseInt(newValue, 10) : null;
-    updateField(source, numericValue);
+    // If cleared (null, empty string, or '-- Select --'), set to null
+    // Otherwise keep as string (for UUID support)
+    const fieldValue = newValue && newValue !== '' ? newValue : null;
+    updateField(source, fieldValue);
   };
 
   return (
@@ -39,11 +42,11 @@ export function DriverReferenceField<K extends string>({
       label={label}
       placeholder={loading ? 'Loading drivers...' : placeholder}
       data={options}
-      value={value?.toString() || ''}
+      value={value ? value.toString() : ''}
       onChange={handleChange}
       required={required}
       searchable={searchable}
-      clearable={clearable}
+      clearable={false}
       disabled={loading}
       rightSection={loading ? <Loader size="xs" /> : undefined}
       maxDropdownHeight={200}
