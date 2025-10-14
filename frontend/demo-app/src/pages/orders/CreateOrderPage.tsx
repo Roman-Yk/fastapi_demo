@@ -29,67 +29,22 @@ import {
   TrailerReferenceField,
   TerminalReferenceField
 } from '../../components/admin/forms';
-
-interface CreateOrderForm {
-  reference: string;
-  service: OrderService | null;
-  eta_date: Date | null;
-  eta_time: string;
-  etd_date: Date | null;
-  etd_time: string;
-  commodity: CommodityType | null;
-  pallets: string | number;
-  boxes: string | number;
-  kilos: string | number;
-  notes: string;
-  priority: boolean;
-  terminal_id: string;
-  // ETA reference fields
-  eta_driver_id: string | null;
-  eta_truck_id: string | null;
-  eta_trailer_id: string | null;
-  // ETD reference fields
-  etd_driver_id: string | null;
-  etd_truck_id: string | null;
-  etd_trailer_id: string | null;
-}
+import { transformFormData, ORDER_FORM_CONFIG } from '../../utils/formTransform';
 
 // Form content component that uses the context
 const CreateOrderFormContent: React.FC<{
   onBack: () => void;
 }> = ({ onBack }) => {
   const navigate = useNavigate();
-  const { formData } = useFormContext<CreateOrderForm>();
+  const { formData } = useFormContext();
 
   const handleSave = async () => {
     try {
-      // Convert form data to API format
-      const orderData = {
-        reference: formData.reference,
-        service: formData.service!,
-        terminal_id: formData.terminal_id,
-        eta_date: formData.eta_date?.toISOString().split('T')[0],
-        eta_time: formData.eta_time || undefined,
-        etd_date: formData.etd_date?.toISOString().split('T')[0],
-        etd_time: formData.etd_time || undefined,
-        commodity: formData.commodity || undefined,
-        pallets: typeof formData.pallets === 'number' ? formData.pallets : (formData.pallets ? parseFloat(formData.pallets.toString()) : undefined),
-        boxes: typeof formData.boxes === 'number' ? formData.boxes : (formData.boxes ? parseFloat(formData.boxes.toString()) : undefined),
-        kilos: typeof formData.kilos === 'number' ? formData.kilos : (formData.kilos ? parseFloat(formData.kilos.toString()) : undefined),
-        notes: formData.notes || undefined,
-        priority: formData.priority,
-        // ETA vehicle assignments
-        eta_driver_id: formData.eta_driver_id || undefined,
-        eta_truck_id: formData.eta_truck_id || undefined,
-        eta_trailer_id: formData.eta_trailer_id || undefined,
-        // ETD vehicle assignments  
-        etd_driver_id: formData.etd_driver_id || undefined,
-        etd_truck_id: formData.etd_truck_id || undefined,
-        etd_trailer_id: formData.etd_trailer_id || undefined,
-      };
+      // Transform form data to API format automatically
+      const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
       
-      console.log('Creating order:', orderData);
-      await ApiService.createOrder(orderData);
+      console.log('Creating order:', apiData);
+      await ApiService.createOrder(apiData);
       navigate('/');
     } catch (error) {
       console.error('Failed to create order:', error);
@@ -344,35 +299,35 @@ const CreateOrderFormContent: React.FC<{
 export const CreateOrderPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const initialFormData: CreateOrderForm = {
-    reference: '',
-    service: null,
-    eta_date: null,
-    eta_time: '',
-    etd_date: null,
-    etd_time: '',
-    commodity: null,
-    pallets: '',
-    boxes: '',
-    kilos: '',
-    notes: '',
-    priority: false,
-    terminal_id: '',
-    eta_driver_id: null,
-    eta_truck_id: null,
-    eta_trailer_id: null,
-    etd_driver_id: null,
-    etd_truck_id: null,
-    etd_trailer_id: null,
-  };
-
   const handleBack = () => {
     navigate('/');
   };
 
   return (
     <ReferenceDataProvider>
-      <FormProvider initialData={initialFormData}>
+      <FormProvider 
+        initialData={{
+          reference: '',
+          service: null,
+          eta_date: null,
+          eta_time: '',
+          etd_date: null,
+          etd_time: '',
+          commodity: null,
+          pallets: '',
+          boxes: '',
+          kilos: '',
+          notes: '',
+          priority: false,
+          terminal_id: '',
+          eta_driver_id: null,
+          eta_truck_id: null,
+          eta_trailer_id: null,
+          etd_driver_id: null,
+          etd_truck_id: null,
+          etd_trailer_id: null,
+        }}
+      >
         <CreateOrderFormContent 
           onBack={handleBack}
         />
