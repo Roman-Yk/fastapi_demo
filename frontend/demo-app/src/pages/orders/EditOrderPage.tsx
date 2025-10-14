@@ -22,6 +22,7 @@ import {
   TextField, 
   SelectField, 
   TimePicker,
+  PhoneNumberInput,
   DriverReferenceField,
   TruckReferenceField,
   TrailerReferenceField
@@ -241,14 +242,15 @@ const EditOrderFormContent: React.FC<{
 
                     <Grid>
                       <GridCol span={12}>
-                        <TextField
+                        <PhoneNumberInput
                           label="ETA-A driver phone"
-                          placeholder="+47"
+                          placeholder="+47 XXX XX XXX"
                           value={formData.eta_driver_phone || ''}
                           onChange={(value) => setForm(prev => ({ 
                             ...prev, 
-                            eta_driver_phone: value
+                            eta_driver_phone: value || null
                           }))}
+                          defaultCountry="NO"
                         />
                       </GridCol>
                     </Grid>
@@ -409,14 +411,15 @@ const EditOrderFormContent: React.FC<{
 
                     <Grid>
                       <GridCol span={12}>
-                        <TextField
+                        <PhoneNumberInput
                           label="ETD-D driver phone"
-                          placeholder="+47"
+                          placeholder="+47 XXX XX XXX"
                           value={formData.etd_driver_phone || ''}
                           onChange={(value) => setForm(prev => ({ 
                             ...prev, 
-                            etd_driver_phone: value
+                            etd_driver_phone: value || null
                           }))}
+                          defaultCountry="NO"
                         />
                       </GridCol>
                     </Grid>

@@ -1,0 +1,43 @@
+/* Additional styles for PhoneInput component to prevent black flash and improve dropdown */
+
+/* Ensure the country select dropdown has proper styling */
+.PhoneInputCountrySelect {
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  appearance: menulist;
+}
+
+/* Style the native select dropdown options */
+.PhoneInputCountrySelect option {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  line-height: 1.5 !important;
+}
+
+/* Prevent any black background during transition */
+.PhoneInputCountrySelect:focus {
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+/* Fix for dropdown in different browsers */
+.PhoneInputCountrySelect optgroup {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure smooth rendering */
+.PhoneInput {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+}
+
+/* Additional hover state for better UX */
+.PhoneInputCountry:hover .PhoneInputCountryIcon {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
