@@ -305,29 +305,7 @@ export const CreateOrderPage: React.FC = () => {
 
   return (
     <ReferenceDataProvider>
-      <FormProvider 
-        initialData={{
-          reference: '',
-          service: null,
-          eta_date: null,
-          eta_time: '',
-          etd_date: null,
-          etd_time: '',
-          commodity: null,
-          pallets: '',
-          boxes: '',
-          kilos: '',
-          notes: '',
-          priority: false,
-          terminal_id: '',
-          eta_driver_id: null,
-          eta_truck_id: null,
-          eta_trailer_id: null,
-          etd_driver_id: null,
-          etd_truck_id: null,
-          etd_trailer_id: null,
-        }}
-      >
+      <FormProvider initialData={{}}>
         <CreateOrderFormContent 
           onBack={handleBack}
         />

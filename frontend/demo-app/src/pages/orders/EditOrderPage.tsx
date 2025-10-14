@@ -23,75 +23,16 @@ import {
   SelectField, 
   TimePicker 
 } from '../../components/admin/forms';
+import { FormProvider, useFormContext } from '../../hooks/useFormContext';
+import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
 
-interface EditOrderForm {
-  reference: string;
-  service: OrderService | null;
-  eta_date: Date | null;
-  eta_time: string;
-  etd_date: Date | null;
-  etd_time: string;
-  commodity: CommodityType | null;
-  pallets: string | number;
-  boxes: string | number;
-  kilos: string | number;
-  notes: string;
-  priority: boolean;
-  terminal_id: string;
-  // ETA fields - ID or manual, not both
-  eta_driver_id: string;
-  eta_truck_id: string;
-  eta_trailer_id: string;
-  eta_driver: string;      // Manual driver name
-  eta_driver_phone: string; // Manual driver phone
-  eta_truck: string;       // Manual truck name
-  eta_trailer: string;     // Manual trailer name
-  // ETD fields - ID or manual, not both
-  etd_driver_id: string;
-  etd_truck_id: string;
-  etd_trailer_id: string;
-  etd_driver: string;      // Manual driver name
-  etd_driver_phone: string; // Manual driver phone
-  etd_truck: string;       // Manual truck name
-  etd_trailer: string;     // Manual trailer name
-}
-
-export const EditOrderPage: React.FC = () => {
+// Form content component that uses the context
+const EditOrderFormContent: React.FC<{
+  orderId: string;
+  onBack: () => void;
+}> = ({ orderId, onBack }) => {
   const navigate = useNavigate();
-  const { orderId } = useParams<{ orderId: string }>();
-  
-  // Form state
-  const [form, setForm] = useState<EditOrderForm>({
-    priority: false,
-    reference: '',
-    service: null,
-    eta_date: null,
-    eta_time: '',
-    etd_date: null,
-    etd_time: '',
-    commodity: null,
-    pallets: '',
-    boxes: '',
-    kilos: '',
-    notes: '',
-    terminal_id: '',
-    // ETA fields
-    eta_driver_id: '',
-    eta_truck_id: '',
-    eta_trailer_id: '',
-    eta_driver: '',
-    eta_driver_phone: '',
-    eta_truck: '',
-    eta_trailer: '',
-    // ETD fields
-    etd_driver_id: '',
-    etd_truck_id: '',
-    etd_trailer_id: '',
-    etd_driver: '',
-    etd_driver_phone: '',
-    etd_truck: '',
-    etd_trailer: ''
-  });
+  const { formData, setForm } = useFormContext();
 
   const [drivers, setDrivers] = useState<Array<{value: string, label: string, phone: string}>>([]);
   const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
@@ -104,12 +45,12 @@ export const EditOrderPage: React.FC = () => {
   const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
   const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
 
-  // Load terminals and order data from API
+  // Load data and populate form
   useEffect(() => {
     const loadData = async () => {
       try {
         const [orderData, driversData, trucksData, trailersData] = await Promise.all([
-          orderId ? ApiService.getOrder(orderId) : null,
+          ApiService.getOrder(orderId),
           ApiService.getDrivers(),
           ApiService.getTrucks(),
           ApiService.getTrailers()
@@ -143,39 +84,9 @@ export const EditOrderPage: React.FC = () => {
         ];
         setTrailers(trailerOptions);
 
-        // If editing existing order, populate form
+        // Populate form from API data - fields are defined by JSX components only
         if (orderData) {
-          setForm({
-            reference: orderData.reference || '',
-            service: orderData.service || null,
-            eta_date: orderData.eta_date ? new Date(orderData.eta_date) : null,
-            eta_time: orderData.eta_time || '',
-            etd_date: orderData.etd_date ? new Date(orderData.etd_date) : null,
-            etd_time: orderData.etd_time || '',
-            commodity: orderData.commodity || null,
-            pallets: orderData.pallets || '',
-            boxes: orderData.boxes || '',
-            kilos: orderData.kilos || '',
-            notes: orderData.notes || '',
-            priority: orderData.priority || false,
-            terminal_id: orderData.terminal_id || '',
-            // ETA fields
-            eta_driver_id: orderData.eta_driver_id || '',
-            eta_truck_id: orderData.eta_truck_id || '',
-            eta_trailer_id: orderData.eta_trailer_id || '',
-            eta_driver: orderData.eta_driver || '',
-            eta_driver_phone: orderData.eta_driver_phone || '',
-            eta_truck: orderData.eta_truck || '',
-            eta_trailer: orderData.eta_trailer || '',
-            // ETD fields
-            etd_driver_id: orderData.etd_driver_id || '',
-            etd_truck_id: orderData.etd_truck_id || '',
-            etd_trailer_id: orderData.etd_trailer_id || '',
-            etd_driver: orderData.etd_driver || '',
-            etd_driver_phone: orderData.etd_driver_phone || '',
-            etd_truck: orderData.etd_truck || '',
-            etd_trailer: orderData.etd_trailer || '',
-          });
+          setForm(() => populateFormFromApi(orderData, ORDER_DATE_FIELDS));
 
           // Set manual mode based on whether manual fields have data
           setEtaDriverManualMode(!!(orderData.eta_driver || orderData.eta_driver_phone));
@@ -187,73 +98,21 @@ export const EditOrderPage: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to load data:', error);
-        // Fallback to default options
-        setDrivers([
-          { value: '', label: '-- Select Driver --', phone: '' },
-          { value: '1', label: 'John Doe', phone: '+47123456789' },
-          { value: '2', label: 'Jane Smith', phone: '+47987654321' },
-        ]);
-        setTrucks([
-          { value: '', label: '-- Select Truck --' },
-          { value: '1', label: 'Truck 001' },
-          { value: '2', label: 'Truck 002' },
-        ]);
-        setTrailers([
-          { value: '', label: '-- Select Trailer --' },
-          { value: '1', label: 'Trailer 001' },
-          { value: '2', label: 'Trailer 002' },
-        ]);
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [orderId]);
-
-  const handleBack = () => {
-    navigate('/');
-  };
+  }, [orderId, setForm]);
 
   const handleSave = async () => {
-    if (!orderId) return;
-    
     try {
-      // Convert form data to API format
-      const orderData = {
-        reference: form.reference || undefined,
-        service: form.service || undefined,
-        terminal_id: form.terminal_id || undefined,
-        eta_date: form.eta_date ? form.eta_date.toISOString().split('T')[0] : undefined,
-        eta_time: form.eta_time || undefined,
-        etd_date: form.etd_date ? form.etd_date.toISOString().split('T')[0] : undefined,
-        etd_time: form.etd_time || undefined,
-        commodity: form.commodity || undefined,
-        pallets: typeof form.pallets === 'number' ? form.pallets : (form.pallets ? parseFloat(form.pallets.toString()) : undefined),
-        boxes: typeof form.boxes === 'number' ? form.boxes : (form.boxes ? parseFloat(form.boxes.toString()) : undefined),
-        kilos: typeof form.kilos === 'number' ? form.kilos : (form.kilos ? parseFloat(form.kilos.toString()) : undefined),
-        notes: form.notes || undefined,
-        priority: form.priority,
-        // ETA fields - either ID or manual, never both
-        eta_driver_id: form.eta_driver_id || undefined,
-        eta_truck_id: form.eta_truck_id || undefined,
-        eta_trailer_id: form.eta_trailer_id || undefined,
-        eta_driver: form.eta_driver || undefined,
-        eta_driver_phone: form.eta_driver_phone || undefined,
-        eta_truck: form.eta_truck || undefined,
-        eta_trailer: form.eta_trailer || undefined,
-        // ETD fields - either ID or manual, never both
-        etd_driver_id: form.etd_driver_id || undefined,
-        etd_truck_id: form.etd_truck_id || undefined,
-        etd_trailer_id: form.etd_trailer_id || undefined,
-        etd_driver: form.etd_driver || undefined,
-        etd_driver_phone: form.etd_driver_phone || undefined,
-        etd_truck: form.etd_truck || undefined,
-        etd_trailer: form.etd_trailer || undefined,
-      };
+      // Transform form data to API format automatically
+      const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
       
-      console.log('Updating order:', orderData);
-      await ApiService.updateOrder(orderId, orderData);
+      console.log('Updating order:', apiData);
+      await ApiService.updateOrder(orderId, apiData);
       navigate('/');
     } catch (error) {
       console.error('Failed to update order:', error);
@@ -262,8 +121,6 @@ export const EditOrderPage: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!orderId) return;
-    
     if (window.confirm('Are you sure you want to delete this order?')) {
       try {
         console.log('Delete order:', orderId);
@@ -271,7 +128,6 @@ export const EditOrderPage: React.FC = () => {
         navigate('/');
       } catch (error) {
         console.error('Failed to delete order:', error);
-        // TODO: Show error notification
       }
     }
   };
@@ -296,7 +152,7 @@ export const EditOrderPage: React.FC = () => {
               <Button 
                 variant="subtle" 
                 leftSection={<IconArrowLeft size={16} />}
-                onClick={handleBack}
+                onClick={onBack}
               >
                 Back to Orders
               </Button>
@@ -321,7 +177,7 @@ export const EditOrderPage: React.FC = () => {
                       label="Reference"
                       placeholder="Order reference"
                       required
-                      value={form.reference}
+                      value={formData.reference}
                       onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
                     />
                   </GridCol>
@@ -331,7 +187,7 @@ export const EditOrderPage: React.FC = () => {
                       placeholder="Select service"
                       required
                       data={serviceOptions}
-                      value={form.service?.toString() || ''}
+                      value={formData.service?.toString() || ''}
                       onChange={(value) => setForm(prev => ({ 
                         ...prev, 
                         service: value ? parseInt(value) as OrderService : null 
@@ -341,7 +197,7 @@ export const EditOrderPage: React.FC = () => {
                   <GridCol span={2}>
                     <Switch
                       label="Priority"
-                      checked={form.priority}
+                      checked={formData.priority}
                       onChange={(e) => setForm(prev => ({ ...prev, priority: e.target.checked }))}
                       size="md"
                     />
@@ -359,7 +215,7 @@ export const EditOrderPage: React.FC = () => {
                         <DateInput
                           label="ETA-A date"
                           placeholder="Select date"
-                          value={form.eta_date}
+                          value={formData.eta_date}
                           onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
                           required
                         />
@@ -368,7 +224,7 @@ export const EditOrderPage: React.FC = () => {
                         <TimePicker
                           label="ETA-A time"
                           placeholder="Select time"
-                          value={form.eta_time}
+                          value={formData.eta_time}
                           onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
                         />
                       </GridCol>
@@ -382,7 +238,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETA-A driver"
                               placeholder="Select driver"
                               data={drivers}
-                              value={form.eta_driver_id}
+                              value={formData.eta_driver_id}
                               onChange={(driverId) => {
                                 setForm(prev => ({ 
                                   ...prev, 
@@ -396,7 +252,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETA-A driver"
                               placeholder="Enter driver name"
-                              value={form.eta_driver}
+                              value={formData.eta_driver}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_driver: value,
@@ -421,8 +277,8 @@ export const EditOrderPage: React.FC = () => {
                         <TextField
                           label="ETA-A driver phone"
                           placeholder="+47"
-                          value={etaDriverManualMode ? form.eta_driver_phone : 
-                                 (form.eta_driver_id && form.eta_driver_id !== '' ? (drivers.find(d => d.value === form.eta_driver_id)?.phone || '') : '')}
+                          value={etaDriverManualMode ? formData.eta_driver_phone : 
+                                 (formData.eta_driver_id && formData.eta_driver_id !== '' ? (drivers.find(d => d.value === formData.eta_driver_id)?.phone || '') : '')}
                           onChange={(value) => {
                             if (etaDriverManualMode) {
                               setForm(prev => ({ 
@@ -444,7 +300,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETA-A truck"
                               placeholder="Select truck"
                               data={trucks}
-                              value={form.eta_truck_id}
+                              value={formData.eta_truck_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_truck_id: value || '',
@@ -455,7 +311,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETA-A truck"
                               placeholder="Enter truck name"
-                              value={form.eta_truck}
+                              value={formData.eta_truck}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_truck: value,
@@ -483,7 +339,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETA-A trailer"
                               placeholder="Select trailer"
                               data={trailers}
-                              value={form.eta_trailer_id}
+                              value={formData.eta_trailer_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_trailer_id: value || '',
@@ -494,7 +350,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETA-A trailer"
                               placeholder="Enter trailer name"
-                              value={form.eta_trailer}
+                              value={formData.eta_trailer}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 eta_trailer: value,
@@ -524,7 +380,7 @@ export const EditOrderPage: React.FC = () => {
                         <DateInput
                           label="ETD-D date"
                           placeholder="Select date"
-                          value={form.etd_date}
+                          value={formData.etd_date}
                           onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
                           required
                         />
@@ -533,7 +389,7 @@ export const EditOrderPage: React.FC = () => {
                         <TimePicker
                           label="ETD-D time"
                           placeholder="Select time"
-                          value={form.etd_time}
+                          value={formData.etd_time}
                           onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
                         />
                       </GridCol>
@@ -547,7 +403,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETD-D driver"
                               placeholder="Select driver"
                               data={drivers}
-                              value={form.etd_driver_id}
+                              value={formData.etd_driver_id}
                               onChange={(driverId) => {
                                 setForm(prev => ({ 
                                   ...prev, 
@@ -561,7 +417,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETD-D driver"
                               placeholder="Enter driver name"
-                              value={form.etd_driver}
+                              value={formData.etd_driver}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_driver: value,
@@ -586,8 +442,8 @@ export const EditOrderPage: React.FC = () => {
                         <TextField
                           label="ETD-D driver phone"
                           placeholder="+47"
-                          value={etdDriverManualMode ? form.etd_driver_phone : 
-                                 (form.etd_driver_id && form.etd_driver_id !== '' ? (drivers.find(d => d.value === form.etd_driver_id)?.phone || '') : '')}
+                          value={etdDriverManualMode ? formData.etd_driver_phone : 
+                                 (formData.etd_driver_id && formData.etd_driver_id !== '' ? (drivers.find(d => d.value === formData.etd_driver_id)?.phone || '') : '')}
                           onChange={(value) => {
                             if (etdDriverManualMode) {
                               setForm(prev => ({ 
@@ -609,7 +465,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETD-D truck"
                               placeholder="Select truck"
                               data={trucks}
-                              value={form.etd_truck_id}
+                              value={formData.etd_truck_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_truck_id: value || '',
@@ -620,7 +476,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETD-D truck"
                               placeholder="Enter truck name"
-                              value={form.etd_truck}
+                              value={formData.etd_truck}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_truck: value,
@@ -648,7 +504,7 @@ export const EditOrderPage: React.FC = () => {
                               label="ETD-D trailer"
                               placeholder="Select trailer"
                               data={trailers}
-                              value={form.etd_trailer_id}
+                              value={formData.etd_trailer_id}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_trailer_id: value || '',
@@ -659,7 +515,7 @@ export const EditOrderPage: React.FC = () => {
                             <TextField
                               label="ETD-D trailer"
                               placeholder="Enter trailer name"
-                              value={form.etd_trailer}
+                              value={formData.etd_trailer}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
                                 etd_trailer: value,
@@ -690,7 +546,7 @@ export const EditOrderPage: React.FC = () => {
                       label="Commodity"
                       placeholder="Select commodity"
                       data={commodityOptions}
-                      value={form.commodity || ''}
+                      value={formData.commodity || ''}
                       onChange={(value) => setForm(prev => ({ 
                         ...prev, 
                         commodity: value as CommodityType || null 
@@ -702,7 +558,7 @@ export const EditOrderPage: React.FC = () => {
                       label="Pallets"
                       placeholder="Number of pallets"
                       type="number"
-                      value={form.pallets.toString()}
+                      value={formData.pallets?.toString() || ''}
                       onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
                     />
                   </GridCol>
@@ -711,7 +567,7 @@ export const EditOrderPage: React.FC = () => {
                       label="Boxes"
                       placeholder="Number of boxes"
                       type="number"
-                      value={form.boxes.toString()}
+                      value={formData.boxes?.toString() || ''}
                       onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
                     />
                   </GridCol>
@@ -720,7 +576,7 @@ export const EditOrderPage: React.FC = () => {
                       label="Kilos"
                       placeholder="Weight in kg"
                       type="number"
-                      value={form.kilos.toString()}
+                      value={formData.kilos?.toString() || ''}
                       onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
                     />
                   </GridCol>
@@ -734,7 +590,7 @@ export const EditOrderPage: React.FC = () => {
                     <TextField
                       label="Notes"
                       placeholder="Order notes..."
-                      value={form.notes}
+                      value={formData.notes}
                       onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
                       multiline
                       rows={3}
@@ -768,5 +624,27 @@ export const EditOrderPage: React.FC = () => {
         </Stack>
       </Container>
     </Box>
+  );
+};
+
+export const EditOrderPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { orderId } = useParams<{ orderId: string }>();
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  if (!orderId) {
+    return <div>Order ID not found</div>;
+  }
+
+  return (
+    <FormProvider initialData={{}}>
+      <EditOrderFormContent 
+        orderId={orderId}
+        onBack={handleBack}
+      />
+    </FormProvider>
   );
 };

@@ -73,3 +73,47 @@ export const ORDER_FORM_CONFIG: FieldTransformConfig = {
   numericFields: ['pallets', 'boxes', 'kilos'],
   skipEmpty: true
 };
+
+/**
+ * Populate form data from API response (react-admin style)
+ * 
+ * Automatically handles:
+ * - String date fields → Date objects
+ * - Null/undefined values → appropriate defaults
+ * 
+ * @param apiData - The API response data
+ * @param dateFields - Fields that should be converted from ISO strings to Date objects
+ * @returns Form data ready for FormProvider
+ * 
+ * @example
+ * ```ts
+ * const formData = populateFormFromApi(orderData, ['eta_date', 'etd_date']);
+ * setForm(() => formData);
+ * ```
+ */
+export function populateFormFromApi<T = any>(
+  apiData: Record<string, any>,
+  dateFields: string[] = []
+): T {
+  return Object.entries(apiData).reduce((acc, [key, value]) => {
+    // Convert ISO date strings to Date objects
+    if (dateFields.includes(key) && value) {
+      acc[key] = new Date(value);
+    }
+    // Convert null/undefined to empty string
+    else if (value === null || value === undefined) {
+      acc[key] = '';
+    }
+    // Pass through all other values
+    else {
+      acc[key] = value;
+    }
+    
+    return acc;
+  }, {} as any) as T;
+}
+
+/**
+ * Date fields for order forms
+ */
+export const ORDER_DATE_FIELDS = ['eta_date', 'etd_date'];
