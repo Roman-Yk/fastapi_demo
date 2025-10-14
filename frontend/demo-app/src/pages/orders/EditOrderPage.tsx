@@ -21,7 +21,10 @@ import {
   GroupGrid, 
   TextField, 
   SelectField, 
-  TimePicker 
+  TimePicker,
+  DriverReferenceField,
+  TruckReferenceField,
+  TrailerReferenceField
 } from '../../components/admin/forms';
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
 import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
@@ -34,9 +37,6 @@ const EditOrderFormContent: React.FC<{
   const navigate = useNavigate();
   const { formData, setForm } = useFormContext();
 
-  const [drivers, setDrivers] = useState<Array<{value: string, label: string, phone: string}>>([]);
-  const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
-  const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
   const [etdDriverManualMode, setEtdDriverManualMode] = useState(false);
@@ -49,40 +49,7 @@ const EditOrderFormContent: React.FC<{
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [orderData, driversData, trucksData, trailersData] = await Promise.all([
-          ApiService.getOrder(orderId),
-          ApiService.getDrivers(),
-          ApiService.getTrucks(),
-          ApiService.getTrailers()
-        ]);
-        
-        const driverOptions = [
-          { value: '', label: '-- Select Driver --', phone: '' },
-          ...driversData.map(driver => ({
-            value: driver.id,
-            label: driver.name,
-            phone: driver.phone || ''
-          }))
-        ];
-        setDrivers(driverOptions);
-        
-        const truckOptions = [
-          { value: '', label: '-- Select Truck --' },
-          ...trucksData.map(truck => ({
-            value: truck.id,
-            label: `${truck.make || ''} ${truck.model || ''}`.trim() || truck.truck_number || truck.license_plate || truck.id
-          }))
-        ];
-        setTrucks(truckOptions);
-        
-        const trailerOptions = [
-          { value: '', label: '-- Select Trailer --' },
-          ...trailersData.map(trailer => ({
-            value: trailer.id,
-            label: trailer.license_plate || trailer.id
-          }))
-        ];
-        setTrailers(trailerOptions);
+        const orderData = await ApiService.getOrder(orderId);
 
         // Populate form from API data - fields are defined by JSX components only
         if (orderData) {
@@ -233,19 +200,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaDriverManualMode ? (
-                            <SelectField
+                            <DriverReferenceField
                               label="ETA-A driver"
+                              source="eta_driver_id"
                               placeholder="Select driver"
-                              data={drivers}
-                              value={formData.eta_driver_id}
-                              onChange={(driverId) => {
-                                setForm(prev => ({ 
-                                  ...prev, 
-                                  eta_driver_id: driverId || null,
-                                  eta_driver: null,
-                                  eta_driver_phone: null
-                                }));
-                              }}
                             />
                           ) : (
                             <TextField
@@ -262,7 +220,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtaDriverManualMode(!etaDriverManualMode)}
+                            onClick={() => {
+                              setEtaDriverManualMode(!etaDriverManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etaDriverManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, eta_driver_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual fields
+                                setForm(prev => ({ ...prev, eta_driver: null, eta_driver_phone: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
@@ -276,17 +244,11 @@ const EditOrderFormContent: React.FC<{
                         <TextField
                           label="ETA-A driver phone"
                           placeholder="+47"
-                          value={etaDriverManualMode ? formData.eta_driver_phone : 
-                                 (formData.eta_driver_id && formData.eta_driver_id !== '' ? (drivers.find(d => d.value === formData.eta_driver_id)?.phone || '') : '')}
-                          onChange={(value) => {
-                            if (etaDriverManualMode) {
-                              setForm(prev => ({ 
-                                ...prev, 
-                                eta_driver_phone: value,
-                                eta_driver_id: null
-                              }));
-                            }
-                          }}
+                          value={formData.eta_driver_phone || ''}
+                          onChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            eta_driver_phone: value
+                          }))}
                         />
                       </GridCol>
                     </Grid>
@@ -295,16 +257,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaTruckManualMode ? (
-                            <SelectField
+                            <TruckReferenceField
                               label="ETA-A truck"
+                              source="eta_truck_id"
                               placeholder="Select truck"
-                              data={trucks}
-                              value={formData.eta_truck_id}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                eta_truck_id: value || null,
-                                eta_truck: null
-                              }))}
                             />
                           ) : (
                             <TextField
@@ -321,7 +277,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtaTruckManualMode(!etaTruckManualMode)}
+                            onClick={() => {
+                              setEtaTruckManualMode(!etaTruckManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etaTruckManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, eta_truck_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual field
+                                setForm(prev => ({ ...prev, eta_truck: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
@@ -334,16 +300,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaTrailerManualMode ? (
-                            <SelectField
+                            <TrailerReferenceField
                               label="ETA-A trailer"
+                              source="eta_trailer_id"
                               placeholder="Select trailer"
-                              data={trailers}
-                              value={formData.eta_trailer_id}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                eta_trailer_id: value || null,
-                                eta_trailer: null
-                              }))}
                             />
                           ) : (
                             <TextField
@@ -360,7 +320,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtaTrailerManualMode(!etaTrailerManualMode)}
+                            onClick={() => {
+                              setEtaTrailerManualMode(!etaTrailerManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etaTrailerManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, eta_trailer_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual field
+                                setForm(prev => ({ ...prev, eta_trailer: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
@@ -398,19 +368,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdDriverManualMode ? (
-                            <SelectField
+                            <DriverReferenceField
                               label="ETD-D driver"
+                              source="etd_driver_id"
                               placeholder="Select driver"
-                              data={drivers}
-                              value={formData.etd_driver_id}
-                              onChange={(driverId) => {
-                                setForm(prev => ({ 
-                                  ...prev, 
-                                  etd_driver_id: driverId || null,
-                                  etd_driver: null,
-                                  etd_driver_phone: null
-                                }));
-                              }}
                             />
                           ) : (
                             <TextField
@@ -427,7 +388,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtdDriverManualMode(!etdDriverManualMode)}
+                            onClick={() => {
+                              setEtdDriverManualMode(!etdDriverManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etdDriverManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, etd_driver_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual fields
+                                setForm(prev => ({ ...prev, etd_driver: null, etd_driver_phone: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
@@ -441,17 +412,11 @@ const EditOrderFormContent: React.FC<{
                         <TextField
                           label="ETD-D driver phone"
                           placeholder="+47"
-                          value={etdDriverManualMode ? formData.etd_driver_phone : 
-                                 (formData.etd_driver_id && formData.etd_driver_id !== '' ? (drivers.find(d => d.value === formData.etd_driver_id)?.phone || '') : '')}
-                          onChange={(value) => {
-                            if (etdDriverManualMode) {
-                              setForm(prev => ({ 
-                                ...prev, 
-                                etd_driver_phone: value,
-                                etd_driver_id: null
-                              }));
-                            }
-                          }}
+                          value={formData.etd_driver_phone || ''}
+                          onChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            etd_driver_phone: value
+                          }))}
                         />
                       </GridCol>
                     </Grid>
@@ -460,16 +425,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdTruckManualMode ? (
-                            <SelectField
+                            <TruckReferenceField
                               label="ETD-D truck"
+                              source="etd_truck_id"
                               placeholder="Select truck"
-                              data={trucks}
-                              value={formData.etd_truck_id}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                etd_truck_id: value || null,
-                                etd_truck: null
-                              }))}
                             />
                           ) : (
                             <TextField
@@ -486,7 +445,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtdTruckManualMode(!etdTruckManualMode)}
+                            onClick={() => {
+                              setEtdTruckManualMode(!etdTruckManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etdTruckManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, etd_truck_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual field
+                                setForm(prev => ({ ...prev, etd_truck: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
@@ -499,16 +468,10 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdTrailerManualMode ? (
-                            <SelectField
+                            <TrailerReferenceField
                               label="ETD-D trailer"
+                              source="etd_trailer_id"
                               placeholder="Select trailer"
-                              data={trailers}
-                              value={formData.etd_trailer_id}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                etd_trailer_id: value || null,
-                                etd_trailer: null
-                              }))}
                             />
                           ) : (
                             <TextField
@@ -525,7 +488,17 @@ const EditOrderFormContent: React.FC<{
                           <Button
                             variant="light"
                             size="sm"
-                            onClick={() => setEtdTrailerManualMode(!etdTrailerManualMode)}
+                            onClick={() => {
+                              setEtdTrailerManualMode(!etdTrailerManualMode);
+                              // Clear the opposite field when toggling
+                              if (!etdTrailerManualMode) {
+                                // Switching to manual mode - clear ID
+                                setForm(prev => ({ ...prev, etd_trailer_id: null }));
+                              } else {
+                                // Switching to reference mode - clear manual field
+                                setForm(prev => ({ ...prev, etd_trailer: null }));
+                              }
+                            }}
                             style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
                           >
                             <IconEdit size={16} />
