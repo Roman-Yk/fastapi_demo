@@ -1,54 +1,56 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
+import { useFormData, FormValidationRule } from './useFormData';
 
+// TypeScript-friendly form context interface
 interface FormContextType<T extends Record<string, any>> {
   formData: T;
+  errors: Partial<Record<keyof T, string>>;
+  touched: Partial<Record<keyof T, boolean>>;
+  isValid: boolean;
+  isDirty: boolean;
   updateField: <K extends keyof T>(
-    source: K,
+    field: K,
     value: T[K],
-    transform?: (value: any) => T[K]
+    options?: { validate?: boolean; touch?: boolean }
   ) => void;
+  handleBlur: <K extends keyof T>(field: K) => void;
   setForm: (updater: (prev: T) => T) => void;
   resetForm: () => void;
+  validateField: <K extends keyof T>(field: K, value: T[K]) => string | undefined;
+  validateAll: () => boolean;
+  getFieldProps: <K extends keyof T>(field: K) => {
+    value: T[K];
+    error?: string;
+    onChange: (value: T[K]) => void;
+    onBlur: () => void;
+  };
 }
 
 const FormContext = createContext<FormContextType<any> | null>(null);
 
+// TypeScript-friendly FormProvider props
 interface FormProviderProps<T extends Record<string, any>> {
   children: ReactNode;
   initialData: T;
+  validationRules?: Record<string, FormValidationRule<any>[]>;
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
 }
 
+// TypeScript-friendly FormProvider using useFormData hook
 export function FormProvider<T extends Record<string, any>>({ 
   children, 
-  initialData 
+  initialData,
+  validationRules,
+  validateOnChange = false,
+  validateOnBlur = true
 }: FormProviderProps<T>) {
-  const [formData, setFormData] = useState<T>(initialData);
-
-  const updateField = useCallback(<K extends keyof T>(
-    source: K,
-    value: T[K],
-    transform?: (value: any) => T[K]
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [source]: transform ? transform(value) : value
-    }));
-  }, []);
-
-  const setForm = useCallback((updater: (prev: T) => T) => {
-    setFormData(updater);
-  }, []);
-
-  const resetForm = useCallback(() => {
-    setFormData(initialData);
-  }, [initialData]);
-
-  const formMethods = {
-    formData,
-    updateField,
-    setForm,
-    resetForm
-  };
+  const formMethods = useFormData<T>({
+    initialData,
+    validationRules,
+    validateOnChange,
+    validateOnBlur
+  });
 
   return (
     <FormContext.Provider value={formMethods as FormContextType<any>}>
@@ -57,6 +59,7 @@ export function FormProvider<T extends Record<string, any>>({
   );
 }
 
+// TypeScript-friendly useFormContext hook
 export function useFormContext<T extends Record<string, any>>(): FormContextType<T> {
   const context = useContext(FormContext);
   if (!context) {

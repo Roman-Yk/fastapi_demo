@@ -1,7 +1,7 @@
 import { TextInput, Textarea, NumberInput } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormTextFieldProps<K extends string> {
+interface ContextFormTextFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -12,10 +12,11 @@ interface ContextFormTextFieldProps<K extends string> {
   min?: number;
   max?: number;
   decimalScale?: number;
-  transform?: (value: any) => any;
+  disabled?: boolean;
+  description?: string;
 }
 
-export function ContextFormTextField<K extends string>({
+export function ContextFormTextField<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder,
@@ -26,13 +27,15 @@ export function ContextFormTextField<K extends string>({
   min,
   max,
   decimalScale,
-  transform
-}: ContextFormTextFieldProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description
+}: ContextFormTextFieldProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
+  const error = touched[source] ? errors[source] : undefined;
 
-  const handleChange = (newValue: string | number) => {
-    updateField(source, newValue, transform);
+  const handleChange = (newValue: string | number | undefined) => {
+    updateField(source, newValue as T[K], { validate: true });
   };
 
   if (multiline) {
@@ -40,10 +43,14 @@ export function ContextFormTextField<K extends string>({
       <Textarea
         label={label}
         placeholder={placeholder}
-        value={value as string || ''}
+        value={(value as string) || ''}
         onChange={(e) => handleChange(e.target.value)}
+        onBlur={() => {}}
         required={required}
         rows={rows}
+        disabled={disabled}
+        description={description}
+        error={error}
       />
     );
   }
@@ -54,11 +61,15 @@ export function ContextFormTextField<K extends string>({
         label={label}
         placeholder={placeholder}
         value={value as number}
-        onChange={(val) => handleChange(val?.toString() || '')}
+        onChange={(val) => handleChange(val)}
+        onBlur={() => {}}
         required={required}
         min={min}
         max={max}
         decimalScale={decimalScale}
+        disabled={disabled}
+        description={description}
+        error={error}
       />
     );
   }
@@ -67,9 +78,13 @@ export function ContextFormTextField<K extends string>({
     <TextInput
       label={label}
       placeholder={placeholder}
-      value={value as string || ''}
+      value={(value as string) || ''}
       onChange={(e) => handleChange(e.target.value)}
+      onBlur={() => {}}
       required={required}
+      disabled={disabled}
+      description={description}
+      error={error}
     />
   );
 }

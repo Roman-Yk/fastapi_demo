@@ -7,23 +7,26 @@ import { IconClock } from '@tabler/icons-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormTimePickerProps<K extends string> {
+interface ContextFormTimePickerProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
   required?: boolean;
-  transform?: (value: any) => any;
+  disabled?: boolean;
+  description?: string;
 }
 
-export function ContextFormTimePicker<K extends string>({
+export function ContextFormTimePicker<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder = "Select time",
   required,
-  transform
-}: ContextFormTimePickerProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description
+}: ContextFormTimePickerProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source] as string;
+  const error = touched[source] ? errors[source] : undefined;
   
   const [opened, setOpened] = useState(false);
   const [tempValue, setTempValue] = useState<Dayjs | null>(
@@ -33,7 +36,7 @@ export function ContextFormTimePicker<K extends string>({
   const handleAccept = () => {
     if (tempValue) {
       const timeString = tempValue.format('HH:mm');
-      updateField(source, timeString, transform);
+      updateField(source, timeString as T[K], { validate: true });
     }
     setOpened(false);
   };
@@ -46,68 +49,71 @@ export function ContextFormTimePicker<K extends string>({
   const displayValue = value ? value : '';
 
   return (
-    <Popover 
-      width={320} 
-      position="bottom" 
-      withArrow 
-      shadow="md" 
-      opened={opened} 
-      onChange={setOpened}
-    >
-      <Popover.Target>
-        <Input.Wrapper label={label} required={required} withAsterisk={required}>
-          <Input
-            component="button"
-            type="button"
-            pointer
-            onClick={() => setOpened(!opened)}
-            rightSection={<IconClock size={16} />}
-            style={{ 
-              textAlign: 'left',
-              backgroundColor: 'transparent',
-              border: '1px solid var(--mantine-color-gray-4)',
-              minHeight: 36
-            }}
-          >
-            {displayValue || <Text c="placeholder" size="sm">{placeholder}</Text>}
-          </Input>
-        </Input.Wrapper>
-      </Popover.Target>
+    <div>
+      <Popover 
+        width={320} 
+        position="bottom" 
+        withArrow 
+        shadow="md" 
+        opened={opened && !disabled} 
+        onChange={setOpened}
+      >
+        <Popover.Target>
+          <Input.Wrapper label={label} required={required} withAsterisk={required} description={description} error={error}>
+            <Input
+              component="button"
+              type="button"
+              pointer
+              onClick={() => !disabled && setOpened(!opened)}
+              rightSection={<IconClock size={16} />}
+              disabled={disabled}
+              style={{ 
+                textAlign: 'left',
+                backgroundColor: 'transparent',
+                border: '1px solid var(--mantine-color-gray-4)',
+                minHeight: 36
+              }}
+            >
+              {displayValue || <Text c="placeholder" size="sm">{placeholder}</Text>}
+            </Input>
+          </Input.Wrapper>
+        </Popover.Target>
 
-      <Popover.Dropdown>
-        <Paper p="md">
-          <Stack gap="md">
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <StaticTimePicker
-                value={tempValue}
-                onChange={(newValue) => setTempValue(newValue)}
-                ampm={false}
-                orientation="portrait"
-                sx={{
-                  '& .MuiPickersLayout-root': {
-                    minHeight: 'auto',
-                  },
-                  '& .MuiTimeClock-root': {
-                    maxHeight: 280,
-                  },
-                  '& .MuiPickersLayout-actionBar': {
-                    display: 'none',
-                  }
-                }}
-              />
-            </LocalizationProvider>
-            
-            <Group justify="space-between" mt="sm">
-              <Button variant="light" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button onClick={handleAccept} disabled={!tempValue}>
-                OK
-              </Button>
-            </Group>
-          </Stack>
-        </Paper>
-      </Popover.Dropdown>
-    </Popover>
+        <Popover.Dropdown>
+          <Paper p="md">
+            <Stack gap="md">
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <StaticTimePicker
+                  value={tempValue}
+                  onChange={(newValue) => setTempValue(newValue)}
+                  ampm={false}
+                  orientation="portrait"
+                  sx={{
+                    '& .MuiPickersLayout-root': {
+                      minHeight: 'auto',
+                    },
+                    '& .MuiTimeClock-root': {
+                      maxHeight: 280,
+                    },
+                    '& .MuiPickersLayout-actionBar': {
+                      display: 'none',
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+              
+              <Group justify="space-between" mt="sm">
+                <Button variant="light" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAccept} disabled={!tempValue}>
+                  OK
+                </Button>
+              </Group>
+            </Stack>
+          </Paper>
+        </Popover.Dropdown>
+      </Popover>
+    </div>
   );
 }

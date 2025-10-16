@@ -1,24 +1,27 @@
 import { Switch } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormSwitchFieldProps<K extends string> {
+interface ContextFormSwitchFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  transform?: (value: any) => any;
+  disabled?: boolean;
+  description?: string;
 }
 
-export function ContextFormSwitchField<K extends string>({
+export function ContextFormSwitchField<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   size = 'md',
-  transform
-}: ContextFormSwitchFieldProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description
+}: ContextFormSwitchFieldProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
+  const error = touched[source] ? errors[source] : undefined;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    updateField(source, event.target.checked, transform);
+    updateField(source, event.target.checked as T[K], { validate: true });
   };
 
   return (
@@ -27,6 +30,9 @@ export function ContextFormSwitchField<K extends string>({
       checked={value as boolean}
       onChange={handleChange}
       size={size}
+      disabled={disabled}
+      description={description}
+      error={error}
     />
   );
 }

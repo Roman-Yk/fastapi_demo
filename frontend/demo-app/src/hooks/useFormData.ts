@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface FormField<T = any> {
   value: T;
@@ -135,15 +135,45 @@ export function useFormData<T extends Record<string, any>>(config: FormConfig<T>
     onBlur: () => handleBlur(field),
   }), [formData, touched, errors, updateField, handleBlur]);
 
-  // Check if form is valid
-  const isValid = Object.keys(errors).length === 0;
+  // Check if form is valid by running validation on all fields
+  const isValid = useMemo((): boolean => {
+    // First check if there are any existing errors (with actual error messages, not undefined)
+    const hasErrors = Object.values(errors).some(error => error !== undefined && error !== '');
+    if (hasErrors) {
+      console.log('Form has errors:', errors);
+      return false;
+    }
+
+    // Then validate all fields that have validation rules
+    let valid = true;
+    const validationErrors: Record<string, string | undefined> = {};
+    
+    Object.keys(validationRules || {}).forEach((key) => {
+      const field = key as keyof T;
+      const error = validateField(field, formData[field]);
+      validationErrors[key] = error;
+      if (error) {
+        valid = false;
+      }
+    });
+
+    console.log('Validation check:', {
+      validationRules: Object.keys(validationRules || {}),
+      formData,
+      validationErrors,
+      valid
+    });
+
+    return valid;
+  }, [errors, formData, validationRules, validateField]);
+
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
   return {
     formData,
     errors,
     touched,
-    isValid,
+    isValid: isValid,
     isDirty,
     updateField,
     handleBlur,

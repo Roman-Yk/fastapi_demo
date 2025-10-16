@@ -1,26 +1,33 @@
 import { DateInput } from '@mantine/dates';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormDateFieldProps<K extends string> {
+interface ContextFormDateFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
   required?: boolean;
-  transform?: (value: any) => any;
+  disabled?: boolean;
+  description?: string;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-export function ContextFormDateField<K extends string>({
+export function ContextFormDateField<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder,
   required,
-  transform
-}: ContextFormDateFieldProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description,
+  minDate,
+  maxDate
+}: ContextFormDateFieldProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
+  const error = touched[source] ? errors[source] : undefined;
 
   const handleChange = (newValue: Date | null) => {
-    updateField(source, newValue, transform);
+    updateField(source, newValue as T[K], { validate: true });
   };
 
   return (
@@ -29,7 +36,13 @@ export function ContextFormDateField<K extends string>({
       placeholder={placeholder}
       value={value as Date | null}
       onChange={handleChange}
+      onBlur={() => {}}
       required={required}
+      disabled={disabled}
+      description={description}
+      error={error}
+      minDate={minDate}
+      maxDate={maxDate}
     />
   );
 }

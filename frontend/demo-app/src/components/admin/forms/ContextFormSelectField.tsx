@@ -1,7 +1,7 @@
 import { Select } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormSelectFieldProps<K extends string> {
+interface ContextFormSelectFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   data: Array<{ value: string; label: string }>;
@@ -9,10 +9,11 @@ interface ContextFormSelectFieldProps<K extends string> {
   required?: boolean;
   searchable?: boolean;
   clearable?: boolean;
-  transform?: (value: any) => any;
+  disabled?: boolean;
+  description?: string;
 }
 
-export function ContextFormSelectField<K extends string>({
+export function ContextFormSelectField<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   data,
@@ -20,13 +21,15 @@ export function ContextFormSelectField<K extends string>({
   required,
   searchable = false,
   clearable = false,
-  transform
-}: ContextFormSelectFieldProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description
+}: ContextFormSelectFieldProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
+  const error = touched[source] ? errors[source] : undefined;
 
   const handleChange = (newValue: string | null) => {
-    updateField(source, newValue, transform);
+    updateField(source, newValue as T[K], { validate: true });
   };
 
   return (
@@ -34,11 +37,15 @@ export function ContextFormSelectField<K extends string>({
       label={label}
       placeholder={placeholder}
       data={data}
-      value={value?.toString() || ''}
+      value={value?.toString() || null}
       onChange={handleChange}
+      onBlur={() => {}}
       required={required}
       searchable={searchable}
       clearable={clearable}
+      disabled={disabled}
+      description={description}
+      error={error}
     />
   );
 }

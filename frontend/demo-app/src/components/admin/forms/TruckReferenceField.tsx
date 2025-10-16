@@ -2,25 +2,30 @@ import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 import { useTrucks } from '../../../hooks/useReferenceData';
 
-interface TruckReferenceFieldProps<K extends string> {
+interface TruckReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
+  disabled?: boolean;
+  description?: string;
 }
 
-export function TruckReferenceField<K extends string>({
+export function TruckReferenceField<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder = 'Select truck',
   required = false,
   searchable = true,
-}: TruckReferenceFieldProps<K>) {
-  const { formData, updateField } = useFormContext();
+  disabled,
+  description
+}: TruckReferenceFieldProps<T, K>) {
+  const { formData, updateField, errors, touched } = useFormContext<T>();
   const { data: trucks, loading } = useTrucks();
 
   const value = formData[source];
+  const error = touched[source] ? errors[source] : undefined;
 
   const options = [
     { value: '', label: '-- Select Truck --' },
@@ -34,7 +39,7 @@ export function TruckReferenceField<K extends string>({
     // If cleared (null, empty string, or '-- Select --'), set to null
     // Otherwise keep as string (for UUID support)
     const fieldValue = newValue && newValue !== '' ? newValue : null;
-    updateField(source, fieldValue);
+    updateField(source, fieldValue as T[K], { validate: true });
   };
 
   // Convert value for Mantine Select: null -> '', string -> string
@@ -47,12 +52,15 @@ export function TruckReferenceField<K extends string>({
       data={options}
       value={selectValue}
       onChange={handleChange}
+      onBlur={() => {}}
       required={required}
       searchable={searchable}
       clearable={false}
-      disabled={loading}
+      disabled={loading || disabled}
       rightSection={loading ? <Loader size="xs" /> : undefined}
       maxDropdownHeight={200}
+      description={description}
+      error={error}
     />
   );
 }

@@ -13,7 +13,7 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconTrash, IconEdit } from '@tabler/icons-react';
-import { OrderService, CommodityType, OrderServiceLabels, CommodityLabels } from '../../types/order';
+import { OrderServiceLabels, CommodityLabels } from '../../types/order';
 import ApiService from '../../services/apiService';
 import { 
   Grid, 
@@ -30,13 +30,43 @@ import {
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
 import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
 
+// TypeScript interface for edit order form data
+interface EditOrderFormData {
+  reference: string;
+  service: number | null;
+  priority: boolean;
+  eta_date: Date | null;
+  eta_time: string;
+  etd_date: Date | null;
+  etd_time: string;
+  eta_driver_id: string | null;
+  eta_driver: string | null;
+  eta_driver_phone: string | null;
+  eta_truck_id: string | null;
+  eta_truck: string | null;
+  eta_trailer_id: string | null;
+  eta_trailer: string | null;
+  etd_driver_id: string | null;
+  etd_driver: string | null;
+  etd_driver_phone: string | null;
+  etd_truck_id: string | null;
+  etd_truck: string | null;
+  etd_trailer_id: string | null;
+  etd_trailer: string | null;
+  commodity: string | null;
+  pallets: number | null;
+  boxes: number | null;
+  kilos: number | null;
+  notes: string | null;
+}
+
 // Form content component that uses the context
 const EditOrderFormContent: React.FC<{
   orderId: string;
   onBack: () => void;
 }> = ({ orderId, onBack }) => {
   const navigate = useNavigate();
-  const { formData, setForm } = useFormContext();
+  const { formData, setForm } = useFormContext<EditOrderFormData>();
 
   const [loading, setLoading] = useState(true);
   const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
@@ -157,7 +187,7 @@ const EditOrderFormContent: React.FC<{
                       value={formData.service?.toString() || ''}
                       onChange={(value) => setForm(prev => ({ 
                         ...prev, 
-                        service: value ? parseInt(value) as OrderService : null 
+                        service: value ? parseInt(value) : null 
                       }))}
                     />
                   </GridCol>
@@ -210,10 +240,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETA-A driver"
                               placeholder="Enter driver name"
-                              value={formData.eta_driver}
+                              value={formData.eta_driver || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                eta_driver: value,
+                                eta_driver: value || null,
                                 eta_driver_id: null
                               }))}
                             />
@@ -268,10 +298,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETA-A truck"
                               placeholder="Enter truck name"
-                              value={formData.eta_truck}
+                              value={formData.eta_truck || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                eta_truck: value,
+                                eta_truck: value || null,
                                 eta_truck_id: null
                               }))}
                             />
@@ -311,10 +341,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETA-A trailer"
                               placeholder="Enter trailer name"
-                              value={formData.eta_trailer}
+                              value={formData.eta_trailer || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                eta_trailer: value,
+                                eta_trailer: value || null,
                                 eta_trailer_id: null
                               }))}
                             />
@@ -379,10 +409,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETD-D driver"
                               placeholder="Enter driver name"
-                              value={formData.etd_driver}
+                              value={formData.etd_driver || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                etd_driver: value,
+                                etd_driver: value || null,
                                 etd_driver_id: null
                               }))}
                             />
@@ -437,10 +467,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETD-D truck"
                               placeholder="Enter truck name"
-                              value={formData.etd_truck}
+                              value={formData.etd_truck || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                etd_truck: value,
+                                etd_truck: value || null,
                                 etd_truck_id: null
                               }))}
                             />
@@ -480,10 +510,10 @@ const EditOrderFormContent: React.FC<{
                             <TextField
                               label="ETD-D trailer"
                               placeholder="Enter trailer name"
-                              value={formData.etd_trailer}
+                              value={formData.etd_trailer || ''}
                               onChange={(value) => setForm(prev => ({ 
                                 ...prev, 
-                                etd_trailer: value,
+                                etd_trailer: value || null,
                                 etd_trailer_id: null
                               }))}
                             />
@@ -524,7 +554,7 @@ const EditOrderFormContent: React.FC<{
                       value={formData.commodity || ''}
                       onChange={(value) => setForm(prev => ({ 
                         ...prev, 
-                        commodity: value as CommodityType || null 
+                        commodity: value || null 
                       }))}
                     />
                   </GridCol>
@@ -534,7 +564,7 @@ const EditOrderFormContent: React.FC<{
                       placeholder="Number of pallets"
                       type="number"
                       value={formData.pallets?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, pallets: value }))}
+                      onChange={(value) => setForm(prev => ({ ...prev, pallets: value ? parseInt(value) : null }))}
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -543,7 +573,7 @@ const EditOrderFormContent: React.FC<{
                       placeholder="Number of boxes"
                       type="number"
                       value={formData.boxes?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, boxes: value }))}
+                      onChange={(value) => setForm(prev => ({ ...prev, boxes: value ? parseInt(value) : null }))}
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -552,7 +582,7 @@ const EditOrderFormContent: React.FC<{
                       placeholder="Weight in kg"
                       type="number"
                       value={formData.kilos?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, kilos: value }))}
+                      onChange={(value) => setForm(prev => ({ ...prev, kilos: value ? parseInt(value) : null }))}
                     />
                   </GridCol>
                 </Grid>
@@ -565,8 +595,8 @@ const EditOrderFormContent: React.FC<{
                     <TextField
                       label="Notes"
                       placeholder="Order notes..."
-                      value={formData.notes}
-                      onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
+                      value={formData.notes || ''}
+                      onChange={(value) => setForm(prev => ({ ...prev, notes: value || null }))}
                       multiline
                       rows={3}
                     />
@@ -614,8 +644,38 @@ export const EditOrderPage: React.FC = () => {
     return <div>Order ID not found</div>;
   }
 
+  // Initial form data with proper types
+  const initialData: EditOrderFormData = {
+    reference: '',
+    service: null,
+    priority: false,
+    eta_date: null,
+    eta_time: '',
+    etd_date: null,
+    etd_time: '',
+    eta_driver_id: null,
+    eta_driver: null,
+    eta_driver_phone: null,
+    eta_truck_id: null,
+    eta_truck: null,
+    eta_trailer_id: null,
+    eta_trailer: null,
+    etd_driver_id: null,
+    etd_driver: null,
+    etd_driver_phone: null,
+    etd_truck_id: null,
+    etd_truck: null,
+    etd_trailer_id: null,
+    etd_trailer: null,
+    commodity: null,
+    pallets: null,
+    boxes: null,
+    kilos: null,
+    notes: null,
+  };
+
   return (
-    <FormProvider initialData={{}}>
+    <FormProvider<EditOrderFormData> initialData={initialData}>
       <EditOrderFormContent 
         orderId={orderId}
         onBack={handleBack}
