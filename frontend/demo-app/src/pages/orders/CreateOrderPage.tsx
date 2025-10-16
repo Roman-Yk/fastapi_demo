@@ -92,8 +92,15 @@ const CreateOrderFormContent: React.FC<{
       const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
       
       console.log('Creating order:', apiData);
-      await ApiService.createOrder(apiData);
-      navigate('/');
+      const newOrder = await ApiService.createOrder(apiData);
+      
+      // Navigate to the edit page of the newly created order
+      if (newOrder && newOrder.id) {
+        navigate(`/orders/${newOrder.id}/edit`);
+      } else {
+        // Fallback to orders list if no ID is returned
+        navigate('/');
+      }
     } catch (error) {
       console.error('Failed to create order:', error);
       // TODO: Show error notification to user

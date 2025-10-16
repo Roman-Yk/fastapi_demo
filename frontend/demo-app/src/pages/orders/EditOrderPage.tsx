@@ -29,6 +29,7 @@ import {
 } from '../../components/admin/forms';
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
 import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
+import { OrderDocumentsUpload } from '../../components/orders/OrderDocumentsUpload';
 
 // TypeScript interface for edit order form data
 interface EditOrderFormData {
@@ -603,6 +604,37 @@ const EditOrderFormContent: React.FC<{
                   </GridCol>
                 </Grid>
               </GroupGrid>
+
+              {/* Documents Upload Section */}
+              <OrderDocumentsUpload
+                orderId={orderId}
+                documents={[
+                  // Mock data - replace with actual documents from API
+                  // {
+                  //   id: '1',
+                  //   name: 'Bill of Lading.pdf',
+                  //   size: 245632,
+                  //   type: 'application/pdf',
+                  //   uploadedAt: new Date(),
+                  //   status: 'completed'
+                  // }
+                ]}
+                onUpload={async (files) => {
+                  console.log('Uploading files:', files);
+                  // TODO: Implement actual upload logic
+                  // await ApiService.uploadOrderDocuments(orderId, files);
+                }}
+                onDelete={async (documentId) => {
+                  console.log('Deleting document:', documentId);
+                  // TODO: Implement actual delete logic
+                  // await ApiService.deleteOrderDocument(orderId, documentId);
+                }}
+                onDownload={(documentId) => {
+                  console.log('Downloading document:', documentId);
+                  // TODO: Implement actual download logic
+                  // window.open(document.url, '_blank');
+                }}
+              />
 
             {/* Actions */}
             <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
