@@ -6,12 +6,12 @@ export { SelectField } from './SelectField';
 export { TimePicker } from './TimePicker';
 export { PhoneNumberInput } from './PhoneInput';
 
-// Context-aware form components (TypeScript-enhanced, no need to pass formData/updateField)
-export { ContextFormTextField } from './ContextFormTextField';
-export { ContextFormSelectField } from './ContextFormSelectField';
-export { ContextFormDateField } from './ContextFormDateField';
-export { ContextFormSwitchField } from './ContextFormSwitchField';
-export { ContextFormTimePicker } from './ContextFormTimePicker';
+// Form input components (TypeScript-enhanced, use with FormProvider)
+export { FormTextInput } from './FormTextInput';
+export { FormSelectInput } from './FormSelectInput';
+export { FormDateInput } from './FormDateInput';
+export { FormSwitchInput } from './FormSwitchInput';
+export { FormTimeInput } from './FormTimeInput';
 
 // Reference field components (React Admin style)
 export { ReferenceField } from './ReferenceField';

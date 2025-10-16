@@ -19,11 +19,11 @@ import {
   Grid, 
   GridCol, 
   GroupGrid, 
-  ContextFormTextField, 
-  ContextFormSelectField,
-  ContextFormDateField,
-  ContextFormTimePicker,
-  ContextFormSwitchField,
+  FormTextInput, 
+  FormSelectInput,
+  FormDateInput,
+  FormTimeInput,
+  FormSwitchInput,
   DriverReferenceField,
   TruckReferenceField,
   TrailerReferenceField,
@@ -140,7 +140,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Order Information">
                 <Grid>
                   <GridCol span={6}>
-                    <ContextFormTextField<OrderFormData, 'reference'>
+                    <FormTextInput<OrderFormData, 'reference'>
                       label="Reference"
                       source="reference"
                       placeholder="Enter order reference"
@@ -148,7 +148,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={6}>
-                    <ContextFormSelectField<OrderFormData, 'service'>
+                    <FormSelectInput<OrderFormData, 'service'>
                       label="Service Type"
                       source="service"
                       placeholder="Select service"
@@ -173,14 +173,14 @@ const CreateOrderFormContent: React.FC<{
               
                 <Grid>
                   <GridCol span={3}>
-                    <ContextFormDateField<OrderFormData, 'eta_date'>
+                    <FormDateInput<OrderFormData, 'eta_date'>
                       label="ETA Date"
                       source="eta_date"
                       placeholder="Select ETA date"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <ContextFormTimePicker<OrderFormData, 'eta_time'>
+                    <FormTimeInput<OrderFormData, 'eta_time'>
                       label="ETA Time"
                       source="eta_time"
                       placeholder="Select ETA time"
@@ -188,14 +188,14 @@ const CreateOrderFormContent: React.FC<{
                   </GridCol>
                   
                   <GridCol span={3}>
-                    <ContextFormDateField<OrderFormData, 'etd_date'>
+                    <FormDateInput<OrderFormData, 'etd_date'>
                       label="ETD Date"
                       source="etd_date"
                       placeholder="Select ETD date"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <ContextFormTimePicker<OrderFormData, 'etd_time'>
+                    <FormTimeInput<OrderFormData, 'etd_time'>
                       label="ETD Time"
                       source="etd_time"
                       placeholder="Select ETD time"
@@ -259,7 +259,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Cargo Details">
                 <Grid>
                   <GridCol span={6}>
-                    <ContextFormSelectField<OrderFormData, 'commodity'>
+                    <FormSelectInput<OrderFormData, 'commodity'>
                       label="Commodity Type"
                       source="commodity"
                       placeholder="Select commodity"
@@ -270,7 +270,7 @@ const CreateOrderFormContent: React.FC<{
                 
                 <Grid>
                   <GridCol span={4}>
-                    <ContextFormTextField<OrderFormData, 'pallets'>
+                    <FormTextInput<OrderFormData, 'pallets'>
                       label="Pallets"
                       source="pallets"
                       placeholder="Number of pallets"
@@ -278,7 +278,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <ContextFormTextField<OrderFormData, 'boxes'>
+                    <FormTextInput<OrderFormData, 'boxes'>
                       label="Boxes"
                       source="boxes"
                       placeholder="Number of boxes"
@@ -286,7 +286,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <ContextFormTextField<OrderFormData, 'kilos'>
+                    <FormTextInput<OrderFormData, 'kilos'>
                       label="Weight (kg)"
                       source="kilos"
                       placeholder="Weight in kilograms"
@@ -299,7 +299,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Additional Information">
                 <Grid>
                   <GridCol span={9}>
-                    <ContextFormTextField<OrderFormData, 'notes'>
+                    <FormTextInput<OrderFormData, 'notes'>
                       label="Notes"
                       source="notes"
                       placeholder="Some notes..."
@@ -309,7 +309,7 @@ const CreateOrderFormContent: React.FC<{
                   </GridCol>
                   <GridCol span={3}>
                     <Stack gap="md" pt="lg">
-                      <ContextFormSwitchField<OrderFormData, 'priority'>
+                      <FormSwitchInput<OrderFormData, 'priority'>
                         label="Priority Order"
                         source="priority"
                         size="md"

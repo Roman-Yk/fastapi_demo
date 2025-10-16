@@ -1,7 +1,7 @@
 import { TextInput, Textarea, NumberInput } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormTextFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface FormTextInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -16,7 +16,7 @@ interface ContextFormTextFieldProps<T extends Record<string, any>, K extends key
   description?: string;
 }
 
-export function ContextFormTextField<T extends Record<string, any>, K extends keyof T>({
+export function FormTextInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder,
@@ -29,7 +29,7 @@ export function ContextFormTextField<T extends Record<string, any>, K extends ke
   decimalScale,
   disabled,
   description
-}: ContextFormTextFieldProps<T, K>) {
+}: FormTextInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;

@@ -1,7 +1,7 @@
 import { Switch } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormSwitchFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface FormSwitchInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -9,13 +9,13 @@ interface ContextFormSwitchFieldProps<T extends Record<string, any>, K extends k
   description?: string;
 }
 
-export function ContextFormSwitchField<T extends Record<string, any>, K extends keyof T>({
+export function FormSwitchInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   size = 'md',
   disabled,
   description
-}: ContextFormSwitchFieldProps<T, K>) {
+}: FormSwitchInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;

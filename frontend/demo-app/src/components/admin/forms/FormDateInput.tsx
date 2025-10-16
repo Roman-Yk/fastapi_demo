@@ -1,51 +1,48 @@
-import { Select } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormSelectFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface FormDateInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
-  data: Array<{ value: string; label: string }>;
   placeholder?: string;
   required?: boolean;
-  searchable?: boolean;
-  clearable?: boolean;
   disabled?: boolean;
   description?: string;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-export function ContextFormSelectField<T extends Record<string, any>, K extends keyof T>({
+export function FormDateInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
-  data,
   placeholder,
   required,
-  searchable = false,
-  clearable = false,
   disabled,
-  description
-}: ContextFormSelectFieldProps<T, K>) {
+  description,
+  minDate,
+  maxDate
+}: FormDateInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;
 
-  const handleChange = (newValue: string | null) => {
+  const handleChange = (newValue: Date | null) => {
     updateField(source, newValue as T[K], { validate: true });
   };
 
   return (
-    <Select
+    <DateInput
       label={label}
       placeholder={placeholder}
-      data={data}
-      value={value?.toString() || null}
+      value={value as Date | null}
       onChange={handleChange}
       onBlur={() => {}}
       required={required}
-      searchable={searchable}
-      clearable={clearable}
       disabled={disabled}
       description={description}
       error={error}
+      minDate={minDate}
+      maxDate={maxDate}
     />
   );
 }

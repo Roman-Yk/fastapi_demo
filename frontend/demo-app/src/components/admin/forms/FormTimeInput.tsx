@@ -7,7 +7,7 @@ import { IconClock } from '@tabler/icons-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { useFormContext } from '../../../hooks/useFormContext';
 
-interface ContextFormTimePickerProps<T extends Record<string, any>, K extends keyof T> {
+interface FormTimeInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -16,14 +16,14 @@ interface ContextFormTimePickerProps<T extends Record<string, any>, K extends ke
   description?: string;
 }
 
-export function ContextFormTimePicker<T extends Record<string, any>, K extends keyof T>({
+export function FormTimeInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder = "Select time",
   required,
   disabled,
   description
-}: ContextFormTimePickerProps<T, K>) {
+}: FormTimeInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source] as string;
   const error = touched[source] ? errors[source] : undefined;
