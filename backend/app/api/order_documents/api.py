@@ -248,5 +248,5 @@ class OrderDocumentsResource:
 		order_id - path parameter
 		document_id - path parameter
 		"""
-		await self.order_documents_service.delete_order_document(document_id=document_id)
+		await self.order_documents_service.delete_order_document(order_document_id=document_id)
 		return status.HTTP_204_NO_CONTENT

@@ -131,17 +131,7 @@ const EditOrderFormContent: React.FC<{
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this order?')) {
-      try {
-        console.log('Delete order:', orderId);
-        await ApiService.deleteOrder(orderId);
-        navigate('/');
-      } catch (error) {
-        console.error('Failed to delete order:', error);
-      }
-    }
-  };
+
 
   const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
     value,
@@ -697,14 +687,6 @@ const EditOrderFormContent: React.FC<{
 
             {/* Actions */}
             <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
-              <Button 
-                variant="light"
-                color="red"
-                leftSection={<IconTrash size={16} />}
-                onClick={handleDelete}
-              >
-                Delete Order
-              </Button>
               
               <Button 
                 leftSection={<IconDeviceFloppy size={16} />}
