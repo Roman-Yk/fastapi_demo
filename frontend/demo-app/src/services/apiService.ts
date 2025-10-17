@@ -299,6 +299,17 @@ class ApiService {
     });
   }
 
+  static async updateOrderDocument(
+    orderId: string, 
+    documentId: string, 
+    data: { title?: string; type?: string }
+  ): Promise<void> {
+    return this.makeRequest<void>(`/orders/${orderId}/documents/${documentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   static async viewOrderDocument(orderId: string, documentId: string): Promise<void> {
     const url = `${API_BASE_URL}/orders/${orderId}/documents/${documentId}/view`;
     window.open(url, '_blank');

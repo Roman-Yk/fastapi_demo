@@ -676,6 +676,22 @@ const EditOrderFormContent: React.FC<{
                       console.error('Failed to view document:', error);
                     }
                   }}
+                  onEdit={async (documentId, title, documentType) => {
+                    // Edit document metadata
+                    try {
+                      await ApiService.updateOrderDocument(orderId, documentId, {
+                        title,
+                        type: documentType
+                      });
+                      // Refresh the documents list
+                      const documents = await ApiService.getOrderDocuments(orderId);
+                      setExistingDocuments(documents);
+                    } catch (error) {
+                      console.error('Failed to update document:', error);
+                      alert(`Failed to update document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      throw error;
+                    }
+                  }}
                 />
               </ErrorBoundary>
 

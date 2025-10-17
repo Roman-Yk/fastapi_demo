@@ -222,7 +222,7 @@ class OrderDocumentsResource:
 		body is a body passed in request, validated by UpdateOrderDocumentSchema
 		"""
 		updated_document = await self.order_documents_service.update_order_document(
-			document_id=document_id,
+			order_document_id=document_id,
 			data=body.model_dump(exclude_unset=True),
 		)
 		return updated_document
@@ -236,7 +236,7 @@ class OrderDocumentsResource:
 		body is a body passed in request, validated by UpdateOrderDocumentSchema
 		"""
 		updated_document = await self.order_documents_service.update_order_document(
-			document_id=document_id,
+			order_document_id=document_id,
 			data=body.model_dump(),
 		)
 		return updated_document

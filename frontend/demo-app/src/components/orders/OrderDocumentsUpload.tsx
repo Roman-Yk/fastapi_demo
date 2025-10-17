@@ -31,7 +31,8 @@ import {
   IconTrash,
   IconFileDescription,
   IconX,
-  IconCheck
+  IconCheck,
+  IconEdit
 } from '@tabler/icons-react';
 
 // Document type enum matching backend
@@ -84,6 +85,7 @@ interface OrderDocumentsUploadProps {
   onDelete?: (documentId: string) => Promise<void>;
   onDownload?: (documentId: string) => void;
   onView?: (document: Document) => void;
+  onEdit?: (documentId: string, title: string, documentType: OrderDocumentType) => Promise<void>;
 }
 
 export interface OrderDocumentsUploadRef {
@@ -126,7 +128,77 @@ const documentTypeOptions = Object.values(OrderDocumentType).map(type => ({
   label: type
 }));
 
-// Document Edit Modal Component
+// Modal for editing existing document
+const EditDocumentModal: React.FC<{
+  document: Document | null;
+  opened: boolean;
+  onClose: () => void;
+  onSave: (title: string, type: OrderDocumentType) => void;
+}> = ({ document, opened, onClose, onSave }) => {
+  const [name, setName] = useState('');
+  const [type, setType] = useState<OrderDocumentType>(OrderDocumentType.Other);
+
+  React.useEffect(() => {
+    if (document) {
+      setName(document.name);
+      setType(document.documentType || OrderDocumentType.Other);
+    }
+  }, [document]);
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    onSave(name, type);
+    onClose();
+  };
+
+  const documentTypeOptions = Object.values(OrderDocumentType).map(value => ({
+    value,
+    label: value
+  }));
+
+  if (!document) return null;
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Edit Document"
+      size="md"
+    >
+      <Stack gap="md">
+        <TextInput
+          label="Document Name"
+          placeholder="Enter document name"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+          required
+        />
+
+        <Select
+          label="Document Type"
+          placeholder="Select document type"
+          data={documentTypeOptions}
+          value={type}
+          onChange={(value) => setType(value as OrderDocumentType)}
+          required
+          searchable
+        />
+
+        {/* Actions */}
+        <Group justify="flex-end" gap="xs">
+          <Button variant="light" onClick={onClose} leftSection={<IconX size={16} />}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} leftSection={<IconCheck size={16} />}>
+            Save Changes
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+};
+
+// Modal for adding new document (file upload)
 const DocumentEditModal: React.FC<{
   file: File;
   opened: boolean;
@@ -333,13 +405,18 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
   onUpload,
   onDelete,
   onDownload,
-  onView
+  onView,
+  onEdit
 }, ref) => {
   const theme = useMantineTheme();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [editingFile, setEditingFile] = useState<File | null>(null);
   const [pendingDocs, setPendingDocs] = useState<PendingDocument[]>([]);
+  
+  // Edit existing document state
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [editModalOpened, setEditModalOpened] = useState(false);
 
   const handleFileSelect = useCallback(async (files: File[] | null) => {
     if (!files || files.length === 0) return;
@@ -394,6 +471,23 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
   const handleRemovePending = useCallback((index: number) => {
     setPendingDocs(prev => prev.filter((_, i) => i !== index));
   }, []);
+
+  const handleEditDocument = useCallback((document: Document) => {
+    setEditingDocument(document);
+    setEditModalOpened(true);
+  }, []);
+
+  const handleSaveEdit = useCallback(async (title: string, documentType: OrderDocumentType) => {
+    if (!editingDocument) return;
+    
+    try {
+      await onEdit?.(editingDocument.id, title, documentType);
+      setEditingDocument(null);
+    } catch (error) {
+      console.error('Failed to edit document:', error);
+      alert(`Failed to edit document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [editingDocument, onEdit]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -563,6 +657,17 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
 
                   {/* Actions */}
                   <Group gap={4} mt="xs" justify="center">
+                     <ActionIcon
+                      variant="subtle"
+                      color="blue"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditDocument(doc);
+                      }}
+                    >
+                      <IconEdit size={14} stroke={1.5} />
+                    </ActionIcon>
                     <ActionIcon
                       variant="subtle"
                       color="gray"
@@ -574,6 +679,7 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
                     >
                       <IconDownload size={14} stroke={1.5} />
                     </ActionIcon>
+                   
                     <ActionIcon
                       variant="subtle"
                       color="red"
@@ -620,6 +726,17 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
           onSave={handleDocumentSave}
         />
       )}
+
+      {/* Edit Existing Document Modal */}
+      <EditDocumentModal
+        opened={editModalOpened}
+        document={editingDocument}
+        onClose={() => {
+          setEditModalOpened(false);
+          setEditingDocument(null);
+        }}
+        onSave={handleSaveEdit}
+      />
     </Paper>
   );
 });
