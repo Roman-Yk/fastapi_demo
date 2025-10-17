@@ -14,14 +14,15 @@ from app.utils.queries.fetching import (
 )
 from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
+
 from app.api._shared.base_service import BaseService
+from app.api._shared.tasks.tasks import add_order_document_text
 
 from app.database.models.orders.enums import OrderDocumentType
 from app.database.models.orders import OrderDocument, OrderDocumentText, Order
 
 from app.core.settings import settings
 
-from app.api._shared.tasks.tasks import add_order_document_text
 from .schemas import CollectionOrderDocumentsQueryParams
 
 
