@@ -8,7 +8,12 @@ from app.api import (
     trailers_router,
     terminals_router,
 )
+from app.api._shared.health import health_router
 from app.modules.cache import populate_cache_on_startup
+from app.core.logging_config import setup_logging
+
+# Initialize structured logging
+setup_logging()
 
 app = FastAPI(
     title="FastAPI Demo",
@@ -28,6 +33,10 @@ app.add_middleware(
 )
 
 
+# Health check endpoints (no prefix for easy monitoring)
+app.include_router(health_router, prefix="/api/v1")
+
+# Resource endpoints
 app.include_router(orders_router, prefix="/api/v1", tags=["orders"])
 app.include_router(order_documents_router, prefix="/api/v1", tags=["order_documents"])
 app.include_router(drivers_router, prefix="/api/v1", tags=["drivers"])

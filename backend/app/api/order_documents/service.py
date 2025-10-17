@@ -39,21 +39,16 @@ class OrderDocumentsService(BaseService):
         """
         select_query = select(OrderDocument).where(OrderDocument.order_id == order_id)
         count_query = select(func.count()).select_from(OrderDocument).where(OrderDocument.order_id == order_id)
-        try:
-            query, count_query = apply_filter_sort_range_for_query(
-                OrderDocument,
-                select_query,
-                count_query,
-                querystring.dict_data,
-            )
+        query, count_query = apply_filter_sort_range_for_query(
+            OrderDocument,
+            select_query,
+            count_query,
+            querystring.dict_data,
+        )
 
-            order_documents = await fetch_all(self.db, query)
-            order_documents_count = await fetch_count_query(self.db, count_query)
-            return order_documents, order_documents_count
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"Error fetching order documents: {str(e)}"
-            )
+        order_documents = await fetch_all(self.db, query)
+        order_documents_count = await fetch_count_query(self.db, count_query)
+        return order_documents, order_documents_count
 
     async def get_order_document_by_id(
         self, order_document_id: uuid.UUID
@@ -75,6 +70,10 @@ class OrderDocumentsService(BaseService):
         """
         Create a new order_document.
         """
+        # Validate file before processing
+        from app.utils.files import validate_file_upload
+        await validate_file_upload(file)
+
         destination_path = None
         try:
             # Create order_documents subdirectory if it doesn't exist
@@ -97,7 +96,7 @@ class OrderDocumentsService(BaseService):
                 src=destination_path
             )
             self.db.add(new_order_document)
-            await self.db.commit()
+            await self.db.flush()  # Flush without committing (get_db handles commit)
             await self.db.refresh(new_order_document)
 
             # add_order_document_text.delay(document_id=new_order_document.id)
@@ -110,9 +109,7 @@ class OrderDocumentsService(BaseService):
             # Clean up file if it was created
             if destination_path and os.path.exists(destination_path):
                 os.remove(destination_path)
-            raise HTTPException(
-                status_code=400, detail=f"Error creating order document: {str(e)}"
-            )
+            raise
 
     async def update_order_document(
         self, order_document_id: uuid.UUID, data: dict
@@ -120,48 +117,31 @@ class OrderDocumentsService(BaseService):
         """
         Update an existing order document.
         """
-        try:
-            order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
-            order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
-            order_document = await update_model_fields(self.db, order_document, data)
-            
-            await self.db.commit()
-            return order_document
+        order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+        order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+        order_document = await update_model_fields(self.db, order_document, data)
 
-        except HTTPException:
-            # Re-raise HTTP exceptions (like 404, validation errors)
-            raise
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"Error updating order document: {str(e)}"
-            )
+        await self.db.flush()  # Flush without committing (get_db handles commit)
+        await self.db.refresh(order_document)
+        return order_document
 
     async def delete_order_document(self, order_document_id: uuid.UUID):
         """
         Delete an existing order_document.
         """
-        try:
-            order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
-            order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
-            
-            # Delete associated text if it exists (optional - may not exist if parsing task hasn't run)
-            order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
-            order_document_text = await fetch_one_or_none(self.db, order_document_text_select_query)
-            if order_document_text:
-                await self.db.delete(order_document_text)
+        order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
+        order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
 
-            # Remove file from filesystem
-            if order_document.src and os.path.exists(order_document.src):
-                os.remove(order_document.src)
+        # Delete associated text if it exists (optional - may not exist if parsing task hasn't run)
+        order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
+        order_document_text = await fetch_one_or_none(self.db, order_document_text_select_query)
+        if order_document_text:
+            await self.db.delete(order_document_text)
 
-            # Delete from database
-            await self.db.delete(order_document)
-            await self.db.commit()
+        # Remove file from filesystem
+        if order_document.src and os.path.exists(order_document.src):
+            os.remove(order_document.src)
 
-        except HTTPException:
-            # Re-raise HTTP exceptions
-            raise
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"Error deleting order document: {str(e)}"
-            )
+        # Delete from database
+        await self.db.delete(order_document)
+        await self.db.flush()  # Flush without committing (get_db handles commit)
