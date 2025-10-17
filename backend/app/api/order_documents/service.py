@@ -142,15 +142,18 @@ class OrderDocumentsService(BaseService):
         try:
             order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
             order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+            
+            # Delete associated text if it exists (optional - may not exist if parsing task hasn't run)
             order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
-            order_document_text = await fetch_one_or_404(self.db, order_document_text_select_query, detail="Parsed order document text not found")
+            order_document_text = await fetch_one_or_none(self.db, order_document_text_select_query)
+            if order_document_text:
+                await self.db.delete(order_document_text)
 
             # Remove file from filesystem
             if order_document.src and os.path.exists(order_document.src):
                 os.remove(order_document.src)
 
             # Delete from database
-            await self.db.delete(order_document_text)
             await self.db.delete(order_document)
             await self.db.commit()
 
