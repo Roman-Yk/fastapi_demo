@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Container, 
   Title, 
@@ -29,7 +29,8 @@ import {
 } from '../../components/admin/forms';
 import { FormProvider, useFormContext } from '../../hooks/useFormContext';
 import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
-import { OrderDocumentsUpload } from '../../components/orders/OrderDocumentsUpload';
+import { OrderDocumentsUpload, OrderDocumentsUploadRef } from '../../components/orders/OrderDocumentsUpload';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 
 // TypeScript interface for edit order form data
 interface EditOrderFormData {
@@ -68,6 +69,7 @@ const EditOrderFormContent: React.FC<{
 }> = ({ orderId, onBack }) => {
   const navigate = useNavigate();
   const { formData, setForm } = useFormContext<EditOrderFormData>();
+  const documentsUploadRef = useRef<OrderDocumentsUploadRef>(null);
 
   const [loading, setLoading] = useState(true);
   const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
@@ -76,6 +78,7 @@ const EditOrderFormContent: React.FC<{
   const [etdTruckManualMode, setEtdTruckManualMode] = useState(false);
   const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
   const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
+  const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
 
   // Load data and populate form
   useEffect(() => {
@@ -95,6 +98,10 @@ const EditOrderFormContent: React.FC<{
           setEtaTrailerManualMode(!!orderData.eta_trailer);
           setEtdTrailerManualMode(!!orderData.etd_trailer);
         }
+
+        // Load existing documents
+        const documents = await ApiService.getOrderDocuments(orderId);
+        setExistingDocuments(documents);
       } catch (error) {
         console.error('Failed to load data:', error);
       } finally {
@@ -107,14 +114,20 @@ const EditOrderFormContent: React.FC<{
 
   const handleSave = async () => {
     try {
+      // First, upload any pending documents
+      if (documentsUploadRef.current?.hasPendingDocuments()) {
+        await documentsUploadRef.current.uploadPendingDocuments();
+      }
+
       // Transform form data to API format automatically
       const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
       
       await ApiService.updateOrder(orderId, apiData);
+      
       navigate('/');
     } catch (error) {
       console.error('Failed to update order:', error);
-      // TODO: Show error notification
+      alert(`Failed to save order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -606,35 +619,65 @@ const EditOrderFormContent: React.FC<{
               </GroupGrid>
 
               {/* Documents Upload Section */}
-              <OrderDocumentsUpload
-                orderId={orderId}
-                documents={[
-                  // Mock data - replace with actual documents from API
-                  // {
-                  //   id: '1',
-                  //   name: 'Bill of Lading.pdf',
-                  //   size: 245632,
-                  //   type: 'application/pdf',
-                  //   uploadedAt: new Date(),
-                  //   status: 'completed'
-                  // }
-                ]}
-                onUpload={async (files) => {
-                  console.log('Uploading files:', files);
-                  // TODO: Implement actual upload logic
-                  // await ApiService.uploadOrderDocuments(orderId, files);
-                }}
-                onDelete={async (documentId) => {
-                  console.log('Deleting document:', documentId);
-                  // TODO: Implement actual delete logic
-                  // await ApiService.deleteOrderDocument(orderId, documentId);
-                }}
-                onDownload={(documentId) => {
-                  console.log('Downloading document:', documentId);
-                  // TODO: Implement actual download logic
-                  // window.open(document.url, '_blank');
-                }}
-              />
+              <ErrorBoundary>
+                <OrderDocumentsUpload
+                  ref={documentsUploadRef}
+                  orderId={orderId}
+                  documents={[
+                    // Existing documents from the server
+                    ...existingDocuments.map((doc) => ({
+                      id: doc.id.toString(),
+                      name: doc.title || 'Untitled',
+                      size: 0, // Backend doesn't provide file size
+                      type: '', // Backend doesn't provide mime type
+                      documentType: doc.type,
+                      uploadedAt: new Date(doc.created_at),
+                      url: doc.src,
+                      status: 'completed' as const
+                    }))
+                  ]}
+                  onUpload={async (files, metadata) => {
+                    // Upload files immediately with metadata
+                    try {
+                      await ApiService.uploadOrderDocuments(orderId, files, metadata);
+                      // Refresh the documents list
+                      const documents = await ApiService.getOrderDocuments(orderId);
+                      setExistingDocuments(documents);
+                    } catch (error) {
+                      console.error('Failed to upload documents:', error);
+                      alert(`Failed to upload documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      throw error; // Re-throw to let component handle it
+                    }
+                  }}
+                  onDelete={async (documentId) => {
+                    // Delete existing document from server
+                    try {
+                      await ApiService.deleteOrderDocument(orderId, documentId);
+                      // Refresh the documents list
+                      const documents = await ApiService.getOrderDocuments(orderId);
+                      setExistingDocuments(documents);
+                    } catch (error) {
+                      console.error('Failed to delete document:', error);
+                    }
+                  }}
+                  onDownload={async (documentId) => {
+                    // Download button - forces file download
+                    try {
+                      await ApiService.downloadOrderDocument(orderId, documentId);
+                    } catch (error) {
+                      console.error('Failed to download document:', error);
+                    }
+                  }}
+                  onView={(document) => {
+                    // Card click - opens file in browser for viewing
+                    try {
+                      ApiService.viewOrderDocument(orderId, document.id);
+                    } catch (error) {
+                      console.error('Failed to view document:', error);
+                    }
+                  }}
+                />
+              </ErrorBoundary>
 
             {/* Actions */}
             <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>

@@ -74,10 +74,21 @@ class OrderDocumentsService(BaseService):
         """
         Create a new order_document.
         """
+        destination_path = None
         try:
-            filename = f"{uuid.uuid4()}_{file.filename}"
-            destination_path = os.path.join(settings.FILES_PATH, filename)
+            # Create order_documents subdirectory if it doesn't exist
+            order_documents_dir = os.path.join(settings.FILES_PATH, "order_documents")
+            os.makedirs(order_documents_dir, exist_ok=True)
             
+            # Generate unique filename
+            filename = f"{uuid.uuid4()}_{file.filename}"
+            destination_path = os.path.join(order_documents_dir, filename)
+            
+            # Save file to disk first
+            with open(destination_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            
+            # Create database record after file is saved
             new_order_document = OrderDocument(
                 order_id=order_id, 
                 title=title, 
@@ -86,11 +97,9 @@ class OrderDocumentsService(BaseService):
             )
             self.db.add(new_order_document)
             await self.db.commit()
-            
-            with open(destination_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+            await self.db.refresh(new_order_document)
 
-            add_order_document_text.delay(document_id=new_order_document.id)
+            # add_order_document_text.delay(document_id=new_order_document.id)
             return new_order_document
 
         except HTTPException:
@@ -98,7 +107,7 @@ class OrderDocumentsService(BaseService):
             raise
         except Exception as e:
             # Clean up file if it was created
-            if "destination_path" in locals() and os.path.exists(destination_path):
+            if destination_path and os.path.exists(destination_path):
                 os.remove(destination_path)
             raise HTTPException(
                 status_code=400, detail=f"Error creating order document: {str(e)}"
