@@ -24,14 +24,63 @@ from .BaseSchemas import ETAETDFieldsMixin, OrderBaseResponseSchema, OrderFields
 
 # Create schema
 class CreateOrderSchema(OrderFieldsMixin):
-    reference: str = Field(max_length=32, min_length=1)
-    service: OrderService
-    terminal_id: uuid.UUID
+    reference: str = Field(
+        max_length=32,
+        min_length=1,
+        description="Unique order reference number",
+        examples=["ORD-2024-001", "REF-12345"]
+    )
+    service: OrderService = Field(
+        description="Type of service for this order",
+        examples=[OrderService.RELOAD_CAR_CAR]
+    )
+    terminal_id: uuid.UUID = Field(
+        description="UUID of the terminal where order will be processed",
+        examples=["550e8400-e29b-41d4-a716-446655440000"]
+    )
 
-    eta_date: NotPastOptionalDate = None
-    eta_time: Optional[time] = None
-    etd_date: NotPastOptionalDate = None
-    etd_time: Optional[time] = None
+    eta_date: NotPastOptionalDate = Field(
+        default=None,
+        description="Estimated Time of Arrival date (must not be in the past)",
+        examples=["2024-12-25"]
+    )
+    eta_time: Optional[time] = Field(
+        default=None,
+        description="Estimated Time of Arrival time",
+        examples=["14:30:00"]
+    )
+    etd_date: NotPastOptionalDate = Field(
+        default=None,
+        description="Estimated Time of Departure date (must not be in the past)",
+        examples=["2024-12-26"]
+    )
+    etd_time: Optional[time] = Field(
+        default=None,
+        description="Estimated Time of Departure time",
+        examples=["18:00:00"]
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "reference": "ORD-2024-001",
+                    "service": 1,
+                    "terminal_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "eta_date": "2024-12-25",
+                    "eta_time": "14:30:00",
+                    "etd_date": "2024-12-26",
+                    "etd_time": "18:00:00",
+                    "commodity": 1,
+                    "pallets": 20,
+                    "boxes": 100,
+                    "kilos": 1500.5,
+                    "notes": "Handle with care - fragile items",
+                    "priority": True
+                }
+            ]
+        }
+    }
 
 
 # Update schema (Patch)
@@ -41,17 +90,72 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
     if using patch then use model_dump(exclude_unset=True)
     """
 
-    eta_date: NotPastOptionalDate = None
-    eta_time: Optional[time] = None
+    eta_date: NotPastOptionalDate = Field(
+        default=None,
+        description="Updated Estimated Time of Arrival date",
+        examples=["2024-12-27"]
+    )
+    eta_time: Optional[time] = Field(
+        default=None,
+        description="Updated Estimated Time of Arrival time",
+        examples=["16:00:00"]
+    )
 
-    etd_date: NotPastOptionalDate = None
-    etd_time: Optional[time] = None
+    etd_date: NotPastOptionalDate = Field(
+        default=None,
+        description="Updated Estimated Time of Departure date",
+        examples=["2024-12-28"]
+    )
+    etd_time: Optional[time] = Field(
+        default=None,
+        description="Updated Estimated Time of Departure time",
+        examples=["20:00:00"]
+    )
 
-    commodity: Optional[CommodityType] = None
-    pallets: NonNegativeOptionalInt = None
-    boxes: NonNegativeOptionalInt = None
-    kilos: NonNegativeOptionalFloat = None
-    notes: Optional[str] = None
+    commodity: Optional[CommodityType] = Field(
+        default=None,
+        description="Type of commodity being transported",
+        examples=[CommodityType.SALMON]
+    )
+    pallets: NonNegativeOptionalInt = Field(
+        default=None,
+        description="Number of pallets (must be non-negative)",
+        examples=[25]
+    )
+    boxes: NonNegativeOptionalInt = Field(
+        default=None,
+        description="Number of boxes (must be non-negative)",
+        examples=[150]
+    )
+    kilos: NonNegativeOptionalFloat = Field(
+        default=None,
+        description="Weight in kilograms (must be non-negative)",
+        examples=[2000.75]
+    )
+    notes: Optional[str] = Field(
+        default=None,
+        max_length=1024,
+        description="Additional notes or special instructions",
+        examples=["Updated delivery instructions - use back entrance"]
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "notes": "Updated delivery time - customer requested afternoon delivery",
+                    "pallets": 25,
+                    "priority": True
+                },
+                {
+                    "eta_date": "2024-12-27",
+                    "eta_time": "16:00:00",
+                    "commodity": 2,
+                    "kilos": 2500.0
+                }
+            ]
+        }
+    }
 
 
 # Declare dynamic filter model

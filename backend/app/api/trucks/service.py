@@ -21,22 +21,19 @@ class TruckService(BaseService):
         """
         Fetch all trucks with optional filtering, sorting, and pagination.
         """
-        try:
-            select_query = select(Truck)
-            count_query = select(func.count()).select_from(Truck)
+        select_query = select(Truck)
+        count_query = select(func.count()).select_from(Truck)
 
-            query, count_query = apply_filter_sort_range_for_query(
-                Truck,
-                select_query,
-                count_query,
-                querystring.dict_data,
-            )
+        query, count_query = apply_filter_sort_range_for_query(
+            Truck,
+            select_query,
+            count_query,
+            querystring.dict_data,
+        )
 
-            trucks = await fetch_all(self.db, query)
-            trucks_count = await fetch_count_query(self.db, count_query)
-            return trucks, trucks_count
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error fetching trucks: {str(e)}")
+        trucks = await fetch_all(self.db, query)
+        trucks_count = await fetch_count_query(self.db, count_query)
+        return trucks, trucks_count
 
     async def get_truck_by_id(self, truck_id: uuid.UUID):
         """
@@ -44,6 +41,4 @@ class TruckService(BaseService):
         """
         query = select(Truck).where(Truck.id == truck_id)
         truck = await fetch_one_or_404(self.db, query, detail="Truck not found")
-        if not truck:
-            raise HTTPException(status_code=404, detail="Truck not found")
         return truck 

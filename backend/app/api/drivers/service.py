@@ -21,22 +21,19 @@ class DriverService(BaseService):
         """
         Fetch all drivers with optional filtering, sorting, and pagination.
         """
-        try:
-            select_query = select(Driver)
-            count_query = select(func.count()).select_from(Driver)
+        select_query = select(Driver)
+        count_query = select(func.count()).select_from(Driver)
 
-            query, count_query = apply_filter_sort_range_for_query(
-                Driver,
-                select_query,
-                count_query,
-                querystring.dict_data,
-            )
+        query, count_query = apply_filter_sort_range_for_query(
+            Driver,
+            select_query,
+            count_query,
+            querystring.dict_data,
+        )
 
-            drivers = await fetch_all(self.db, query)
-            drivers_count = await fetch_count_query(self.db, count_query)
-            return drivers, drivers_count
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error fetching drivers: {str(e)}")
+        drivers = await fetch_all(self.db, query)
+        drivers_count = await fetch_count_query(self.db, count_query)
+        return drivers, drivers_count
 
     async def get_driver_by_id(self, driver_id: uuid.UUID):
         """

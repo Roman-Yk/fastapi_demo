@@ -16,8 +16,20 @@ from app.core.logging_config import setup_logging
 setup_logging()
 
 app = FastAPI(
-    title="FastAPI Demo",
-    description="This is a demo app for creating orders using FastAPI.",
+    title="Logistics Order Management API",
+    description="""
+## Logistics Order Management System
+
+A comprehensive API for managing logistics orders, documents, drivers, vehicles, and terminals.
+    """,
+    version="1.0.0",
+    contact={
+        "name": "API Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
