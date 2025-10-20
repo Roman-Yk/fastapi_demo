@@ -21,15 +21,19 @@ class FileConfig(BaseConstants):
     # Upload validation configuration
     max_upload_size_bytes: int = 10 * 1024 * 1024  # 10MB
     allowed_upload_extensions: Set[str] = {
-        "pdf", "png", "jpg", "jpeg", "tiff", "tif", "doc", "docx"
+        "pdf", "png", "jpg", "jpeg", "webp", "tiff", "tif", "doc", "docx", "xls", "xlsx", "txt"
     }
     allowed_upload_mime_types: Set[str] = {
         "application/pdf",
         "image/jpeg",
         "image/png",
+        "image/webp",
         "image/tiff",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "text/plain",
     }
 
     # Displayable file types (for browser inline display)

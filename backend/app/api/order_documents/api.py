@@ -152,7 +152,7 @@ class OrderDocumentsResource:
 				}
 			)
 
-	@order_documents_router.post("/{order_id}/documents/")
+	@order_documents_router.post("/{order_id}/documents/", status_code=status.HTTP_201_CREATED)
 	async def create_order_document(
 		self,
 		order_id: uuid.UUID,
@@ -160,7 +160,7 @@ class OrderDocumentsResource:
 		title: str = Form(...),
 		type: OrderDocumentType = Form(...),
 	):
-		"""		
+		"""
 		Create a new order document.
 		order_id - path parameter
 		file - file passed in request, validated by UploadFile
@@ -173,7 +173,7 @@ class OrderDocumentsResource:
 			title=title,
 			doc_type=type,
 		)
-		return status.HTTP_201_CREATED
+		return {"message": "Document created successfully"}
 
 	@order_documents_router.post("/{order_id}/documents/batch")
 	async def create_order_documents_batch(
@@ -241,7 +241,7 @@ class OrderDocumentsResource:
 		)
 		return updated_document
 
-	@order_documents_router.delete("/{order_id}/documents/{document_id}")
+	@order_documents_router.delete("/{order_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 	async def delete_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID):
 		"""
 		Delete an existing order document.
@@ -249,4 +249,4 @@ class OrderDocumentsResource:
 		document_id - path parameter
 		"""
 		await self.order_documents_service.delete_order_document(order_document_id=document_id)
-		return status.HTTP_204_NO_CONTENT
+		return None

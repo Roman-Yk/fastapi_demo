@@ -83,7 +83,7 @@ class TestOrderDocumentsAPI:
         # Create a fake image file
         image_content = b"\x89PNG\r\n\x1a\n fake png content"
         files = {"file": ("test.png", io.BytesIO(image_content), "image/png")}
-        data = {"title": "Test Image Document", "type": "POD"}
+        data = {"title": "Test Image Document", "type": "Other"}
 
         response = await async_client.post(
             f"/api/v1/orders/{sample_order.id}/documents/",
@@ -197,7 +197,7 @@ class TestOrderDocumentsAPI:
         self, async_client: AsyncClient, sample_order_document
     ):
         """Test updating document metadata (title, type)."""
-        update_data = {"title": "Updated Title", "type": "POD"}
+        update_data = {"title": "Updated Title", "type": "Other"}
 
         response = await async_client.put(
             f"/api/v1/orders/{sample_order_document.order_id}/documents/{sample_order_document.id}",
@@ -246,15 +246,15 @@ class TestOrderDocumentsAPI:
         non_existent_order_id = uuid.uuid4()
         pdf_content = b"%PDF-1.4 fake pdf"
         files = {"file": ("test.pdf", io.BytesIO(pdf_content), "application/pdf")}
-        data = {"title": "Test PDF", "type": "CMR"}
+        data = {"title": "Test PDF", "type": "Other"}
 
         response = await async_client.post(
             f"/api/v1/orders/{non_existent_order_id}/documents/",
             files=files,
             data=data,
         )
-        # Should fail because order doesn't exist
-        assert response.status_code in [404, 422, 500]
+        # Should return 404 because order doesn't exist
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_document_type_validation(
@@ -289,7 +289,7 @@ class TestOrderDocumentsAPI:
 
         # Upload second document
         files2 = {"file": ("test2.pdf", io.BytesIO(b"%PDF-1.4 fake 2"), "application/pdf")}
-        data2 = {"title": "Document 2", "type": "POD"}
+        data2 = {"title": "Document 2", "type": "Other"}
         response2 = await async_client.post(
             f"/api/v1/orders/{sample_order.id}/documents/",
             files=files2,
@@ -329,6 +329,120 @@ class TestOrderDocumentsAPI:
         assert len(documents) <= 10
 
     @pytest.mark.asyncio
+    async def test_upload_webp_image(
+        self, async_client: AsyncClient, sample_order
+    ):
+        """Test uploading a WebP image file."""
+        webp_content = b"RIFF\x00\x00\x00\x00WEBP"
+        files = {"file": ("test.webp", io.BytesIO(webp_content), "image/webp")}
+        data = {"title": "Test WebP Image", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_upload_word_document(
+        self, async_client: AsyncClient, sample_order
+    ):
+        """Test uploading Word documents (.doc and .docx)."""
+        # Test DOCX
+        docx_content = b"PK\x03\x04"  # ZIP header for DOCX
+        files = {"file": ("test.docx", io.BytesIO(docx_content), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")}
+        data = {"title": "Test DOCX Document", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+        # Test DOC
+        doc_content = b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"  # OLE2 header for DOC
+        files = {"file": ("test.doc", io.BytesIO(doc_content), "application/msword")}
+        data = {"title": "Test DOC Document", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_upload_excel_spreadsheet(
+        self, async_client: AsyncClient, sample_order
+    ):
+        """Test uploading Excel spreadsheets (.xls and .xlsx)."""
+        # Test XLSX
+        xlsx_content = b"PK\x03\x04"  # ZIP header for XLSX
+        files = {"file": ("test.xlsx", io.BytesIO(xlsx_content), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
+        data = {"title": "Test XLSX Spreadsheet", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+        # Test XLS
+        xls_content = b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"  # OLE2 header for XLS
+        files = {"file": ("test.xls", io.BytesIO(xls_content), "application/vnd.ms-excel")}
+        data = {"title": "Test XLS Spreadsheet", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_upload_text_file(
+        self, async_client: AsyncClient, sample_order
+    ):
+        """Test uploading a plain text file."""
+        txt_content = b"This is a plain text file content for testing."
+        files = {"file": ("test.txt", io.BytesIO(txt_content), "text/plain")}
+        data = {"title": "Test Text File", "type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_upload_batch_mixed_file_types(
+        self, async_client: AsyncClient, sample_order
+    ):
+        """Test batch uploading with different file types."""
+        files = [
+            ("files", ("test1.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")),
+            ("files", ("test2.png", io.BytesIO(b"\x89PNG\r\n\x1a\n"), "image/png")),
+            ("files", ("test3.webp", io.BytesIO(b"RIFF\x00\x00\x00\x00WEBP"), "image/webp")),
+            ("files", ("test4.txt", io.BytesIO(b"Text content"), "text/plain")),
+            ("files", ("test5.xlsx", io.BytesIO(b"PK\x03\x04"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
+        ]
+        data = {"type": "Other"}
+
+        response = await async_client.post(
+            f"/api/v1/orders/{sample_order.id}/documents/batch",
+            files=files,
+            data=data,
+        )
+        assert response.status_code == 200
+        result = response.json()
+        assert result["created"] == 5
+        assert len(result["documents"]) == 5
+
+    @pytest.mark.asyncio
     async def test_upload_supported_file_types(
         self, async_client: AsyncClient, sample_order
     ):
@@ -338,6 +452,12 @@ class TestOrderDocumentsAPI:
             ("test.jpg", b"\xFF\xD8\xFF", "image/jpeg"),
             ("test.png", b"\x89PNG\r\n\x1a\n", "image/png"),
             ("test.tiff", b"II*\x00", "image/tiff"),
+            ("test.webp", b"RIFF\x00\x00\x00\x00WEBP", "image/webp"),
+            ("test.docx", b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            ("test.doc", b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", "application/msword"),
+            ("test.xlsx", b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            ("test.xls", b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", "application/vnd.ms-excel"),
+            ("test.txt", b"Plain text content", "text/plain"),
         ]
 
         for filename, content, mime_type in test_files:
