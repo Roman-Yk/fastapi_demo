@@ -1,14 +1,10 @@
 import uuid
-import os
-from typing import Annotated
-from fastapi import Depends, Response, Form, UploadFile, File, status, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import Depends, Response, Form, UploadFile, File, status
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.orders.enums import OrderDocumentType
-from app.database.models.orders import Order, OrderDocument, OrderDocumentText
 from app.database.conn import get_db
 from app.utils.queries.queries import generate_range
 
@@ -78,28 +74,10 @@ class OrderDocumentsResource:
 		Download order document file.
 		Forces download with proper filename for all file types.
 		"""
-		from app.utils.files import get_mime_type, encode_filename_for_header
-		
-		document = await self.order_documents_service.get_order_document_by_id(document_id)
-		
-		file_path = getattr(document, 'src', None)
-		if not file_path or not os.path.exists(file_path):
-			raise HTTPException(status_code=404, detail="File not found")
-		
-		# Get filename from document title or file path
-		doc_title = getattr(document, 'title', None)
-		filename = doc_title if doc_title else os.path.basename(file_path)
-		
-		# Get MIME type
-		mime_type = get_mime_type(file_path)
-		
-		# Read file content
-		with open(file_path, 'rb') as f:
-			content = f.read()
-		
-		# Encode filename for Content-Disposition header (handles Unicode)
-		content_disposition = encode_filename_for_header(filename)
-		
+		content, mime_type, content_disposition = await self.order_documents_service.download_order_document(
+			document_id
+		)
+
 		return Response(
 			content=content,
 			media_type=mime_type,
@@ -115,41 +93,24 @@ class OrderDocumentsResource:
 		Files that can be displayed (PDF, images) are shown inline.
 		Files that cannot be displayed (Office docs) are downloaded.
 		"""
-		from starlette.responses import Response
-		from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
-		
-		document = await self.order_documents_service.get_order_document_by_id(document_id)
-		
-		file_path = getattr(document, 'src', None)
-		if not file_path or not os.path.exists(file_path):
-			raise HTTPException(status_code=404, detail="File not found")
-		
-		# Read file content
-		with open(file_path, 'rb') as f:
-			content = f.read()
-		
-		# Get MIME type using existing FileConfig mappings
-		mime_type = get_mime_type(file_path)
-		
-		# Check if browser can display this file type
-		if is_displayable_in_browser(mime_type):
-			# Display inline (PDF, images, videos, text, etc.)
-			return Response(
-				content=content,
-				media_type=mime_type
-			)
-		else:
-			# Force download for non-displayable types (Office docs, ZIP, etc.)
-			doc_title = getattr(document, 'title', None)
-			filename = doc_title if doc_title else os.path.basename(file_path)
-			content_disposition = encode_filename_for_header(filename)
-			
+		content, mime_type, content_disposition = await self.order_documents_service.view_order_document(
+			document_id
+		)
+
+		if content_disposition:
+			# Force download for non-displayable types
 			return Response(
 				content=content,
 				media_type=mime_type,
 				headers={
 					"Content-Disposition": content_disposition
 				}
+			)
+		else:
+			# Display inline (PDF, images, videos, text, etc.)
+			return Response(
+				content=content,
+				media_type=mime_type
 			)
 
 	@order_documents_router.post("/{order_id}/documents/", status_code=status.HTTP_201_CREATED)

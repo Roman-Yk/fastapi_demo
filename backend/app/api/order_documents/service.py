@@ -149,3 +149,61 @@ class OrderDocumentsService(BaseService):
         # Delete from database
         self.db.delete(order_document)
         await self.db.flush()  # Flush without committing (get_db handles commit)
+
+    async def download_order_document(self, order_document_id: uuid.UUID) -> tuple[bytes, str, str]:
+        """
+        Get file content, MIME type, and content disposition for download.
+        Returns: (file_content, mime_type, content_disposition_header)
+        """
+        from app.utils.files import get_mime_type, encode_filename_for_header
+
+        order_document = await self.get_order_document_by_id(order_document_id)
+
+        file_path = order_document.src
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Get filename from document title or file path
+        filename = order_document.title if order_document.title else os.path.basename(file_path)
+
+        # Get MIME type
+        mime_type = get_mime_type(file_path)
+
+        # Read file content
+        with open(file_path, 'rb') as f:
+            content = f.read()
+
+        # Encode filename for Content-Disposition header 
+        content_disposition = encode_filename_for_header(filename)
+
+        return content, mime_type, content_disposition
+
+    async def view_order_document(self, order_document_id: uuid.UUID) -> tuple[bytes, str, str | None]:
+        """
+        Get file content, MIME type, and optional content disposition for viewing.
+        Returns: (file_content, mime_type, content_disposition_header or None)
+        """
+        from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
+
+        order_document = await self.get_order_document_by_id(order_document_id)
+
+        file_path = order_document.src
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Read file content
+        with open(file_path, 'rb') as f:
+            content = f.read()
+
+        # Get MIME type using existing FileConfig mappings
+        mime_type = get_mime_type(file_path)
+
+        # Check if browser can display this file type
+        if is_displayable_in_browser(mime_type):
+            # Display inline (PDF, images, videos, text, etc.)
+            return content, mime_type, None
+        else:
+            # Force download for non-displayable types (Office docs, ZIP, etc.)
+            filename = order_document.title if order_document.title else os.path.basename(file_path)
+            content_disposition = encode_filename_for_header(filename)
+            return content, mime_type, content_disposition
