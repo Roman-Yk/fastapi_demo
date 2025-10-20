@@ -12,7 +12,7 @@ import { Notifications } from '@mantine/notifications';
 import { ThemeProvider, createTheme as createMuiTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Navbar } from './components/layout';
-import { AppRoutes } from './components/common';
+import { AppRoutes } from './pages/AppRoutes';
 
 // Custom color palette
 const customBlue: MantineColorsTuple = [

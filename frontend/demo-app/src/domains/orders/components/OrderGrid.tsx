@@ -12,7 +12,7 @@ import {
   ReferenceDriverFieldOptimized,
   ReferenceVehicleFieldOptimized
 } from '../../../shared/components';
-import { useReferenceDataForGrid } from '../../../hooks/useReferenceDataMany';
+import { useReferenceDataForGrid } from '../hooks/useReferenceDataForGrid';
 import {
   Order,
   CommodityLabels,

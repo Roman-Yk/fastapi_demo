@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, Stack, Group, Skeleton } from '@mantine/core';
 import { IconTruck } from '@tabler/icons-react';
-import { useTruck, useTrailer } from '../../../hooks/useReferenceData';
+import { useTruck } from '../../../domains/vehicles/hooks/useTrucks';
+import { useTrailer } from '../../../domains/vehicles/hooks/useTrailers';
 import { FieldProps } from './types';
 
 export interface ReferenceVehicleFieldProps extends FieldProps {

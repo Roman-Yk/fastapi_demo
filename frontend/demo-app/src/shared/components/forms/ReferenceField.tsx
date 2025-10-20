@@ -1,6 +1,9 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useDrivers, useTerminals, useTrucks, useTrailers } from '../../../hooks/useReferenceData';
+import { useDrivers } from '../../../domains/drivers/hooks/useDrivers';
+import { useTerminals } from '../../../domains/terminals/hooks/useTerminals';
+import { useTrucks } from '../../../domains/vehicles/hooks/useTrucks';
+import { useTrailers } from '../../../domains/vehicles/hooks/useTrailers';
 
 interface ReferenceFieldProps<K extends string> {
   label: string;

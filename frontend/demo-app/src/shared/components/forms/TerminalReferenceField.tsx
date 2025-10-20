@@ -1,6 +1,6 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useTerminals } from '../../../hooks/useReferenceData';
+import { useTerminals } from '../../../domains/terminals/hooks/useTerminals';
 
 interface TerminalReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;

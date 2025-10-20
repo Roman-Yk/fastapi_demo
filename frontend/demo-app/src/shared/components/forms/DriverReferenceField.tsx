@@ -1,6 +1,6 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useDrivers } from '../../../hooks/useReferenceData';
+import { useDrivers } from '../../../domains/drivers/hooks/useDrivers';
 
 interface DriverReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;

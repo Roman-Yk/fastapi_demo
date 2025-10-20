@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Stack, Group, Skeleton } from '@mantine/core';
 import { IconUser } from '@tabler/icons-react';
-import { useDriver } from '../../../hooks/useReferenceData';
+import { useDriver } from '../../../domains/drivers/hooks/useDrivers';
 import { FieldProps } from './types';
 
 export interface ReferenceDriverFieldProps extends FieldProps {

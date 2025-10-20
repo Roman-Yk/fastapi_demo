@@ -1,8 +1,22 @@
+/**
+ * @deprecated This file is deprecated and will be removed in a future version.
+ * Please use domain-specific services instead:
+ * - Orders: import from '@/domains/orders/api/orderService'
+ * - Drivers: import from '@/domains/drivers/api/driverService'
+ * - Terminals: import from '@/domains/terminals/api/terminalService'
+ * - Vehicles: import from '@/domains/vehicles/api/truckService' or '@/domains/vehicles/api/trailerService'
+ *
+ * This file now acts as a compatibility layer to maintain backwards compatibility.
+ */
+
 import { Order, OrderService, CommodityType } from '../domains/orders/types/order';
+import { orderApi } from '../domains/orders/api/orderService';
 import { orderDocumentApi, DocumentMetadata } from '../domains/orders/api/orderDocumentService';
 import { OrderDocument } from '../domains/orders/types/document';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { driverApi } from '../domains/drivers/api/driverService';
+import { terminalApi } from '../domains/terminals/api/terminalService';
+import { truckApi } from '../domains/vehicles/api/truckService';
+import { trailerApi } from '../domains/vehicles/api/trailerService';
 
 interface Driver {
   id: string;
@@ -66,183 +80,112 @@ interface UpdateOrderRequest extends Partial<CreateOrderRequest> {
   id: string;
 }
 
-// Generic API functions
+// Generic API functions - now using domain services
 class ApiService {
-  private static async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
 
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
-  }
-
-  // Orders
+  // Orders - delegated to domain service
   static async getOrders(): Promise<Order[]> {
-    return this.makeRequest<Order[]>('/orders');
+    return orderApi.getAll();
   }
 
   static async getOrder(id: string): Promise<Order> {
-    return this.makeRequest<Order>(`/orders/${id}`);
+    return orderApi.getById(id);
   }
 
   static async createOrder(order: CreateOrderRequest): Promise<Order> {
-    return this.makeRequest<Order>('/orders', {
-      method: 'POST',
-      body: JSON.stringify(order),
-    });
+    return orderApi.create(order);
   }
 
   static async updateOrder(id: string, order: Partial<CreateOrderRequest>): Promise<Order> {
-    return this.makeRequest<Order>(`/orders/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(order),
-    });
+    return orderApi.update(id, order);
   }
 
   static async deleteOrder(id: string): Promise<void> {
-    return this.makeRequest<void>(`/orders/${id}`, {
-      method: 'DELETE',
-    });
+    return orderApi.delete(id);
   }
 
-  // Drivers
+  // Drivers - delegated to domain service
   static async getDrivers(): Promise<Driver[]> {
-    return this.makeRequest<Driver[]>('/drivers');
+    return driverApi.getAll() as Promise<any>;
   }
 
   static async getDriver(id: string): Promise<Driver> {
-    return this.makeRequest<Driver>(`/drivers/${id}`);
+    return driverApi.getById(id) as Promise<any>;
   }
 
   static async createDriver(driver: Omit<Driver, 'id'>): Promise<Driver> {
-    return this.makeRequest<Driver>('/drivers', {
-      method: 'POST',
-      body: JSON.stringify(driver),
-    });
+    return driverApi.create(driver as any) as Promise<any>;
   }
 
   static async updateDriver(id: string, driver: Partial<Omit<Driver, 'id'>>): Promise<Driver> {
-    return this.makeRequest<Driver>(`/drivers/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(driver),
-    });
+    return driverApi.update(id, driver as any) as Promise<any>;
   }
 
   static async deleteDriver(id: string): Promise<void> {
-    return this.makeRequest<void>(`/drivers/${id}`, {
-      method: 'DELETE',
-    });
+    return driverApi.delete(id);
   }
 
-  // Terminals
+  // Terminals - delegated to domain service
   static async getTerminals(): Promise<Terminal[]> {
-    return this.makeRequest<Terminal[]>('/terminals');
+    return terminalApi.getAll() as Promise<any>;
   }
 
   static async getTerminal(id: string): Promise<Terminal> {
-    return this.makeRequest<Terminal>(`/terminals/${id}`);
+    return terminalApi.getById(id) as Promise<any>;
   }
 
   static async createTerminal(terminal: Omit<Terminal, 'id'>): Promise<Terminal> {
-    return this.makeRequest<Terminal>('/terminals', {
-      method: 'POST',
-      body: JSON.stringify(terminal),
-    });
+    return terminalApi.create(terminal as any) as Promise<any>;
   }
 
   static async updateTerminal(id: string, terminal: Partial<Omit<Terminal, 'id'>>): Promise<Terminal> {
-    return this.makeRequest<Terminal>(`/terminals/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(terminal),
-    });
+    return terminalApi.update(id, terminal as any) as Promise<any>;
   }
 
   static async deleteTerminal(id: string): Promise<void> {
-    return this.makeRequest<void>(`/terminals/${id}`, {
-      method: 'DELETE',
-    });
+    return terminalApi.delete(id);
   }
 
-  // Trailers
+  // Trailers - delegated to domain service
   static async getTrailers(): Promise<Trailer[]> {
-    return this.makeRequest<Trailer[]>('/trailers');
+    return trailerApi.getAll() as Promise<any>;
   }
 
   static async getTrailer(id: string): Promise<Trailer> {
-    return this.makeRequest<Trailer>(`/trailers/${id}`);
+    return trailerApi.getById(id) as Promise<any>;
   }
 
   static async createTrailer(trailer: Omit<Trailer, 'id'>): Promise<Trailer> {
-    return this.makeRequest<Trailer>('/trailers', {
-      method: 'POST',
-      body: JSON.stringify(trailer),
-    });
+    return trailerApi.create(trailer as any) as Promise<any>;
   }
 
   static async updateTrailer(id: string, trailer: Partial<Omit<Trailer, 'id'>>): Promise<Trailer> {
-    return this.makeRequest<Trailer>(`/trailers/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(trailer),
-    });
+    return trailerApi.update(id, trailer as any) as Promise<any>;
   }
 
   static async deleteTrailer(id: string): Promise<void> {
-    return this.makeRequest<void>(`/trailers/${id}`, {
-      method: 'DELETE',
-    });
+    return trailerApi.delete(id);
   }
 
-  // Trucks
+  // Trucks - delegated to domain service
   static async getTrucks(): Promise<Truck[]> {
-    return this.makeRequest<Truck[]>('/trucks');
+    return truckApi.getAll() as Promise<any>;
   }
 
   static async getTruck(id: string): Promise<Truck> {
-    return this.makeRequest<Truck>(`/trucks/${id}`);
+    return truckApi.getById(id) as Promise<any>;
   }
 
   static async createTruck(truck: Omit<Truck, 'id'>): Promise<Truck> {
-    return this.makeRequest<Truck>('/trucks', {
-      method: 'POST',
-      body: JSON.stringify(truck),
-    });
+    return truckApi.create(truck as any) as Promise<any>;
   }
 
   static async updateTruck(id: string, truck: Partial<Omit<Truck, 'id'>>): Promise<Truck> {
-    return this.makeRequest<Truck>(`/trucks/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(truck),
-    });
+    return truckApi.update(id, truck as any) as Promise<any>;
   }
 
   static async deleteTruck(id: string): Promise<void> {
-    return this.makeRequest<void>(`/trucks/${id}`, {
-      method: 'DELETE',
-    });
+    return truckApi.delete(id);
   }
 
   // Order Documents - delegated to orderDocumentApi

@@ -16,12 +16,10 @@
  */
 
 import { useMemo } from 'react';
-import { 
-  useDriversByIds, 
-  useTerminalsByIds, 
-  useTrucksByIds, 
-  useTrailersByIds 
-} from './useReferenceData';
+import { useDriversByIds } from '../../drivers/hooks/useDrivers';
+import { useTerminalsByIds } from '../../terminals/hooks/useTerminals';
+import { useTrucksByIds } from '../../vehicles/hooks/useTrucks';
+import { useTrailersByIds } from '../../vehicles/hooks/useTrailers';
 
 /**
  * Hook to get all reference data needed for a grid

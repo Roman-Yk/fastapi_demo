@@ -1,6 +1,6 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useTrailers } from '../../../hooks/useReferenceData';
+import { useTrailers } from '../../../domains/vehicles/hooks/useTrailers';
 
 interface TrailerReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
   label: string;

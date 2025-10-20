@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import { List } from '../../components/admin';
 import { OrderFiltersComponent, OrderGrid } from '../../components/features/orders';
-import { filterOrders } from '../../utils/mockData';
+import { filterOrders } from '../utils/mockData';
 import { OrderFilters, DateFilterOption } from '../types/order';
 import { orderApi } from '../../services/apiServices';
 import { useApi } from '../../hooks/useApi';
