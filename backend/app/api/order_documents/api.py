@@ -1,5 +1,6 @@
+import os
 import uuid
-from fastapi import Depends, Response, Form, UploadFile, File, status
+from fastapi import Depends, Response, Form, UploadFile, File, status, HTTPException
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
@@ -7,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.orders.enums import OrderDocumentType
 from app.database.conn import get_db
 from app.utils.queries.queries import generate_range
-
+from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
 from .schemas import (
 	ResponseOrderDocumentSchema,
 	CollectionOrderDocumentsQueryParams,
@@ -74,9 +75,26 @@ class OrderDocumentsResource:
 		Download order document file.
 		Forces download with proper filename for all file types.
 		"""
-		content, mime_type, content_disposition = await self.order_documents_service.download_order_document(
-			document_id
-		)
+
+		# Get document from service
+		document = await self.order_documents_service.get_order_document_by_id(document_id)
+
+		file_path = document.src
+		if not file_path or not os.path.exists(file_path):
+			raise HTTPException(status_code=404, detail="File not found")
+
+		# Get filename from document title or file path
+		filename = document.title if document.title else os.path.basename(file_path)
+
+		# Get MIME type
+		mime_type = get_mime_type(file_path)
+
+		# Read file content
+		with open(file_path, 'rb') as f:
+			content = f.read()
+
+		# Encode filename for Content-Disposition header
+		content_disposition = encode_filename_for_header(filename)
 
 		return Response(
 			content=content,
@@ -85,7 +103,7 @@ class OrderDocumentsResource:
 				"Content-Disposition": content_disposition
 			}
 		)
-	
+
 	@order_documents_router.get("/{order_id}/documents/{document_id}/view")
 	async def view_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID):
 		"""
@@ -93,12 +111,31 @@ class OrderDocumentsResource:
 		Files that can be displayed (PDF, images) are shown inline.
 		Files that cannot be displayed (Office docs) are downloaded.
 		"""
-		content, mime_type, content_disposition = await self.order_documents_service.view_order_document(
-			document_id
-		)
+		# Get document from service
+		document = await self.order_documents_service.get_order_document_by_id(document_id)
 
-		if content_disposition:
-			# Force download for non-displayable types
+		file_path = document.src
+		if not file_path or not os.path.exists(file_path):
+			raise HTTPException(status_code=404, detail="File not found")
+
+		# Read file content
+		with open(file_path, 'rb') as f:
+			content = f.read()
+
+		# Get MIME type
+		mime_type = get_mime_type(file_path)
+
+		# Check if browser can display this file type
+		if is_displayable_in_browser(mime_type):
+			# Display inline (PDF, images, videos, text, etc.)
+			return Response(
+				content=content,
+				media_type=mime_type
+			)
+		else:
+			# Force download for non-displayable types (Office docs, etc.)
+			filename = document.title if document.title else os.path.basename(file_path)
+			content_disposition = encode_filename_for_header(filename)
 			return Response(
 				content=content,
 				media_type=mime_type,
@@ -106,14 +143,10 @@ class OrderDocumentsResource:
 					"Content-Disposition": content_disposition
 				}
 			)
-		else:
-			# Display inline (PDF, images, videos, text, etc.)
-			return Response(
-				content=content,
-				media_type=mime_type
-			)
 
-	@order_documents_router.post("/{order_id}/documents/", status_code=status.HTTP_201_CREATED)
+	@order_documents_router.post("/{order_id}/documents/",
+								 response_model=ResponseOrderDocumentSchema,
+								 status_code=status.HTTP_201_CREATED)
 	async def create_order_document(
 		self,
 		order_id: uuid.UUID,
@@ -128,15 +161,16 @@ class OrderDocumentsResource:
 		title - title of the document, passed in request body form
 		type - type of the document, passed in request body form
 		"""
-		await self.order_documents_service.create_order_document(
+		document = await self.order_documents_service.create_order_document(
 			order_id=order_id,
 			file=file,
 			title=title,
 			doc_type=type,
 		)
-		return {"message": "Document created successfully"}
+		return document
 
-	@order_documents_router.post("/{order_id}/documents/batch")
+	@order_documents_router.post("/{order_id}/documents/batch",
+								 status_code=status.HTTP_201_CREATED)
 	async def create_order_documents_batch(
 		self,
 		order_id: uuid.UUID,

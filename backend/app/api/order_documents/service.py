@@ -11,12 +11,15 @@ from app.utils.queries.fetching import (
     fetch_all,
     fetch_count_query,
     fetch_one_or_404,
+    is_record_exists,
 )
 from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
+from app.utils.files import validate_file_upload
 
 from app.api._shared.base_service import BaseService
 from app.api._shared.tasks.tasks import add_order_document_text
+from app.database.exceptions import ForeignKeyError, NotFoundError
 
 from app.database.models.orders.enums import OrderDocumentType
 from app.database.models.orders import OrderDocument, OrderDocumentText, Order
@@ -30,6 +33,11 @@ class OrderDocumentsService(BaseService):
     """
     Service class for handling order document-related operations.
     """
+
+    # Foreign key validation mapping
+    FOREIGN_KEY_VALIDATION_MAP = {
+        "order_id": Order,
+    }
 
     async def get_all_order_documents(
         self, order_id: uuid.UUID, querystring: CollectionOrderDocumentsQueryParams
@@ -50,6 +58,7 @@ class OrderDocumentsService(BaseService):
         order_documents_count = await fetch_count_query(self.db, count_query)
         return order_documents, order_documents_count
 
+
     async def get_order_document_by_id(
         self, order_document_id: uuid.UUID
     ) -> OrderDocument:
@@ -59,6 +68,7 @@ class OrderDocumentsService(BaseService):
         select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
         order_document = await fetch_one_or_404(self.db, select_query, detail="Order document not found")
         return order_document
+
 
     async def create_order_document(
         self,
@@ -70,12 +80,11 @@ class OrderDocumentsService(BaseService):
         """
         Create a new order_document.
         """
-        # Validate that the order exists
-        order_query = select(Order).where(Order.id == order_id)
-        order = await fetch_one_or_404(self.db, order_query, detail="Order not found")
+        # Validate order exists (path parameter, so 404 is appropriate)
+        if not await is_record_exists(self.db, Order, order_id):
+            raise NotFoundError("Order", str(order_id))
 
         # Validate file before processing
-        from app.utils.files import validate_file_upload
         await validate_file_upload(file)
 
         destination_path = None
@@ -115,6 +124,7 @@ class OrderDocumentsService(BaseService):
                 os.remove(destination_path)
             raise
 
+
     async def update_order_document(
         self, order_document_id: uuid.UUID, data: dict
     ) -> OrderDocument:
@@ -128,6 +138,7 @@ class OrderDocumentsService(BaseService):
         await self.db.flush()  # Flush without committing (get_db handles commit)
         await self.db.refresh(order_document)
         return order_document
+
 
     async def delete_order_document(self, order_document_id: uuid.UUID):
         """
@@ -149,61 +160,3 @@ class OrderDocumentsService(BaseService):
         # Delete from database
         self.db.delete(order_document)
         await self.db.flush()  # Flush without committing (get_db handles commit)
-
-    async def download_order_document(self, order_document_id: uuid.UUID) -> tuple[bytes, str, str]:
-        """
-        Get file content, MIME type, and content disposition for download.
-        Returns: (file_content, mime_type, content_disposition_header)
-        """
-        from app.utils.files import get_mime_type, encode_filename_for_header
-
-        order_document = await self.get_order_document_by_id(order_document_id)
-
-        file_path = order_document.src
-        if not file_path or not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found")
-
-        # Get filename from document title or file path
-        filename = order_document.title if order_document.title else os.path.basename(file_path)
-
-        # Get MIME type
-        mime_type = get_mime_type(file_path)
-
-        # Read file content
-        with open(file_path, 'rb') as f:
-            content = f.read()
-
-        # Encode filename for Content-Disposition header 
-        content_disposition = encode_filename_for_header(filename)
-
-        return content, mime_type, content_disposition
-
-    async def view_order_document(self, order_document_id: uuid.UUID) -> tuple[bytes, str, str | None]:
-        """
-        Get file content, MIME type, and optional content disposition for viewing.
-        Returns: (file_content, mime_type, content_disposition_header or None)
-        """
-        from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
-
-        order_document = await self.get_order_document_by_id(order_document_id)
-
-        file_path = order_document.src
-        if not file_path or not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found")
-
-        # Read file content
-        with open(file_path, 'rb') as f:
-            content = f.read()
-
-        # Get MIME type using existing FileConfig mappings
-        mime_type = get_mime_type(file_path)
-
-        # Check if browser can display this file type
-        if is_displayable_in_browser(mime_type):
-            # Display inline (PDF, images, videos, text, etc.)
-            return content, mime_type, None
-        else:
-            # Force download for non-displayable types (Office docs, ZIP, etc.)
-            filename = order_document.title if order_document.title else os.path.basename(file_path)
-            content_disposition = encode_filename_for_header(filename)
-            return content, mime_type, content_disposition

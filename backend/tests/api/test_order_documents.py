@@ -161,7 +161,7 @@ class TestOrderDocumentsAPI:
             files=files,
             data=data,
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         result = response.json()
         assert result["created"] == 2
         assert len(result["documents"]) == 2
@@ -437,7 +437,7 @@ class TestOrderDocumentsAPI:
             files=files,
             data=data,
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         result = response.json()
         assert result["created"] == 5
         assert len(result["documents"]) == 5
