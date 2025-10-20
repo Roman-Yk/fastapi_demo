@@ -13,7 +13,7 @@ import {
   SelectFilter,
   BooleanFilter,
   TextFilter
-} from '../../admin';
+} from '../../../shared/components';
 import { 
   OrderFilters,
   DateFilterOption,
@@ -22,7 +22,7 @@ import {
   StatusFilterLabels,
   OrderServiceLabels,
   CommodityLabels
-} from '../../../types/order';
+} from '../types/order';
 
 interface OrderFiltersFormProps {
   filters: OrderFilters;

@@ -1,109 +1,25 @@
-import { BaseApiService } from './baseApiService';
-import { Order } from '../types/order';
+/**
+ * Backwards compatibility layer for old API service imports
+ * This file should be deprecated and removed after updating all imports
+ */
 
-// API-specific interfaces (separate from domain types)
-export interface CreateOrderRequest {
-  reference: string;
-  service: number;
-  terminal_id: string;
-  eta_date?: string;
-  eta_time?: string;
-  etd_date?: string;
-  etd_time?: string;
-  commodity?: string;
-  pallets?: number;
-  boxes?: number;
-  kilos?: number;
-  notes?: string;
-  priority?: boolean;
-  eta_driver_id?: string;
-  eta_truck_id?: string;
-  eta_trailer_id?: string;
-  etd_driver_id?: string;
-  etd_truck_id?: string;
-  etd_trailer_id?: string;
-}
+import { orderApi, type CreateOrderRequest, type UpdateOrderRequest } from '../domains/orders';
+import { driverApi } from '../domains/drivers';
+import { terminalApi } from '../domains/terminals';
+import { truckApi, trailerApi } from '../domains/vehicles';
+import { orderDocumentApi, type DocumentMetadata } from '../domains/orders/api/orderDocumentService';
 
-export interface UpdateOrderRequest extends Partial<CreateOrderRequest> {}
+// Re-export types for backwards compatibility
+export { BaseApiService, BaseApiError } from './baseApiService';
+export type { CreateOrderRequest, UpdateOrderRequest };
+export type { Driver, CreateDriverRequest, UpdateDriverRequest } from '../domains/drivers';
+export type { Terminal, CreateTerminalRequest, UpdateTerminalRequest } from '../domains/terminals';
+export type { Truck, Trailer, CreateTruckRequest, UpdateTruckRequest, CreateTrailerRequest, UpdateTrailerRequest } from '../domains/vehicles';
 
-export interface Driver {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  license_number: string | null;
-  license_expiry: string | null;
-}
+// Re-export service instances
+export { orderApi, driverApi, terminalApi, truckApi, trailerApi };
 
-export interface Terminal {
-  id: string;
-  name: string;
-  code: string;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-}
-
-export interface Trailer {
-  id: string;
-  license_plate: string;
-  type: string | null;
-  capacity: number | null;
-}
-
-export interface Truck {
-  id: string;
-  truck_number: string;
-  make: string | null;
-  model: string | null;
-  year: number | null;
-  license_plate: string | null;
-}
-
-// Service implementations
-class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOrderRequest> {
-  protected endpoint = '/orders';
-
-  async getAll(filters?: Record<string, any>, options?: { page?: number; perPage?: number; sort?: string; order?: 'ASC' | 'DESC' }) {
-    // Build query params
-    const params = new URLSearchParams();
-    if (filters && Object.keys(filters).length > 0) {
-      params.append('filter', JSON.stringify(filters));
-    }
-    if (options?.page !== undefined) params.append('page', String(options.page));
-    if (options?.perPage !== undefined) params.append('perPage', String(options.perPage));
-    if (options?.sort) params.append('sort', options.sort);
-    if (options?.order) params.append('order', options.order);
-
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return this.makeRequest<Order[]>(query);
-  }
-}
-
-class DriverApiService extends BaseApiService<Driver> {
-  protected endpoint = '/drivers';
-}
-
-class TerminalApiService extends BaseApiService<Terminal> {
-  protected endpoint = '/terminals';
-}
-
-class TrailerApiService extends BaseApiService<Trailer> {
-  protected endpoint = '/trailers';
-}
-
-class TruckApiService extends BaseApiService<Truck> {
-  protected endpoint = '/trucks';
-}
-
-// Export service instances
-export const orderApi = new OrderApiService();
-export const driverApi = new DriverApiService();
-export const terminalApi = new TerminalApiService();
-export const trailerApi = new TrailerApiService();
-export const truckApi = new TruckApiService();
-
-// Legacy compatibility - can be removed once all components are updated
+// Legacy ApiService class for backwards compatibility
 const ApiService = {
   // Orders
   getOrders: () => orderApi.getAll(),
@@ -115,30 +31,54 @@ const ApiService = {
   // Drivers
   getDrivers: () => driverApi.getAll(),
   getDriver: (id: string) => driverApi.getById(id),
-  createDriver: (driver: Omit<Driver, 'id'>) => driverApi.create(driver),
-  updateDriver: (id: string, driver: Partial<Omit<Driver, 'id'>>) => driverApi.update(id, driver),
+  createDriver: (driver: any) => driverApi.create(driver),
+  updateDriver: (id: string, driver: any) => driverApi.update(id, driver),
   deleteDriver: (id: string) => driverApi.delete(id),
 
   // Terminals
   getTerminals: () => terminalApi.getAll(),
   getTerminal: (id: string) => terminalApi.getById(id),
-  createTerminal: (terminal: Omit<Terminal, 'id'>) => terminalApi.create(terminal),
-  updateTerminal: (id: string, terminal: Partial<Omit<Terminal, 'id'>>) => terminalApi.update(id, terminal),
+  createTerminal: (terminal: any) => terminalApi.create(terminal),
+  updateTerminal: (id: string, terminal: any) => terminalApi.update(id, terminal),
   deleteTerminal: (id: string) => terminalApi.delete(id),
 
   // Trailers
   getTrailers: () => trailerApi.getAll(),
   getTrailer: (id: string) => trailerApi.getById(id),
-  createTrailer: (trailer: Omit<Trailer, 'id'>) => trailerApi.create(trailer),
-  updateTrailer: (id: string, trailer: Partial<Omit<Trailer, 'id'>>) => trailerApi.update(id, trailer),
+  createTrailer: (trailer: any) => trailerApi.create(trailer),
+  updateTrailer: (id: string, trailer: any) => trailerApi.update(id, trailer),
   deleteTrailer: (id: string) => trailerApi.delete(id),
 
   // Trucks
   getTrucks: () => truckApi.getAll(),
   getTruck: (id: string) => truckApi.getById(id),
-  createTruck: (truck: Omit<Truck, 'id'>) => truckApi.create(truck),
-  updateTruck: (id: string, truck: Partial<Omit<Truck, 'id'>>) => truckApi.update(id, truck),
+  createTruck: (truck: any) => truckApi.create(truck),
+  updateTruck: (id: string, truck: any) => truckApi.update(id, truck),
   deleteTruck: (id: string) => truckApi.delete(id),
+
+  // Order Documents - delegated to orderDocumentApi
+  uploadOrderDocuments: (
+    orderId: string,
+    files: File[],
+    metadata?: DocumentMetadata[]
+  ) => orderDocumentApi.uploadDocuments(orderId, files, metadata),
+
+  getOrderDocuments: (orderId: string) => orderDocumentApi.getByOrderId(orderId),
+
+  deleteOrderDocument: (orderId: string, documentId: string) =>
+    orderDocumentApi.deleteDocument(orderId, documentId),
+
+  updateOrderDocument: (
+    orderId: string,
+    documentId: string,
+    data: { title?: string; type?: string }
+  ) => orderDocumentApi.updateDocument(orderId, documentId, data as any),
+
+  viewOrderDocument: (orderId: string, documentId: string) =>
+    orderDocumentApi.viewDocument(orderId, documentId),
+
+  downloadOrderDocument: (orderId: string, documentId: string) =>
+    orderDocumentApi.downloadDocument(orderId, documentId),
 };
 
 export default ApiService;

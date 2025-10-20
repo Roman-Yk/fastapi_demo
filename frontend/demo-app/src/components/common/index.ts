@@ -7,6 +7,10 @@ export * from './AppRoutes';
 
 // Error Handling Components
 export * from './ErrorBoundary';
+export * from './ErrorPage';
+
+// Data Loading Components
+export * from './DataLoader';
 
 // Re-export commonly used Mantine components with consistent naming
 export { 

@@ -1,4 +1,6 @@
-import { Order, OrderService, CommodityType } from '../types/order';
+import { Order, OrderService, CommodityType } from '../domains/orders/types/order';
+import { orderDocumentApi, DocumentMetadata } from '../domains/orders/api/orderDocumentService';
+import { OrderDocument } from '../domains/orders/types/document';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
@@ -243,81 +245,37 @@ class ApiService {
     });
   }
 
-  // Order Documents
+  // Order Documents - delegated to orderDocumentApi
   static async uploadOrderDocuments(
-    orderId: string, 
-    files: File[], 
-    metadata?: { name: string; type: string }[]
-  ): Promise<any> {
-    const formData = new FormData();
-    
-    files.forEach((file, index) => {
-      // If metadata provided, create a new file with the custom name
-      const customName = metadata?.[index]?.name || file.name;
-      const newFile = new File([file], customName, { type: file.type });
-      formData.append('files', newFile);
-      
-      // Append individual type for each file if metadata provided
-      if (metadata?.[index]?.type) {
-        formData.append('types', metadata[index].type);
-      }
-    });
-    
-    // Always provide a default type parameter as fallback
-    const defaultType = metadata?.[0]?.type || 'Other';
-    formData.append('type', defaultType);
-
-    const url = `${API_BASE_URL}/orders/${orderId}/documents/batch`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Document upload failed:', error);
-      throw error;
-    }
+    orderId: string,
+    files: File[],
+    metadata?: DocumentMetadata[]
+  ) {
+    return orderDocumentApi.uploadDocuments(orderId, files, metadata);
   }
 
-  static async getOrderDocuments(orderId: string): Promise<any[]> {
-    return this.makeRequest<any[]>(`/orders/${orderId}/documents/`);
+  static async getOrderDocuments(orderId: string): Promise<OrderDocument[]> {
+    return orderDocumentApi.getByOrderId(orderId);
   }
 
   static async deleteOrderDocument(orderId: string, documentId: string): Promise<void> {
-    return this.makeRequest<void>(`/orders/${orderId}/documents/${documentId}`, {
-      method: 'DELETE',
-    });
+    return orderDocumentApi.deleteDocument(orderId, documentId);
   }
 
   static async updateOrderDocument(
-    orderId: string, 
-    documentId: string, 
+    orderId: string,
+    documentId: string,
     data: { title?: string; type?: string }
   ): Promise<void> {
-    return this.makeRequest<void>(`/orders/${orderId}/documents/${documentId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
+    return orderDocumentApi.updateDocument(orderId, documentId, data as any);
   }
 
   static async viewOrderDocument(orderId: string, documentId: string): Promise<void> {
-    const url = `${API_BASE_URL}/orders/${orderId}/documents/${documentId}/view`;
-    window.open(url, '_blank');
+    orderDocumentApi.viewDocument(orderId, documentId);
   }
 
   static async downloadOrderDocument(orderId: string, documentId: string): Promise<void> {
-    const url = `${API_BASE_URL}/orders/${orderId}/documents/${documentId}/download`;
-    window.open(url, '_blank');
+    orderDocumentApi.downloadDocument(orderId, documentId);
   }
 }
 

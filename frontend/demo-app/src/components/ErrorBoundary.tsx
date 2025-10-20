@@ -3,6 +3,8 @@ import { Container, Title, Text, Button, Stack, Paper } from '@mantine/core';
 
 interface Props {
   children: ReactNode;
+  fallback?: (error: Error, resetError: () => void) => ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -35,6 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo
     });
+    this.props.onError?.(error, errorInfo);
   }
 
   handleReset = () => {
@@ -47,7 +50,13 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
+      // Use custom fallback if provided
+      if (this.props.fallback) {
+        return this.props.fallback(this.state.error, this.handleReset);
+      }
+
+      // Default fallback UI
       return (
         <Container size="sm" py="xl">
           <Paper p="xl" withBorder>

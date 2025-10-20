@@ -1,6 +1,6 @@
 import React from 'react';
 import { IconEdit } from '@tabler/icons-react';
-import { 
+import {
   Datagrid,
   TextField,
   LinkField,
@@ -8,17 +8,17 @@ import {
   ActionField,
   CombinedDateTimeField,
   PriorityField,
-  TooltipField
-} from '../../admin';
-import { ReferenceDriverFieldOptimized } from '../../admin/fields/ReferenceDriverFieldOptimized';
-import { ReferenceVehicleFieldOptimized } from '../../admin/fields/ReferenceVehicleFieldOptimized';
+  TooltipField,
+  ReferenceDriverFieldOptimized,
+  ReferenceVehicleFieldOptimized
+} from '../../../shared/components';
 import { useReferenceDataForGrid } from '../../../hooks/useReferenceDataMany';
-import { 
-  Order, 
+import {
+  Order,
   CommodityLabels,
   OrderServiceShortLabels,
   OrderServiceLabels
-} from '../../../types/order';
+} from '../types/order';
 
 interface OrderGridProps {
   orders: Order[];

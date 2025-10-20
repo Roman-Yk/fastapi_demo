@@ -1,21 +1,41 @@
 /**
  * Base API Service with generic CRUD operations
- * Eliminates code duplication and provides consistent error handling
+ * Eliminates code duplication and provides consistent error handling with retry logic
+ *
+ * @example
+ * ```typescript
+ * class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOrderRequest> {
+ *   protected endpoint = '/orders';
+ *
+ *   // Add custom methods
+ *   async getByStatus(status: string) {
+ *     return this.customRequest<Order[]>(`?status=${status}`);
+ *   }
+ * }
+ *
+ * export const orderApi = new OrderApiService();
+ * ```
  */
 
 import { formatApiUrl, getApiConfig } from '../utils/config';
 
+/**
+ * API error interface
+ */
 export interface ApiError {
   message: string;
   status: number;
-  details?: any;
+  details?: unknown;
 }
 
+/**
+ * Custom error class for API errors with status code and details
+ */
 export class BaseApiError extends Error implements ApiError {
   constructor(
     public message: string,
     public status: number,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'BaseApiError';
@@ -23,7 +43,11 @@ export class BaseApiError extends Error implements ApiError {
 }
 
 /**
- * Generic base API service class with CRUD operations
+ * Generic base API service class with CRUD operations and retry logic
+ *
+ * @template T - The entity type
+ * @template CreateT - The type for create operations (defaults to T without id)
+ * @template UpdateT - The type for update operations (defaults to Partial<CreateT>)
  */
 export abstract class BaseApiService<T, CreateT = Omit<T, 'id'>, UpdateT = Partial<CreateT>> {
   protected abstract endpoint: string;

@@ -11,10 +11,10 @@ import {
 } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
-import { OrderServiceLabels, CommodityLabels } from '../../types/order';
-import ApiService from '../../services/apiService';
-import { FormProvider, useFormContext } from '../../hooks/useFormContext';
-import { validators } from '../../hooks/useFormData';
+import { OrderServiceLabels, CommodityLabels } from '../types/order';
+import ApiService from '../../../services/apiService';
+import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
+import { validators } from '../../../hooks/useFormData';
 import { 
   Grid, 
   GridCol, 
@@ -28,8 +28,8 @@ import {
   TruckReferenceField,
   TrailerReferenceField,
   TerminalReferenceField
-} from '../../components/admin/forms';
-import { transformFormData, ORDER_FORM_CONFIG } from '../../utils/formTransform';
+} from '../../../shared/components';
+import { transformFormData, ORDER_FORM_CONFIG } from '../../../utils/formTransform';
 
 // TypeScript interface for order form data
 interface OrderFormData {

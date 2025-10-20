@@ -1,7 +1,28 @@
+/**
+ * Datagrid Component
+ *
+ * A reusable data grid component built on top of MUI DataGrid with consistent styling
+ * and field-based rendering similar to react-admin.
+ *
+ * @example
+ * ```tsx
+ * <Datagrid
+ *   data={orders}
+ *   loading={loading}
+ *   onRefresh={() => refetch()}
+ *   onCreate={() => navigate('/orders/create')}
+ *   onRowClick={({ row }) => navigate(`/orders/${row.id}/edit`)}
+ * >
+ *   <TextField source="reference" label="Reference" />
+ *   <BadgeField source="status" label="Status" />
+ *   <DateTimeField source="created_at" label="Created" />
+ * </Datagrid>
+ * ```
+ */
 import React from 'react';
-import { 
-  DataGrid as MuiDataGrid, 
-  GridColDef, 
+import {
+  DataGrid as MuiDataGrid,
+  GridColDef,
   GridRenderCellParams,
   GridRowsProp,
   GridSortModel,
@@ -15,6 +36,10 @@ import { FieldProps } from '../fields';
 
 export interface DatagridToolbarAction extends ToolbarAction {}
 
+/**
+ * Props for the Datagrid component
+ * @template T - The type of data rows
+ */
 export interface DatagridProps<T extends GridValidRowModel = GridValidRowModel> {
   // Data
   data: T[];

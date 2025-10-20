@@ -6,8 +6,8 @@ export * from './common';
 // Layout Components
 export * from './layout';
 
-// Feature Components
-export * from './features';
+// Feature Components - moved to domains
+// export * from './features'; // Now in domains/orders/components
 
 // UI Components
 // export * from './ui'; // Currently empty, uncomment when UI components are added 

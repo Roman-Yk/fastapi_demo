@@ -13,24 +13,25 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconTrash, IconEdit } from '@tabler/icons-react';
-import { OrderServiceLabels, CommodityLabels } from '../../types/order';
-import ApiService from '../../services/apiService';
-import { 
-  Grid, 
-  GridCol, 
-  GroupGrid, 
-  TextField, 
-  SelectField, 
+import { OrderServiceLabels, CommodityLabels } from '../types/order';
+import { OrderDocument } from '../types/document';
+import ApiService from '../../../services/apiService';
+import {
+  Grid,
+  GridCol,
+  GroupGrid,
+  FormTextField,
+  SelectField,
   TimePicker,
   PhoneNumberInput,
   DriverReferenceField,
   TruckReferenceField,
   TrailerReferenceField
-} from '../../components/admin/forms';
-import { FormProvider, useFormContext } from '../../hooks/useFormContext';
-import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../utils/formTransform';
-import { OrderDocumentsUpload, OrderDocumentsUploadRef } from '../../components/orders/OrderDocumentsUpload';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
+} from '../../../shared/components';
+import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
+import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../../utils/formTransform';
+import { OrderDocumentsUpload, OrderDocumentsUploadRef } from '../components/OrderDocumentsUpload';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 // TypeScript interface for edit order form data
 interface EditOrderFormData {
@@ -78,7 +79,7 @@ const EditOrderFormContent: React.FC<{
   const [etdTruckManualMode, setEtdTruckManualMode] = useState(false);
   const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
   const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
-  const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
+  const [existingDocuments, setExistingDocuments] = useState<OrderDocument[]>([]);
 
   // Load data and populate form
   useEffect(() => {
@@ -174,7 +175,7 @@ const EditOrderFormContent: React.FC<{
               <GroupGrid title="Order Information">
                 <Grid>
                   <GridCol span={2}>
-                    <TextField
+                    <FormTextField
                       label="Reference"
                       placeholder="Order reference"
                       required
@@ -241,7 +242,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select driver"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETA-A driver"
                               placeholder="Enter driver name"
                               value={formData.eta_driver || ''}
@@ -299,7 +300,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select truck"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETA-A truck"
                               placeholder="Enter truck name"
                               value={formData.eta_truck || ''}
@@ -342,7 +343,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select trailer"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETA-A trailer"
                               placeholder="Enter trailer name"
                               value={formData.eta_trailer || ''}
@@ -410,7 +411,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select driver"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETD-D driver"
                               placeholder="Enter driver name"
                               value={formData.etd_driver || ''}
@@ -468,7 +469,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select truck"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETD-D truck"
                               placeholder="Enter truck name"
                               value={formData.etd_truck || ''}
@@ -511,7 +512,7 @@ const EditOrderFormContent: React.FC<{
                               placeholder="Select trailer"
                             />
                           ) : (
-                            <TextField
+                            <FormTextField
                               label="ETD-D trailer"
                               placeholder="Enter trailer name"
                               value={formData.etd_trailer || ''}
@@ -563,7 +564,7 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <TextField
+                    <FormTextField
                       label="Pallets"
                       placeholder="Number of pallets"
                       type="number"
@@ -572,7 +573,7 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <TextField
+                    <FormTextField
                       label="Boxes"
                       placeholder="Number of boxes"
                       type="number"
@@ -581,7 +582,7 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <TextField
+                    <FormTextField
                       label="Kilos"
                       placeholder="Weight in kg"
                       type="number"
@@ -596,7 +597,7 @@ const EditOrderFormContent: React.FC<{
               <GroupGrid title="Additional Information">
                 <Grid>
                   <GridCol span={12}>
-                    <TextField
+                    <FormTextField
                       label="Notes"
                       placeholder="Order notes..."
                       value={formData.notes || ''}

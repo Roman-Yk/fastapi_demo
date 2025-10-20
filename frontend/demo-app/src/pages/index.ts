@@ -1,4 +1,4 @@
 // Pages exports organized by feature
 
-// Orders
-export * from './orders'; 
+// Orders - now exported from domains
+export * from '../domains/orders/pages'; 

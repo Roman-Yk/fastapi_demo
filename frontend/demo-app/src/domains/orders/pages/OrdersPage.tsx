@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { List } from "../../components/admin";
-import {
-  OrderFiltersComponent,
-  OrderGrid,
-} from "../../components/features/orders";
-import { OrderFilters, DateFilterOption } from "../../types/order";
-import { Order } from "../../types/order";
-import { orderApi } from "../../services/apiServices";
+import { List } from "../../../shared/components/ui/List"
+import { OrderFiltersForm } from "../components/OrderFiltersForm";
+import { OrderGrid } from "../components/OrderGrid";
+import { Order } from "../types/order";
+import { orderApi } from "../api/orderService";
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -77,7 +74,7 @@ export const OrdersPage: React.FC = () => {
   return (
     <List
       filters={
-        <OrderFiltersComponent
+        <OrderFiltersForm
           filters={filters}
           onFiltersChange={handleFiltersChange}
           totalOrders={orders.length}

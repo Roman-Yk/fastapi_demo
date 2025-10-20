@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BaseApiError } from '../services/baseApiService';
 
-export interface UseApiOptions {
+export interface UseApiOptions<T = unknown> {
   immediate?: boolean;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: T) => void;
   onError?: (error: BaseApiError) => void;
 }
 
@@ -20,8 +20,8 @@ export interface UseApiState<T> {
  */
 export function useApi<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = [],
-  options: UseApiOptions = {}
+  dependencies: React.DependencyList = [],
+  options: UseApiOptions<T> = {}
 ): UseApiState<T> & {
   refetch: () => Promise<void>;
   reset: () => void;
@@ -91,16 +91,11 @@ export function useApi<T>(
   }, []);
 
   useEffect(() => {
-    isMountedRef.current = true;
-    
     if (immediate) {
       execute();
     }
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [execute, immediate, ...dependencies]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [immediate, ...dependencies]);
 
   useEffect(() => {
     return () => {
@@ -118,9 +113,9 @@ export function useApi<T>(
 /**
  * Hook for mutations (POST, PUT, DELETE operations)
  */
-export function useMutation<T, Args extends any[]>(
+export function useMutation<T, Args extends unknown[]>(
   mutationFn: (...args: Args) => Promise<T>,
-  options: UseApiOptions = {}
+  options: UseApiOptions<T> = {}
 ): {
   mutate: (...args: Args) => Promise<T>;
   state: UseApiState<T>;
