@@ -3,18 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { List } from "../../../shared/components/layout/List"
 import { OrderFiltersForm } from "../components/OrderFiltersForm";
 import { OrderGrid } from "../components/OrderGrid";
-import { Order } from "../types/order";
+import { Order, OrderFilters, DateFilterOption } from "../types/order";
 import { orderApi } from "../api/orderService";
+
+const defaultFilters: OrderFilters = {
+  dateFilter: DateFilterOption.TODAY,
+  locationFilter: null,
+  statusFilter: null,
+  serviceFilter: null,
+  commodityFilter: null,
+  priorityFilter: null,
+  searchText: '',
+  inTerminal: false,
+};
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  // Use a generic filter object for flexibility
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<OrderFilters>(defaultFilters);
 
   // Load orders from API with filters
-  const fetchOrders = async (activeFilters: Record<string, any>) => {
+  const fetchOrders = async (activeFilters: OrderFilters) => {
     setLoading(true);
     try {
       // Automatically map frontend filters to backend filter fields
@@ -46,7 +56,7 @@ export const OrdersPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
-  const handleFiltersChange = async (newFilters: Record<string, any>) => {
+  const handleFiltersChange = async (newFilters: OrderFilters) => {
     setFilters(newFilters);
   };
 

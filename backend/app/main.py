@@ -38,7 +38,15 @@ A comprehensive API for managing logistics orders, documents, drivers, vehicles,
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend URLs
+    allow_origins=[
+        "http://localhost:3000",  # Frontend dev server
+        "http://127.0.0.1:3000",  # Frontend dev server (alternative)
+        "http://localhost",       # Frontend via nginx
+        "http://localhost:80",    # Frontend via nginx (explicit port)
+        "http://127.0.0.1",       # Frontend via nginx (alternative)
+        "http://frontend",        # Docker internal network
+        "http://frontend:80",     # Docker internal network (explicit port)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

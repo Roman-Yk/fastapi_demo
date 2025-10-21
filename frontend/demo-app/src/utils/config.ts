@@ -37,7 +37,7 @@ export interface AppConfig {
 // Default configuration
 const defaultConfig: AppConfig = {
   api: {
-    baseUrl: 'http://localhost:8000/api/v1',
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
     timeout: 30000, // 30 seconds
     retryAttempts: 3,
     retryDelay: 1000, // 1 second
@@ -62,14 +62,6 @@ const defaultConfig: AppConfig = {
 
 // Environment-specific overrides
 const environmentConfig: Partial<AppConfig> = {
-  // Override API base URL from environment variable
-  ...(import.meta.env.VITE_API_BASE_URL && {
-    api: {
-      ...defaultConfig.api,
-      baseUrl: import.meta.env.VITE_API_BASE_URL,
-    },
-  }),
-  
   // Override debug mode from environment variable
   ...(import.meta.env.VITE_DEBUG && {
     debug: import.meta.env.VITE_DEBUG === 'true',

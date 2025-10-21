@@ -1,13 +1,13 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Center, Loader, Stack, Text } from '@mantine/core';
-import { ErrorBoundary } from '../ErrorBoundary';
-import { ErrorPage } from './ErrorPage';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { ErrorPage } from '../components/common/ErrorPage';
 
 // Lazy load page components for better performance
-const OrdersPage = lazy(() => import('../../domains/orders/pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
-const CreateOrderPage = lazy(() => import('../../domains/orders/pages/CreateOrderPage').then(m => ({ default: m.CreateOrderPage })));
-const EditOrderPage = lazy(() => import('../../domains/orders/pages/EditOrderPage').then(m => ({ default: m.EditOrderPage })));
+const OrdersPage = lazy(() => import('../domains/orders/pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
+const CreateOrderPage = lazy(() => import('../domains/orders/pages/CreateOrderPage').then(m => ({ default: m.CreateOrderPage })));
+const EditOrderPage = lazy(() => import('../domains/orders/pages/EditOrderPage').then(m => ({ default: m.EditOrderPage })));
 
 /**
  * Loading fallback component for lazy-loaded routes
@@ -28,7 +28,7 @@ const PageLoader: React.FC = () => (
  */
 export const AppRoutes: React.FC = () => {
   return (
-    <ErrorBoundary fallback={(error, resetError) => <ErrorPage error={error} resetError={resetError} />}>
+    <ErrorBoundary fallback={ErrorPage}>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Orders Routes */}

@@ -62,7 +62,8 @@ export const ReferenceInput = <K extends string>({
   const handleChange = (newValue: string | null) => {
     // If cleared (null or empty string), pass null through transform
     // Otherwise pass the value through transform
-    updateField(source, newValue, transform);
+    const transformedValue = transform ? transform(newValue) : newValue;
+    updateField(source, transformedValue);
   };
 
   return (

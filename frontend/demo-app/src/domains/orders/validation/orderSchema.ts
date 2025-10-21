@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 import { OrderService, CommodityType } from '../types/order';
-import { VALIDATION } from '../shared/constants';
+import { VALIDATION } from '../../../shared/constants';
 
 /**
  * Create Order validation schema
@@ -16,7 +16,7 @@ export const createOrderSchema = z.object({
     .max(VALIDATION.MAX_REFERENCE_LENGTH, `Reference must be less than ${VALIDATION.MAX_REFERENCE_LENGTH} characters`),
 
   service: z.nativeEnum(OrderService, {
-    errorMap: () => ({ message: 'Service type is required' }),
+    message: 'Service type is required',
   }),
 
   terminal_id: z.string().uuid('Valid terminal is required'),

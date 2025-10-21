@@ -60,7 +60,7 @@ export function useFormValidation<T>({
         return validData;
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const validationErrors: ValidationError[] = error.errors.map((err) => ({
+          const validationErrors: ValidationError[] = error.issues.map((err: z.ZodIssue) => ({
             field: err.path.join('.'),
             message: err.message,
           }));
@@ -77,17 +77,20 @@ export function useFormValidation<T>({
     (field: keyof T, value: unknown): string | null => {
       try {
         // Create a partial schema for single field validation
-        const fieldSchema = schema.shape?.[field as string];
-        if (fieldSchema) {
-          (fieldSchema as ZodSchema).parse(value);
-          // Clear error for this field
-          setErrors((prev) => prev.filter((e) => e.field !== field));
-          return null;
+        // For object schemas, we can use pick to get single field
+        if ('shape' in schema && typeof schema.shape === 'object') {
+          const fieldSchema = (schema as z.ZodObject<any>).shape[field as string];
+          if (fieldSchema) {
+            fieldSchema.parse(value);
+            // Clear error for this field
+            setErrors((prev) => prev.filter((e) => e.field !== field));
+            return null;
+          }
         }
         return null;
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const message = error.errors[0]?.message || 'Validation error';
+          const message = error.issues[0]?.message || 'Validation error';
           // Update error for this field
           setErrors((prev) => {
             const filtered = prev.filter((e) => e.field !== field);

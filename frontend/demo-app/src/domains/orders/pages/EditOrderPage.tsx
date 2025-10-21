@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconDeviceFloppy, IconTrash, IconEdit } from '@tabler/icons-react';
+import { IconArrowLeft, IconDeviceFloppy, IconEdit } from '@tabler/icons-react';
 import { OrderServiceLabels, CommodityLabels } from '../types/order';
 import { OrderDocument } from '../types/document';
 import ApiService from '../../../services/apiService';
