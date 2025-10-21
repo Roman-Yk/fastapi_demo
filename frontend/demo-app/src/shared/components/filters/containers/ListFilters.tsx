@@ -21,7 +21,7 @@ import {
   IconWorld,
   IconSearch
 } from '@tabler/icons-react';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 import { getFilterDefinitions } from './Filter';
 
 export interface ListFiltersProps {

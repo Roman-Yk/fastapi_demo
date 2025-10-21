@@ -1,6 +1,6 @@
 import React from 'react';
 import { Group, Button } from '@mantine/core';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface DateRangeOption {
   value: string;

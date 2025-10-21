@@ -1,6 +1,6 @@
 import React from 'react';
 import { Switch } from '@mantine/core';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface BooleanFilterProps extends FilterProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';

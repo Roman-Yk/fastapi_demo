@@ -14,7 +14,7 @@ import {
   IconFilter, 
   IconFilterOff 
 } from '@tabler/icons-react';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface FilterFormProps {
   // Always-on filters (rendered immediately)

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Select } from '@mantine/core';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface SelectOption {
   value: string | number;

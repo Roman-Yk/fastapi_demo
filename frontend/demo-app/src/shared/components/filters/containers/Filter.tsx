@@ -1,5 +1,5 @@
 import React from 'react';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface FilterWrapperProps {
   children: React.ReactElement<FilterProps>[];

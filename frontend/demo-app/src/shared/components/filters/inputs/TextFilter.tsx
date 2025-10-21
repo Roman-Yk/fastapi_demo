@@ -1,7 +1,7 @@
 import React from 'react';
 import { TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
-import { FilterProps } from './types';
+import { FilterProps } from '../types';
 
 export interface TextFilterProps extends FilterProps {
   placeholder?: string;

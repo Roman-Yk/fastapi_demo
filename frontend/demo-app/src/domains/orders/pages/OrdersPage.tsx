@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { List } from "../../../shared/components/ui/List"
+import { List } from "../../../shared/components/layout/List"
 import { OrderFiltersForm } from "../components/OrderFiltersForm";
 import { OrderGrid } from "../components/OrderGrid";
 import { Order } from "../types/order";
