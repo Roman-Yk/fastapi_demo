@@ -5,7 +5,7 @@ import { useTerminals } from '../../../domains/terminals/hooks/useTerminals';
 import { useTrucks } from '../../../domains/vehicles/hooks/useTrucks';
 import { useTrailers } from '../../../domains/vehicles/hooks/useTrailers';
 
-interface ReferenceFieldProps<K extends string> {
+interface ReferenceInputProps<K extends string> {
   label: string;
   source: K;
   resource: 'drivers' | 'terminals' | 'trucks' | 'trailers';
@@ -18,7 +18,7 @@ interface ReferenceFieldProps<K extends string> {
   transform?: (value: any) => any;
 }
 
-export function ReferenceField<K extends string>({
+export const ReferenceInput = <K extends string>({
   label,
   source,
   resource,
@@ -29,7 +29,7 @@ export function ReferenceField<K extends string>({
   searchable = true,
   clearable = true,
   transform
-}: ReferenceFieldProps<K>) {
+}: ReferenceInputProps<K>) => {
   const { formData, updateField } = useFormContext();
 
   const value = formData[source];
@@ -80,4 +80,4 @@ export function ReferenceField<K extends string>({
       maxDropdownHeight={200}
     />
   );
-}
+};

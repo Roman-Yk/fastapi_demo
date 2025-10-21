@@ -1,8 +1,8 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useTrucks } from '../../../domains/vehicles/hooks/useTrucks';
+import { useDrivers } from '../../../domains/drivers/hooks/useDrivers';
 
-interface TruckReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface DriverReferenceInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -12,26 +12,26 @@ interface TruckReferenceFieldProps<T extends Record<string, any>, K extends keyo
   description?: string;
 }
 
-export function TruckReferenceField<T extends Record<string, any>, K extends keyof T>({
+export function DriverReferenceInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
-  placeholder = 'Select truck',
+  placeholder = 'Select driver',
   required = false,
   searchable = true,
   disabled,
   description
-}: TruckReferenceFieldProps<T, K>) {
+}: DriverReferenceInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
-  const { data: trucks, loading } = useTrucks();
+  const { data: drivers, loading } = useDrivers();
 
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;
 
   const options = [
-    { value: '', label: '-- Select Truck --' },
-    ...trucks.map(truck => ({
-      value: truck.id.toString(),
-      label: truck.license_plate || truck.id.toString(),
+    { value: '', label: '-- Select Driver --' },
+    ...drivers.map(driver => ({
+      value: driver.id.toString(),
+      label: driver.name,
     }))
   ];
 
@@ -42,15 +42,12 @@ export function TruckReferenceField<T extends Record<string, any>, K extends key
     updateField(source, fieldValue as T[K], { validate: true });
   };
 
-  // Convert value for Mantine Select: null -> '', string -> string
-  const selectValue = value === null || value === undefined ? '' : String(value);
-
   return (
     <Select
       label={label}
-      placeholder={loading ? 'Loading trucks...' : placeholder}
+      placeholder={loading ? 'Loading drivers...' : placeholder}
       data={options}
-      value={selectValue}
+      value={value ? value.toString() : ''}
       onChange={handleChange}
       onBlur={() => {}}
       required={required}

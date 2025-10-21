@@ -13,9 +13,9 @@ export { FormDateInput } from './FormDateInput';
 export { FormSwitchInput } from './FormSwitchInput';
 export { FormTimeInput } from './FormTimeInput';
 
-// Reference field components (React Admin style)
-export { ReferenceField } from './ReferenceField';
-export { DriverReferenceField } from './DriverReferenceField';
-export { TerminalReferenceField } from './TerminalReferenceField';
-export { TruckReferenceField } from './TruckReferenceField';
-export { TrailerReferenceField } from './TrailerReferenceField';
+// Reference input components (for forms)
+export { ReferenceInput } from './ReferenceInput';
+export { DriverReferenceInput } from './DriverReferenceInput';
+export { TerminalReferenceInput } from './TerminalReferenceInput';
+export { TruckReferenceInput } from './TruckReferenceInput';
+export { TrailerReferenceInput } from './TrailerReferenceInput';

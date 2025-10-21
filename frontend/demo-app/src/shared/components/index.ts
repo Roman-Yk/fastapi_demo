@@ -33,11 +33,11 @@ export * from './forms/FormSwitchInput';
 // export * from './forms/TextField'; // Commented out due to naming conflict
 export { TextField as FormTextField } from './forms/TextField';
 export * from './forms/SelectField';
-export * from './forms/ReferenceField';
-export * from './forms/DriverReferenceField';
-export * from './forms/TruckReferenceField';
-export * from './forms/TrailerReferenceField';
-export * from './forms/TerminalReferenceField';
+export * from './forms/ReferenceInput';
+export * from './forms/DriverReferenceInput';
+export * from './forms/TruckReferenceInput';
+export * from './forms/TrailerReferenceInput';
+export * from './forms/TerminalReferenceInput';
 export * from './forms/PhoneInput';
 export * from './forms/TimePicker';
 

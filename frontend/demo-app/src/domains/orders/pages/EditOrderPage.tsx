@@ -24,9 +24,9 @@ import {
   SelectField,
   TimePicker,
   PhoneNumberInput,
-  DriverReferenceField,
-  TruckReferenceField,
-  TrailerReferenceField
+  DriverReferenceInput,
+  TruckReferenceInput,
+  TrailerReferenceInput
 } from '../../../shared/components';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../../utils/formTransform';
@@ -236,7 +236,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaDriverManualMode ? (
-                            <DriverReferenceField
+                            <DriverReferenceInput
                               label="ETA-A driver"
                               source="eta_driver_id"
                               placeholder="Select driver"
@@ -294,7 +294,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaTruckManualMode ? (
-                            <TruckReferenceField
+                            <TruckReferenceInput
                               label="ETA-A truck"
                               source="eta_truck_id"
                               placeholder="Select truck"
@@ -337,7 +337,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etaTrailerManualMode ? (
-                            <TrailerReferenceField
+                            <TrailerReferenceInput
                               label="ETA-A trailer"
                               source="eta_trailer_id"
                               placeholder="Select trailer"
@@ -405,7 +405,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdDriverManualMode ? (
-                            <DriverReferenceField
+                            <DriverReferenceInput
                               label="ETD-D driver"
                               source="etd_driver_id"
                               placeholder="Select driver"
@@ -463,7 +463,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdTruckManualMode ? (
-                            <TruckReferenceField
+                            <TruckReferenceInput
                               label="ETD-D truck"
                               source="etd_truck_id"
                               placeholder="Select truck"
@@ -506,7 +506,7 @@ const EditOrderFormContent: React.FC<{
                       <GridCol span={12}>
                         <Group gap="xs">
                           {!etdTrailerManualMode ? (
-                            <TrailerReferenceField
+                            <TrailerReferenceInput
                               label="ETD-D trailer"
                               source="etd_trailer_id"
                               placeholder="Select trailer"

@@ -15,19 +15,19 @@ import { OrderServiceLabels, CommodityLabels } from '../types/order';
 import ApiService from '../../../services/apiService';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { validators } from '../../../hooks/useFormData';
-import { 
-  Grid, 
-  GridCol, 
-  GroupGrid, 
-  FormTextInput, 
+import {
+  Grid,
+  GridCol,
+  GroupGrid,
+  FormTextInput,
   FormSelectInput,
   FormDateInput,
   FormTimeInput,
   FormSwitchInput,
-  DriverReferenceField,
-  TruckReferenceField,
-  TrailerReferenceField,
-  TerminalReferenceField
+  DriverReferenceInput,
+  TruckReferenceInput,
+  TrailerReferenceInput,
+  TerminalReferenceInput
 } from '../../../shared/components';
 import { transformFormData, ORDER_FORM_CONFIG } from '../../../utils/formTransform';
 
@@ -169,7 +169,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Location & Schedule">
                 <Grid>
                   <GridCol span={6}>
-                    <TerminalReferenceField<OrderFormData, 'terminal_id'>
+                    <TerminalReferenceInput<OrderFormData, 'terminal_id'>
                       label="Terminal"
                       source="terminal_id"
                       placeholder="Select terminal"
@@ -214,21 +214,21 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="ETA Vehicle & Driver">
                 <Grid>
                   <GridCol span={4}>
-                    <DriverReferenceField<OrderFormData, 'eta_driver_id'>
+                    <DriverReferenceInput<OrderFormData, 'eta_driver_id'>
                       label="ETA Driver"
                       source="eta_driver_id"
                       placeholder="Select driver"
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <TruckReferenceField<OrderFormData, 'eta_truck_id'>
+                    <TruckReferenceInput<OrderFormData, 'eta_truck_id'>
                       label="ETA Truck"
                       source="eta_truck_id"
                       placeholder="Select truck"
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <TrailerReferenceField<OrderFormData, 'eta_trailer_id'>
+                    <TrailerReferenceInput<OrderFormData, 'eta_trailer_id'>
                       label="ETA Trailer"
                       source="eta_trailer_id"
                       placeholder="Select trailer"
@@ -240,21 +240,21 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="ETD Vehicle & Driver">
                 <Grid>
                   <GridCol span={4}>
-                    <DriverReferenceField<OrderFormData, 'etd_driver_id'>
+                    <DriverReferenceInput<OrderFormData, 'etd_driver_id'>
                       label="ETD Driver"
                       source="etd_driver_id"
                       placeholder="Select driver"
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <TruckReferenceField<OrderFormData, 'etd_truck_id'>
+                    <TruckReferenceInput<OrderFormData, 'etd_truck_id'>
                       label="ETD Truck"
                       source="etd_truck_id"
                       placeholder="Select truck"
                     />
                   </GridCol>
                   <GridCol span={4}>
-                    <TrailerReferenceField<OrderFormData, 'etd_trailer_id'>
+                    <TrailerReferenceInput<OrderFormData, 'etd_trailer_id'>
                       label="ETD Trailer"
                       source="etd_trailer_id"
                       placeholder="Select trailer"

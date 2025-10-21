@@ -1,8 +1,8 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useTrailers } from '../../../domains/vehicles/hooks/useTrailers';
+import { useTrucks } from '../../../domains/vehicles/hooks/useTrucks';
 
-interface TrailerReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface TruckReferenceInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -12,26 +12,26 @@ interface TrailerReferenceFieldProps<T extends Record<string, any>, K extends ke
   description?: string;
 }
 
-export function TrailerReferenceField<T extends Record<string, any>, K extends keyof T>({
+export function TruckReferenceInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
-  placeholder = 'Select trailer',
+  placeholder = 'Select truck',
   required = false,
   searchable = true,
   disabled,
   description
-}: TrailerReferenceFieldProps<T, K>) {
+}: TruckReferenceInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
-  const { data: trailers, loading } = useTrailers();
+  const { data: trucks, loading } = useTrucks();
 
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;
 
   const options = [
-    { value: '', label: '-- Select Trailer --' },
-    ...trailers.map(trailer => ({
-      value: trailer.id.toString(),
-      label: trailer.license_plate,
+    { value: '', label: '-- Select Truck --' },
+    ...trucks.map(truck => ({
+      value: truck.id.toString(),
+      label: truck.license_plate || truck.id.toString(),
     }))
   ];
 
@@ -42,12 +42,15 @@ export function TrailerReferenceField<T extends Record<string, any>, K extends k
     updateField(source, fieldValue as T[K], { validate: true });
   };
 
+  // Convert value for Mantine Select: null -> '', string -> string
+  const selectValue = value === null || value === undefined ? '' : String(value);
+
   return (
     <Select
       label={label}
-      placeholder={loading ? 'Loading trailers...' : placeholder}
+      placeholder={loading ? 'Loading trucks...' : placeholder}
       data={options}
-      value={value ? value.toString() : ''}
+      value={selectValue}
       onChange={handleChange}
       onBlur={() => {}}
       required={required}

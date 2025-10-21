@@ -1,8 +1,8 @@
 import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
-import { useDrivers } from '../../../domains/drivers/hooks/useDrivers';
+import { useTrailers } from '../../../domains/vehicles/hooks/useTrailers';
 
-interface DriverReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface TrailerReferenceInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -12,26 +12,26 @@ interface DriverReferenceFieldProps<T extends Record<string, any>, K extends key
   description?: string;
 }
 
-export function DriverReferenceField<T extends Record<string, any>, K extends keyof T>({
+export function TrailerReferenceInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
-  placeholder = 'Select driver',
+  placeholder = 'Select trailer',
   required = false,
   searchable = true,
   disabled,
   description
-}: DriverReferenceFieldProps<T, K>) {
+}: TrailerReferenceInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
-  const { data: drivers, loading } = useDrivers();
+  const { data: trailers, loading } = useTrailers();
 
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;
 
   const options = [
-    { value: '', label: '-- Select Driver --' },
-    ...drivers.map(driver => ({
-      value: driver.id.toString(),
-      label: driver.name,
+    { value: '', label: '-- Select Trailer --' },
+    ...trailers.map(trailer => ({
+      value: trailer.id.toString(),
+      label: trailer.license_plate,
     }))
   ];
 
@@ -45,7 +45,7 @@ export function DriverReferenceField<T extends Record<string, any>, K extends ke
   return (
     <Select
       label={label}
-      placeholder={loading ? 'Loading drivers...' : placeholder}
+      placeholder={loading ? 'Loading trailers...' : placeholder}
       data={options}
       value={value ? value.toString() : ''}
       onChange={handleChange}

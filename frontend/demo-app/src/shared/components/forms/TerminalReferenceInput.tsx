@@ -2,7 +2,7 @@ import { Select, Loader } from '@mantine/core';
 import { useFormContext } from '../../../hooks/useFormContext';
 import { useTerminals } from '../../../domains/terminals/hooks/useTerminals';
 
-interface TerminalReferenceFieldProps<T extends Record<string, any>, K extends keyof T> {
+interface TerminalReferenceInputProps<T extends Record<string, any>, K extends keyof T> {
   label: string;
   source: K;
   placeholder?: string;
@@ -12,7 +12,7 @@ interface TerminalReferenceFieldProps<T extends Record<string, any>, K extends k
   description?: string;
 }
 
-export function TerminalReferenceField<T extends Record<string, any>, K extends keyof T>({
+export function TerminalReferenceInput<T extends Record<string, any>, K extends keyof T>({
   label,
   source,
   placeholder = 'Select terminal',
@@ -20,7 +20,7 @@ export function TerminalReferenceField<T extends Record<string, any>, K extends 
   searchable = true,
   disabled,
   description
-}: TerminalReferenceFieldProps<T, K>) {
+}: TerminalReferenceInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const { data: terminals, loading } = useTerminals();
 
