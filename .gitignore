@@ -128,6 +128,7 @@ cython_debug/
 .DS_Store
 /tmp
 /files/*
+.claude/
 !/files/thumbnail-docx.jpeg
 !/files/thumbnail-doc.jpeg
 !/files/thumbnail-pdf.jpeg
