@@ -143,3 +143,4 @@ postgres-data
 /.idea/
 *.code-workspace
 /certbot-data
+CLAUDE.md
