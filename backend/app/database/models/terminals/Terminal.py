@@ -10,7 +10,7 @@ class Terminal(BASE_MODEL):
     
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, index=True)
     name = Column(String(256), nullable=False)
-    time_zone = Column(String(64), nullable=False)
     address = Column(String(256), nullable=True, default="")
+    time_zone = Column(String(64), nullable=False)
     short_name = Column(String(64), nullable=True, default="")
     account_code = Column(String(64), nullable=True, default="")

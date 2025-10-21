@@ -34,5 +34,8 @@ COPY --from=builder /install/deps /usr/local/
 # Copy application code
 COPY . .
 
+# Set PYTHONPATH so Python can find the app module
+ENV PYTHONPATH=/app
+
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

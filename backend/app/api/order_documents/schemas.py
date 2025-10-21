@@ -18,8 +18,8 @@ class UpdateOrderDocumentSchema(BaseModel):
 	Update/Patch order schema.
 	if using patch then use model_dump(exclude_unset=True)
 	"""
-	title: Optional[str] = None
 	type: Optional[str] = None
+	title: Optional[str] = None
 
 
 # Declare dynamic filter model
@@ -57,11 +57,10 @@ class CollectionOrderDocumentsQueryParams(CollectionQueryParams):
 # Response schema
 class ResponseOrderDocumentSchema(ResponseBaseModel):
 	id: uuid.UUID
-	order_id: uuid.UUID
-	type: OrderDocumentType
- 
 	src: str
+	type: OrderDocumentType
 	title: str | None
+	order_id: uuid.UUID
 	thumbnail: str | None
 	created_at: datetime | None
 

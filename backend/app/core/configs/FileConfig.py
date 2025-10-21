@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
 from app.utils.immutables import BaseConstants
 
@@ -7,15 +7,43 @@ class FileConfig(BaseConstants):
     Configuration class for handling file types, extensions, and related settings.
     Inherits from BaseConstants.
     """
-    
+
     images_extensions: tuple = (".png", ".jpg", ".jpeg", ".webp")
     word_extensions: tuple = (".docx", ".doc")
     pdf_extensions: tuple = (".pdf",)
     excel_extensions: tuple = (".xlsx", ".xls")
     text_extensions: tuple = (".txt",)
+    tiff_extensions: tuple = (".tiff", ".tif")
     documents_extensions: tuple = (*pdf_extensions, *word_extensions, *excel_extensions, *text_extensions)
-    acceptable_extensions: tuple = (*images_extensions, *documents_extensions)
+    acceptable_extensions: tuple = (*images_extensions, *tiff_extensions, *documents_extensions)
     searchable_extensions: tuple = (*images_extensions, ".pdf", ".docx", ".xlsx", ".txt")
+
+    # Upload validation configuration
+    max_upload_size_bytes: int = 10 * 1024 * 1024  # 10MB
+    allowed_upload_extensions: Set[str] = {
+        "pdf", "png", "jpg", "jpeg", "webp", "tiff", "tif", "doc", "docx", "xls", "xlsx", "txt"
+    }
+    allowed_upload_mime_types: Set[str] = {
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/tiff",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "text/plain",
+    }
+
+    # Displayable file types (for browser inline display)
+    displayable_mime_types: Set[str] = {
+        'application/pdf',
+        'text/plain',
+        'text/html',
+        'text/css',
+        'text/javascript',
+    }
 
     local_dir_path: str = "files"
 
@@ -39,6 +67,8 @@ class FileConfig(BaseConstants):
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
         ".webp": "image/webp",
+        ".tiff": "image/tiff",
+        ".tif": "image/tiff",
     }
     documents_mimetypes_by_extensions: Dict[str, str] = {
         ".pdf": "application/pdf",

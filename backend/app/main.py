@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     orders_router,
     order_documents_router,
@@ -7,17 +8,55 @@ from app.api import (
     trailers_router,
     terminals_router,
 )
+from app.api._shared.health import health_router
 from app.modules.cache import populate_cache_on_startup
+from app.core.logging_config import setup_logging
+
+# Initialize structured logging
+setup_logging()
 
 app = FastAPI(
-    title="FastAPI Demo",
-    description="This is a demo app for creating orders using FastAPI.",
+    title="Logistics Order Management API",
+    description="""
+## Logistics Order Management System
+
+A comprehensive API for managing logistics orders, documents, drivers, vehicles, and terminals.
+    """,
+    version="1.0.0",
+    contact={
+        "name": "API Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
 )
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Frontend dev server
+        "http://127.0.0.1:3000",  # Frontend dev server (alternative)
+        "http://localhost",       # Frontend via nginx
+        "http://localhost:80",    # Frontend via nginx (explicit port)
+        "http://127.0.0.1",       # Frontend via nginx (alternative)
+        "http://frontend",        # Docker internal network
+        "http://frontend:80",     # Docker internal network (explicit port)
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+
+# Health check endpoints (no prefix for easy monitoring)
+app.include_router(health_router, prefix="/api/v1")
+
+# Resource endpoints
 app.include_router(orders_router, prefix="/api/v1", tags=["orders"])
 app.include_router(order_documents_router, prefix="/api/v1", tags=["order_documents"])
 app.include_router(drivers_router, prefix="/api/v1", tags=["drivers"])

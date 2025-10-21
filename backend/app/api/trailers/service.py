@@ -21,22 +21,19 @@ class TrailerService(BaseService):
         """
         Fetch all trailers with optional filtering, sorting, and pagination.
         """
-        try:
-            select_query = select(Trailer)
-            count_query = select(func.count()).select_from(Trailer)
+        select_query = select(Trailer)
+        count_query = select(func.count()).select_from(Trailer)
 
-            query, count_query = apply_filter_sort_range_for_query(
-                Trailer,
-                select_query,
-                count_query,
-                querystring.dict_data,
-            )
+        query, count_query = apply_filter_sort_range_for_query(
+            Trailer,
+            select_query,
+            count_query,
+            querystring.dict_data,
+        )
 
-            trailers = await fetch_all(self.db, query)
-            trailers_count = await fetch_count_query(self.db, count_query)
-            return trailers, trailers_count
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error fetching trailers: {str(e)}")
+        trailers = await fetch_all(self.db, query)
+        trailers_count = await fetch_count_query(self.db, count_query)
+        return trailers, trailers_count
 
     async def get_trailer_by_id(self, trailer_id: uuid.UUID):
         """

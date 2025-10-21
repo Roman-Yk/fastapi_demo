@@ -26,24 +26,19 @@ class TerminalService(BaseService):
         """
         Fetch all terminals with optional filtering, sorting, and pagination.
         """
-        try:
-            select_query = select(Terminal)
-            count_query = select(func.count()).select_from(Terminal)
+        select_query = select(Terminal)
+        count_query = select(func.count()).select_from(Terminal)
 
-            query, count_query = apply_filter_sort_range_for_query(
-                Terminal,
-                select_query,
-                count_query,
-                querystring.dict_data,
-            )
+        query, count_query = apply_filter_sort_range_for_query(
+            Terminal,
+            select_query,
+            count_query,
+            querystring.dict_data,
+        )
 
-            terminals = await fetch_all(self.db, query)
-            terminals_count = await fetch_count_query(self.db, count_query)
-            return terminals, terminals_count
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"Error fetching terminals: {str(e)}"
-            )
+        terminals = await fetch_all(self.db, query)
+        terminals_count = await fetch_count_query(self.db, count_query)
+        return terminals, terminals_count
 
     async def get_terminal_by_id(self, terminal_id: uuid.UUID):
         """

@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import Integer, Column, String, Date, Time, Float, Boolean, ForeignKey, func, Enum
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.base_model import BASE_MODEL
@@ -51,6 +51,19 @@ class Order(BASE_MODEL):
 	etd_driver_phone = Column(String(32), nullable=True)
 	etd_truck = Column(String(256), nullable=True)
 	etd_trailer = Column(String(256), nullable=True)
+
+	# Relationships - use selectinload for better performance
+	terminal = relationship("Terminal", foreign_keys=[terminal_id], lazy="selectin")
+
+	eta_driver_rel = relationship("Driver", foreign_keys=[eta_driver_id], lazy="selectin")
+	eta_truck_rel = relationship("Truck", foreign_keys=[eta_truck_id], lazy="selectin")
+	eta_trailer_rel = relationship("Trailer", foreign_keys=[eta_trailer_id], lazy="selectin")
+
+	etd_driver_rel = relationship("Driver", foreign_keys=[etd_driver_id], lazy="selectin")
+	etd_truck_rel = relationship("Truck", foreign_keys=[etd_truck_id], lazy="selectin")
+	etd_trailer_rel = relationship("Trailer", foreign_keys=[etd_trailer_id], lazy="selectin")
+
+	documents = relationship("OrderDocument", back_populates="order", cascade="all, delete-orphan")
 
 	@validates('eta_truck', 'eta_trailer', 'etd_truck', 'etd_trailer')
 	def convert_to_lower(self, key, value):
