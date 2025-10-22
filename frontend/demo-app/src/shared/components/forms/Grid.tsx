@@ -16,7 +16,7 @@ export const Grid: React.FC<GridProps> = ({ children, gutter = "md" }) => {
 
 interface GridColProps {
   children: React.ReactNode;
-  span: number;
+  span: number | { base?: number; xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
   offset?: number;
 }
 

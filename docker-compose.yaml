@@ -15,9 +15,19 @@ services:
 
   # Frontend React application
   frontend:
-    build: ./frontend/demo-app
-    image: "fastapi-demo-frontend:latest"
+    build:
+      context: ./frontend/demo-app
+      dockerfile: Dockerfile.dev  # Use dev dockerfile for hot reload
+    image: "fastapi-demo-frontend:dev"
     restart: always
+    volumes:
+      - ./frontend/demo-app:/app  # Mount source code for hot reload
+      - /app/node_modules  # Persist node_modules in container
+    environment:
+      - VITE_API_BASE_URL=http://localhost/api/v1
+      - CHOKIDAR_USEPOLLING=true  # Enable file watching in Docker
+    ports:
+      - 3000:3000  # Expose Vite dev server directly
     depends_on:
       - backend
     networks:

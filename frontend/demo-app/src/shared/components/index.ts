@@ -40,6 +40,7 @@ export * from './forms/TrailerReferenceInput';
 export * from './forms/TerminalReferenceInput';
 export * from './forms/PhoneInput';
 export * from './forms/TimePicker';
+export * from './forms/DatePicker';
 
 // Filter Components
 export * from './filters';

@@ -4,6 +4,7 @@ export { GroupGrid } from './GroupGrid';
 export { TextField } from './TextField';
 export { SelectField } from './SelectField';
 export { TimePicker } from './TimePicker';
+export { DatePicker } from './DatePicker';
 export { PhoneNumberInput } from './PhoneInput';
 
 // Form input components (TypeScript-enhanced, use with FormProvider)

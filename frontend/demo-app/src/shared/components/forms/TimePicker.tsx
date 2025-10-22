@@ -34,11 +34,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     setOpened(false);
   };
 
-  const handleCancel = () => {
-    setTempValue(value ? dayjs(`2023-01-01T${value}`) : null);
-    setOpened(false);
-  };
-
   const displayValue = value ? value : '';
 
   return (
@@ -93,9 +88,29 @@ export const TimePicker: React.FC<TimePickerProps> = ({
               />
             </LocalizationProvider>
             
-            <Group justify="space-between" mt="sm">
-              <Button variant="light" onClick={handleCancel}>
-                Cancel
+            <Group justify="flex-end" gap="xs" wrap="nowrap" mt="sm">
+              <Button 
+                variant="light" 
+                color="red"
+                onClick={() => {
+                  setTempValue(null);
+                  onChange('');
+                  setOpened(false);
+                }}
+              >
+                Clear
+              </Button>
+              <Button 
+                variant="light" 
+                onClick={() => {
+                  const now = dayjs();
+                  setTempValue(now);
+                  const timeString = now.format('HH:mm');
+                  onChange(timeString);
+                  setOpened(false);
+                }}
+              >
+                Now
               </Button>
               <Button onClick={handleAccept} disabled={!tempValue}>
                 OK

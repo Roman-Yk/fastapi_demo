@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { 
-  Container, 
   Title, 
   Text, 
   Stack, 
@@ -24,9 +23,6 @@ import {
   FormDateInput,
   FormTimeInput,
   FormSwitchInput,
-  DriverReferenceInput,
-  TruckReferenceInput,
-  TrailerReferenceInput,
   TerminalReferenceInput
 } from '../../../shared/components';
 import { transformFormData, ORDER_FORM_CONFIG } from '../../../utils/formTransform';
@@ -40,12 +36,6 @@ interface OrderFormData {
   eta_time: string;
   etd_date: Date | null;
   etd_time: string;
-  eta_driver_id: string | null;
-  eta_truck_id: string | null;
-  eta_trailer_id: string | null;
-  etd_driver_id: string | null;
-  etd_truck_id: string | null;
-  etd_trailer_id: string | null;
   commodity: string;
   pallets: number;
   boxes: number;
@@ -118,22 +108,21 @@ const CreateOrderFormContent: React.FC<{
   }));
 
   return (
-    <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Container size="lg" px="md" py="sm" style={{ flex: 1 }}>
-        <Stack gap="sm">
+    <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' }}>
+      <Box px="xl" py="md" style={{ flex: 1, width: '100%' }}>
+        <Stack gap="md">
           {/* Header */}
           <Stack gap="xs">
-            <Group>
-              <Button 
-                variant="subtle" 
-                leftSection={<IconArrowLeft size={16} />}
-                onClick={onBack}
-              >
-                Back to Orders
-              </Button>
-            </Group>
+            <Button 
+              variant="subtle" 
+              leftSection={<IconArrowLeft size={16} />}
+              onClick={onBack}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              Back to Orders
+            </Button>
             
-            <Title order={1} fw={600}>
+            <Title order={2} fw={600} size="h2">
               Create New Order
             </Title>
             <Text c="dimmed" size="sm">
@@ -142,11 +131,11 @@ const CreateOrderFormContent: React.FC<{
           </Stack>
 
           {/* Form Content */}
-          <Paper withBorder p="md" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Stack gap="md">
+          <Paper withBorder p="xl" radius="md" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+            <Stack gap="lg">
               <GroupGrid title="Order Information">
                 <Grid>
-                  <GridCol span={6}>
+                  <GridCol span={3}>
                     <FormTextInput<OrderFormData, 'reference'>
                       label="Reference"
                       source="reference"
@@ -154,7 +143,15 @@ const CreateOrderFormContent: React.FC<{
                       required
                     />
                   </GridCol>
-                  <GridCol span={6}>
+                  <GridCol span={3}>
+                    <TerminalReferenceInput<OrderFormData, 'terminal_id'>
+                      label="Terminal"
+                      source="terminal_id"
+                      placeholder="-- Select Terminal --"
+                      required
+                    />
+                  </GridCol>
+                  <GridCol span={3}>
                     <FormSelectInput<OrderFormData, 'service'>
                       label="Service Type"
                       source="service"
@@ -163,109 +160,67 @@ const CreateOrderFormContent: React.FC<{
                       data={serviceOptions}
                     />
                   </GridCol>
-                </Grid>
-              </GroupGrid>
-
-              <GroupGrid title="Location & Schedule">
-                <Grid>
-                  <GridCol span={6}>
-                    <TerminalReferenceInput<OrderFormData, 'terminal_id'>
-                      label="Terminal"
-                      source="terminal_id"
-                      placeholder="Select terminal"
-                      required
-                    />
-                  </GridCol>
-                </Grid>
-              
-                <Grid>
                   <GridCol span={3}>
-                    <FormDateInput<OrderFormData, 'eta_date'>
-                      label="ETA Date"
-                      source="eta_date"
-                      placeholder="Select ETA date"
-                    />
-                  </GridCol>
-                  <GridCol span={3}>
-                    <FormTimeInput<OrderFormData, 'eta_time'>
-                      label="ETA Time"
-                      source="eta_time"
-                      placeholder="Select ETA time"
-                    />
-                  </GridCol>
-                  
-                  <GridCol span={3}>
-                    <FormDateInput<OrderFormData, 'etd_date'>
-                      label="ETD Date"
-                      source="etd_date"
-                      placeholder="Select ETD date"
-                    />
-                  </GridCol>
-                  <GridCol span={3}>
-                    <FormTimeInput<OrderFormData, 'etd_time'>
-                      label="ETD Time"
-                      source="etd_time"
-                      placeholder="Select ETD time"
+                    <FormSwitchInput<OrderFormData, 'priority'>
+                      label="Priority Order"
+                      source="priority"
+                      size="md"
                     />
                   </GridCol>
                 </Grid>
               </GroupGrid>
 
-              <GroupGrid title="ETA Vehicle & Driver">
-                <Grid>
-                  <GridCol span={4}>
-                    <DriverReferenceInput<OrderFormData, 'eta_driver_id'>
-                      label="ETA Driver"
-                      source="eta_driver_id"
-                      placeholder="Select driver"
-                    />
-                  </GridCol>
-                  <GridCol span={4}>
-                    <TruckReferenceInput<OrderFormData, 'eta_truck_id'>
-                      label="ETA Truck"
-                      source="eta_truck_id"
-                      placeholder="Select truck"
-                    />
-                  </GridCol>
-                  <GridCol span={4}>
-                    <TrailerReferenceInput<OrderFormData, 'eta_trailer_id'>
-                      label="ETA Trailer"
-                      source="eta_trailer_id"
-                      placeholder="Select trailer"
-                    />
-                  </GridCol>
-                </Grid>
-              </GroupGrid>
+              <Grid gutter="lg">
+                <GridCol span={6}>
+                  <Box style={{ backgroundColor: '#e8f5e9', padding: '20px', borderRadius: '8px', height: '100%' }}>
+                    <GroupGrid title="ETA — ARRIVAL">
+                      <Grid>
+                        <GridCol span={6}>
+                          <FormDateInput<OrderFormData, 'eta_date'>
+                            label="ETA Date"
+                            source="eta_date"
+                            placeholder="Select ETA date"
+                          />
+                        </GridCol>
+                        <GridCol span={6}>
+                          <FormTimeInput<OrderFormData, 'eta_time'>
+                            label="ETA Time"
+                            source="eta_time"
+                            placeholder="Select ETA time"
+                          />
+                        </GridCol>
+                      </Grid>
+                    </GroupGrid>
+                  </Box>
+                </GridCol>
 
-              <GroupGrid title="ETD Vehicle & Driver">
-                <Grid>
-                  <GridCol span={4}>
-                    <DriverReferenceInput<OrderFormData, 'etd_driver_id'>
-                      label="ETD Driver"
-                      source="etd_driver_id"
-                      placeholder="Select driver"
-                    />
-                  </GridCol>
-                  <GridCol span={4}>
-                    <TruckReferenceInput<OrderFormData, 'etd_truck_id'>
-                      label="ETD Truck"
-                      source="etd_truck_id"
-                      placeholder="Select truck"
-                    />
-                  </GridCol>
-                  <GridCol span={4}>
-                    <TrailerReferenceInput<OrderFormData, 'etd_trailer_id'>
-                      label="ETD Trailer"
-                      source="etd_trailer_id"
-                      placeholder="Select trailer"
-                    />
-                  </GridCol>
-                </Grid>
-              </GroupGrid>
+                <GridCol span={6}>
+                  <Box style={{ backgroundColor: '#fce4ec', padding: '20px', borderRadius: '8px', height: '100%' }}>
+                    <GroupGrid title="ETD — DEPARTURE">
+                      <Grid>
+                        <GridCol span={6}>
+                          <FormDateInput<OrderFormData, 'etd_date'>
+                            label="ETD Date"
+                            source="etd_date"
+                            placeholder="Select ETD date"
+                          />
+                        </GridCol>
+                        <GridCol span={6}>
+                          <FormTimeInput<OrderFormData, 'etd_time'>
+                            label="ETD Time"
+                            source="etd_time"
+                            placeholder="Select ETD time"
+                          />
+                        </GridCol>
+                      </Grid>
+                    </GroupGrid>
+                  </Box>
+                </GridCol>
+              </Grid>
 
               <GroupGrid title="Cargo Details">
                 <Grid>
-                  <GridCol span={6}>
+                  <GridCol span={3}>
                     <FormSelectInput<OrderFormData, 'commodity'>
                       label="Commodity Type"
                       source="commodity"
@@ -273,30 +228,27 @@ const CreateOrderFormContent: React.FC<{
                       data={commodityOptions}
                     />
                   </GridCol>
-                </Grid>
-                
-                <Grid>
-                  <GridCol span={4}>
+                  <GridCol span={3}>
                     <FormTextInput<OrderFormData, 'pallets'>
                       label="Pallets"
                       source="pallets"
-                      placeholder="Number of pallets"
+                      placeholder="0"
                       type="number"
                     />
                   </GridCol>
-                  <GridCol span={4}>
+                  <GridCol span={3}>
                     <FormTextInput<OrderFormData, 'boxes'>
                       label="Boxes"
                       source="boxes"
-                      placeholder="Number of boxes"
+                      placeholder="0"
                       type="number"
                     />
                   </GridCol>
-                  <GridCol span={4}>
+                  <GridCol span={3}>
                     <FormTextInput<OrderFormData, 'kilos'>
                       label="Weight (kg)"
                       source="kilos"
-                      placeholder="Weight in kilograms"
+                      placeholder="0"
                       type="number"
                     />
                   </GridCol>
@@ -305,35 +257,26 @@ const CreateOrderFormContent: React.FC<{
 
               <GroupGrid title="Additional Information">
                 <Grid>
-                  <GridCol span={9}>
+                  <GridCol span={12}>
                     <FormTextInput<OrderFormData, 'notes'>
                       label="Notes"
                       source="notes"
                       placeholder="Some notes..."
                       multiline
-                      rows={2}
+                      rows={4}
                     />
-                  </GridCol>
-                  <GridCol span={3}>
-                    <Stack gap="md" pt="lg">
-                      <FormSwitchInput<OrderFormData, 'priority'>
-                        label="Priority Order"
-                        source="priority"
-                        size="md"
-                      />
-                    </Stack>
                   </GridCol>
                 </Grid>
               </GroupGrid>
 
               {/* Actions */}
-              <Group justify="space-between" mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
-                <Button variant="light" onClick={onBack}>
+              <Group justify="flex-end" mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+                <Button variant="default" onClick={onBack} size="md">
                   Cancel
                 </Button>
                 
                 <Button 
-                  leftSection={<IconDeviceFloppy size={16} />}
+                  leftSection={<IconDeviceFloppy size={18} />}
                   onClick={handleSave}
                   size="md"
                   disabled={!isValid}
@@ -344,7 +287,7 @@ const CreateOrderFormContent: React.FC<{
             </Stack>
           </Paper>
         </Stack>
-      </Container>
+      </Box>
     </Box>
   );
 };
@@ -365,12 +308,6 @@ export const CreateOrderPage: React.FC = () => {
     eta_time: '',
     etd_date: null,
     etd_time: '',
-    eta_driver_id: null,
-    eta_truck_id: null,
-    eta_trailer_id: null,
-    etd_driver_id: null,
-    etd_truck_id: null,
-    etd_trailer_id: null,
     commodity: '',
     pallets: 0,
     boxes: 0,

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Container, 
   Title, 
   Text, 
   Stack, 
@@ -10,7 +9,6 @@ import {
   Box,
   Paper
 } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconEdit } from '@tabler/icons-react';
 import { OrderServiceLabels, CommodityLabels } from '../types/order';
@@ -23,6 +21,7 @@ import {
   FormTextField,
   SelectField,
   TimePicker,
+  DatePicker,
   PhoneNumberInput,
   DriverReferenceInput,
   TruckReferenceInput,
@@ -145,22 +144,21 @@ const EditOrderFormContent: React.FC<{
   }));
 
   return (
-    <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Container size="lg" px="md" py="sm" style={{ flex: 1 }}>
-        <Stack gap="sm">
+    <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' }}>
+      <Box px="xl" py="md" style={{ flex: 1, width: '100%' }}>
+        <Stack gap="md">
           {/* Header */}
           <Stack gap="xs">
-            <Group>
-              <Button 
-                variant="subtle" 
-                leftSection={<IconArrowLeft size={16} />}
-                onClick={onBack}
-              >
-                Back to Orders
-              </Button>
-            </Group>
+            <Button 
+              variant="subtle" 
+              leftSection={<IconArrowLeft size={16} />}
+              onClick={onBack}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              Back to Orders
+            </Button>
             
-            <Title order={1} fw={600}>
+            <Title order={2} fw={600} size="h2">
               Edit Order {orderId}
             </Title>
             <Text c="dimmed" size="sm">
@@ -169,12 +167,12 @@ const EditOrderFormContent: React.FC<{
           </Stack>
 
           {/* Form Content */}
-          <Paper withBorder p="md" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Stack gap="md">
+          <Paper withBorder p="xl" radius="md" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+            <Stack gap="lg">
               {/* Header Row with Basic Info */}
               <GroupGrid title="Order Information">
                 <Grid>
-                  <GridCol span={2}>
+                  <GridCol span={3}>
                     <FormTextField
                       label="Reference"
                       placeholder="Order reference"
@@ -183,7 +181,7 @@ const EditOrderFormContent: React.FC<{
                       onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
                     />
                   </GridCol>
-                  <GridCol span={2}>
+                  <GridCol span={3}>
                     <SelectField
                       label="Service Type"
                       placeholder="Select service"
@@ -196,25 +194,27 @@ const EditOrderFormContent: React.FC<{
                       }))}
                     />
                   </GridCol>
-                  <GridCol span={2}>
+                  <GridCol span={3}>
                     <Switch
                       label="Priority"
                       checked={formData.priority}
                       onChange={(e) => setForm(prev => ({ ...prev, priority: e.target.checked }))}
                       size="md"
+                      style={{ paddingTop: '28px' }}
                     />
                   </GridCol>
                 </Grid>
               </GroupGrid>
 
               {/* ETA and ETD Sections Side by Side */}
-              <Grid>
+              <Grid gutter="lg">
                 {/* ETA Section */}
                 <GridCol span={6}>
-                  <GroupGrid title="ETA — ARRIVAL — TRUCK">
+                  <Box style={{ backgroundColor: '#e8f5e9', padding: '20px', borderRadius: '8px', height: '100%' }}>
+                    <GroupGrid title="ETA — ARRIVAL — TRUCK">
                     <Grid>
                       <GridCol span={6}>
-                        <DateInput
+                        <DatePicker
                           label="ETA-A date"
                           placeholder="Select date"
                           value={formData.eta_date}
@@ -291,26 +291,28 @@ const EditOrderFormContent: React.FC<{
                     </Grid>
 
                     <Grid>
-                      <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etaTruckManualMode ? (
-                            <TruckReferenceInput
-                              label="ETA-A truck"
-                              source="eta_truck_id"
-                              placeholder="Select truck"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETA-A truck"
-                              placeholder="Enter truck name"
-                              value={formData.eta_truck || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                eta_truck: value || null,
-                                eta_truck_id: null
-                              }))}
-                            />
-                          )}
+                      <GridCol span={{ base: 12, md: 6 }}>
+                        <Group gap="xs" wrap="nowrap">
+                          <Box style={{ flex: 1 }}>
+                            {!etaTruckManualMode ? (
+                              <TruckReferenceInput
+                                label="ETA-A truck"
+                                source="eta_truck_id"
+                                placeholder="Select truck"
+                              />
+                            ) : (
+                              <FormTextField
+                                label="ETA-A truck"
+                                placeholder="Enter truck name"
+                                value={formData.eta_truck || ''}
+                                onChange={(value) => setForm(prev => ({ 
+                                  ...prev, 
+                                  eta_truck: value || null,
+                                  eta_truck_id: null
+                                }))}
+                              />
+                            )}
+                          </Box>
                           <Button
                             variant="light"
                             size="sm"
@@ -331,29 +333,28 @@ const EditOrderFormContent: React.FC<{
                           </Button>
                         </Group>
                       </GridCol>
-                    </Grid>
-
-                    <Grid>
-                      <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etaTrailerManualMode ? (
-                            <TrailerReferenceInput
-                              label="ETA-A trailer"
-                              source="eta_trailer_id"
-                              placeholder="Select trailer"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETA-A trailer"
-                              placeholder="Enter trailer name"
-                              value={formData.eta_trailer || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                eta_trailer: value || null,
-                                eta_trailer_id: null
-                              }))}
-                            />
-                          )}
+                      <GridCol span={{ base: 12, md: 6 }}>
+                        <Group gap="xs" wrap="nowrap">
+                          <Box style={{ flex: 1 }}>
+                            {!etaTrailerManualMode ? (
+                              <TrailerReferenceInput
+                                label="ETA-A trailer"
+                                source="eta_trailer_id"
+                                placeholder="Select trailer"
+                              />
+                            ) : (
+                              <FormTextField
+                                label="ETA-A trailer"
+                                placeholder="Enter trailer name"
+                                value={formData.eta_trailer || ''}
+                                onChange={(value) => setForm(prev => ({ 
+                                  ...prev, 
+                                  eta_trailer: value || null,
+                                  eta_trailer_id: null
+                                }))}
+                              />
+                            )}
+                          </Box>
                           <Button
                             variant="light"
                             size="sm"
@@ -376,14 +377,16 @@ const EditOrderFormContent: React.FC<{
                       </GridCol>
                     </Grid>
                   </GroupGrid>
+                  </Box>
                 </GridCol>
 
                 {/* ETD Section */}
                 <GridCol span={6}>
-                  <GroupGrid title="ETD — DEPARTURE — TRUCK">
+                  <Box style={{ backgroundColor: '#fce4ec', padding: '20px', borderRadius: '8px', height: '100%' }}>
+                    <GroupGrid title="ETD — DEPARTURE — TRUCK">
                     <Grid>
                       <GridCol span={6}>
-                        <DateInput
+                        <DatePicker
                           label="ETD-D date"
                           placeholder="Select date"
                           value={formData.etd_date}
@@ -460,26 +463,28 @@ const EditOrderFormContent: React.FC<{
                     </Grid>
 
                     <Grid>
-                      <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etdTruckManualMode ? (
-                            <TruckReferenceInput
-                              label="ETD-D truck"
-                              source="etd_truck_id"
-                              placeholder="Select truck"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETD-D truck"
-                              placeholder="Enter truck name"
-                              value={formData.etd_truck || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                etd_truck: value || null,
-                                etd_truck_id: null
-                              }))}
-                            />
-                          )}
+                      <GridCol span={{ base: 12, md: 6 }}>
+                        <Group gap="xs" wrap="nowrap">
+                          <Box style={{ flex: 1 }}>
+                            {!etdTruckManualMode ? (
+                              <TruckReferenceInput
+                                label="ETD-D truck"
+                                source="etd_truck_id"
+                                placeholder="Select truck"
+                              />
+                            ) : (
+                              <FormTextField
+                                label="ETD-D truck"
+                                placeholder="Enter truck name"
+                                value={formData.etd_truck || ''}
+                                onChange={(value) => setForm(prev => ({ 
+                                  ...prev, 
+                                  etd_truck: value || null,
+                                  etd_truck_id: null
+                                }))}
+                              />
+                            )}
+                          </Box>
                           <Button
                             variant="light"
                             size="sm"
@@ -500,29 +505,28 @@ const EditOrderFormContent: React.FC<{
                           </Button>
                         </Group>
                       </GridCol>
-                    </Grid>
-
-                    <Grid>
-                      <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etdTrailerManualMode ? (
-                            <TrailerReferenceInput
-                              label="ETD-D trailer"
-                              source="etd_trailer_id"
-                              placeholder="Select trailer"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETD-D trailer"
-                              placeholder="Enter trailer name"
-                              value={formData.etd_trailer || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                etd_trailer: value || null,
-                                etd_trailer_id: null
-                              }))}
-                            />
-                          )}
+                      <GridCol span={{ base: 12, md: 6 }}>
+                        <Group gap="xs" wrap="nowrap">
+                          <Box style={{ flex: 1 }}>
+                            {!etdTrailerManualMode ? (
+                              <TrailerReferenceInput
+                                label="ETD-D trailer"
+                                source="etd_trailer_id"
+                                placeholder="Select trailer"
+                              />
+                            ) : (
+                              <FormTextField
+                                label="ETD-D trailer"
+                                placeholder="Enter trailer name"
+                                value={formData.etd_trailer || ''}
+                                onChange={(value) => setForm(prev => ({ 
+                                  ...prev, 
+                                  etd_trailer: value || null,
+                                  etd_trailer_id: null
+                                }))}
+                              />
+                            )}
+                          </Box>
                           <Button
                             variant="light"
                             size="sm"
@@ -545,6 +549,7 @@ const EditOrderFormContent: React.FC<{
                       </GridCol>
                     </Grid>
                   </GroupGrid>
+                  </Box>
                 </GridCol>
               </Grid>
 
@@ -687,10 +692,13 @@ const EditOrderFormContent: React.FC<{
               </ErrorBoundary>
 
             {/* Actions */}
-            <Group justify="space-between" mt="xl" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+            <Group justify="flex-end" mt="md" pt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+              <Button variant="default" onClick={onBack} size="md">
+                Cancel
+              </Button>
               
               <Button 
-                leftSection={<IconDeviceFloppy size={16} />}
+                leftSection={<IconDeviceFloppy size={18} />}
                 onClick={handleSave}
                 size="md"
                 loading={loading}
@@ -701,7 +709,7 @@ const EditOrderFormContent: React.FC<{
             </Stack>
           </Paper>
         </Stack>
-      </Container>
+      </Box>
     </Box>
   );
 };
