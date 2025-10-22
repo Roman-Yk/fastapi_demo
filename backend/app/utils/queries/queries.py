@@ -83,7 +83,25 @@ def _append_filter_column_to(
 	else:
 		# Determine column type for comparison operators
 		col_type = getattr(column.type, "impl", column.type)
-		if isinstance(col_type, (DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean, Enum)):
+
+		# Handle Boolean types separately - only equality operators are valid
+		if isinstance(col_type, Boolean):
+			if operator == "ne":
+				fields_filters.append(column != value)
+			else:
+				# For boolean, default to equality check (including None checks)
+				if value is None:
+					fields_filters.append(column.is_(None))
+				else:
+					fields_filters.append(column == value)
+		# Handle Enum types - only equality/inequality operators
+		elif isinstance(col_type, Enum):
+			if operator == "ne":
+				fields_filters.append(column != value)
+			else:
+				fields_filters.append(column == value)
+		# Handle numeric and date/time types with full comparison operators
+		elif isinstance(col_type, (DateTime, Date, Time, Integer, SmallInteger, BigInteger)):
 			operator_map = {
 				"gt": column > value,
 				"gte": column >= value,

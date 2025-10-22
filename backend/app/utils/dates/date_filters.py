@@ -78,16 +78,19 @@ def get_date_range_filter(date_range) -> Optional[tuple[date, date]]:
     Returns:
         Tuple of (start_date, end_date) or None if 'All' or unknown
     """
-    # Use UTC for all date calculations
-    today = datetime.now(timezone.utc).date()
-
     # Handle both enum and string values using duck typing
     # If it has a .value attribute (enum), use it; otherwise use as-is (string)
     if hasattr(date_range, 'value'):
         date_range_value = date_range.value
     else:
         date_range_value = date_range
-
+        
+    if date_range_value == DateRangeFilterModel.ALL:
+        return None
+    
+    # Use UTC for all date calculations
+    today = datetime.now(timezone.utc).date()
+    
     if date_range_value == DateRangeFilterModel.TODAY:
         return today, today
 
@@ -108,9 +111,6 @@ def get_date_range_filter(date_range) -> Optional[tuple[date, date]]:
     elif date_range_value == DateRangeFilterModel.LAST_WEEK:
         last_week_date = today - timedelta(days=7)
         return get_week_range(last_week_date)
-
-    elif date_range_value == DateRangeFilterModel.ALL:
-        return None
 
     else:
         # Unknown filter, treat as no filter

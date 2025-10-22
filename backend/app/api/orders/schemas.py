@@ -184,7 +184,9 @@ Filter_model = create_filter_model(
         ("id", uuid.UUID),
         "reference",
         ("service", OrderService),
-        ("date_range", DateRangeFilterModel)
+        ("date_range", DateRangeFilterModel),
+        ("priority", bool),
+        ("service", OrderService),
     ]
 )
 # Declare dynamic sort model
