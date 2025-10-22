@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { GridSortModel } from '@mui/x-data-grid';
 import { List } from "../../../shared/components/layout/List"
 import { OrderFiltersForm } from "../components/OrderFiltersForm";
 import { OrderGrid } from "../components/OrderGrid";
@@ -22,9 +23,10 @@ export const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<OrderFilters>(defaultFilters);
+  const [sortModel, setSortModel] = useState<GridSortModel>([]);
 
   // Load orders from API with filters
-  const fetchOrders = async (activeFilters: OrderFilters) => {
+  const fetchOrders = async (activeFilters: OrderFilters, activeSortModel: GridSortModel = []) => {
     setLoading(true);
     try {
       // Automatically map frontend filters to backend filter fields
@@ -40,8 +42,23 @@ export const OrdersPage: React.FC = () => {
         }
       });
 
+      // Extract sort parameters from sortModel
+      // Backend expects sort as JSON array: ["field", "ASC"] or ["field", "DESC"]
+      let sortParam: string | undefined = undefined;
+      
+      if (activeSortModel.length > 0) {
+        const sortItem = activeSortModel[0];
+        const sortArray = [
+          sortItem.field,
+          sortItem.sort?.toUpperCase() || 'ASC'
+        ];
+        sortParam = JSON.stringify(sortArray);
+      }
+
       console.log("Sending filters to backend:", backendFilters);
-      const ordersData = await orderApi.getAll(backendFilters);
+      console.log("Sending sort to backend:", sortParam);
+      
+      const ordersData = await orderApi.getAll(backendFilters, { sort: sortParam });
       setOrders(ordersData);
     } catch (error) {
       console.error("Failed to load orders:", error);
@@ -52,17 +69,22 @@ export const OrdersPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOrders(filters);
+    fetchOrders(filters, sortModel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, sortModel]);
 
   const handleFiltersChange = async (newFilters: OrderFilters) => {
     setFilters(newFilters);
   };
 
+  // Handle sort model changes
+  const handleSortModelChange = (newSortModel: GridSortModel) => {
+    setSortModel(newSortModel);
+  };
+
   // Toolbar action handlers
   const handleRefresh = async () => {
-    fetchOrders(filters);
+    fetchOrders(filters, sortModel);
   };
 
   const handleImport = () => {
@@ -100,6 +122,8 @@ export const OrdersPage: React.FC = () => {
         onExport={handleExport}
         onCreate={handleCreateOrder}
         onEdit={handleEditOrder}
+        sortModel={sortModel}
+        onSortModelChange={handleSortModelChange}
       />
     </List>
   );

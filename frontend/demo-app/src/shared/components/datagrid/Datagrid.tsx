@@ -241,7 +241,8 @@ export const Datagrid = <T extends GridValidRowModel = GridValidRowModel>({
     },
     
     // Features
-    sortingMode: sortable ? 'client' as const : 'server' as const,
+    // Use server-side sorting if onSortModelChange is provided
+    sortingMode: (sortable && onSortModelChange) ? 'server' as const : 'client' as const,
     filterMode: filterable ? 'client' as const : 'server' as const,
     disableColumnFilter: !filterable,
     disableColumnSelector: !sortable,

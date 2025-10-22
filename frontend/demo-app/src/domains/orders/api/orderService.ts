@@ -40,8 +40,7 @@ class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOr
   async getAll(filters?: FilterOptions, options?: {
     page?: number;
     perPage?: number;
-    sort?: string;
-    order?: 'ASC' | 'DESC'
+    sort?: string;  // JSON-encoded array like '["field", "ASC"]'
   }) {
     // Build query params
     const params = new URLSearchParams();
@@ -51,7 +50,6 @@ class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOr
     if (options?.page !== undefined) params.append('page', String(options.page));
     if (options?.perPage !== undefined) params.append('perPage', String(options.perPage));
     if (options?.sort) params.append('sort', options.sort);
-    if (options?.order) params.append('order', options.order);
 
     const query = params.toString() ? `?${params.toString()}` : '';
     return this.makeRequest<Order[]>(query);

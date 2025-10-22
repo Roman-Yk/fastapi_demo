@@ -91,7 +91,12 @@ class CollectionQueryParams:
             loaded_sort = json.loads(sort_raw)
             validate = self.sort_model(sort=loaded_sort[0], order=loaded_sort[1])
             return loaded_sort
-        except (json.JSONDecodeError, ValidationError) as e:
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=422,  
+                detail=jsonable_encoder({"sort_model_validation_error": f"Invalid JSON: {str(e)}"})
+            )
+        except ValidationError as e:
             raise HTTPException(
                 status_code=422,  
                 detail=jsonable_encoder({"sort_model_validation_error": e.errors()})

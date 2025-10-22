@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconEdit } from '@tabler/icons-react';
+import { GridSortModel } from '@mui/x-data-grid';
 import {
   Datagrid,
   TextField,
@@ -28,6 +29,8 @@ interface OrderGridProps {
   onExport?: () => void;
   onCreate?: () => void;
   onEdit?: (orderId: string) => void;
+  sortModel?: GridSortModel;
+  onSortModelChange?: (model: GridSortModel) => void;
 }
 
 export const OrderGrid: React.FC<OrderGridProps> = ({ 
@@ -37,7 +40,9 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
   onImport, 
   onExport, 
   onCreate,
-  onEdit
+  onEdit,
+  sortModel,
+  onSortModelChange
 }) => {
   // Fetch only the reference data needed for the current orders
   // This will automatically collect IDs and fetch with filter parameter
@@ -60,6 +65,8 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       emptyStateDescription="There are no orders to display with the current filters."
       height={600}
       pageSize={25}
+      sortModel={sortModel}
+      onSortModelChange={onSortModelChange}
     >
       {/* Actions */}
       <ActionField
