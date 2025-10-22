@@ -23,3 +23,12 @@ export type { BooleanFilterProps } from './inputs/BooleanFilter';
 
 export { DateRangeFilter } from './inputs/DateRangeFilter';
 export type { DateRangeFilterProps, DateRangeOption } from './inputs/DateRangeFilter';
+
+export { AnimatedDateRangeFilter } from './inputs/AnimatedDateRangeFilter';
+export type { AnimatedDateRangeFilterProps, AnimatedDateRangeOption } from './inputs/AnimatedDateRangeFilter';
+
+export { YesNoFilter } from './inputs/YesNoFilter';
+export type { YesNoFilterProps, YesNoValue } from './inputs/YesNoFilter';
+
+export { SelectYesNoFilter } from './inputs/SelectYesNoFilter';
+export type { SelectYesNoFilterProps, YesNoSelectValue } from './inputs/SelectYesNoFilter';

@@ -1,3 +1,5 @@
+import { YesNoSelectValue } from '../../../shared/components/filters';
+
 // Enums matching backend
 export enum OrderService {
   RELOAD_CAR_CAR = 1,
@@ -133,9 +135,11 @@ export interface OrderFilters {
   statusFilter: StatusFilter | null;
   serviceFilter: OrderService | null;
   commodityFilter: CommodityType | null;
-  priorityFilter: boolean | null;
+  priorityFilter: YesNoSelectValue;
   searchText: string;
-  inTerminal: boolean;
+  inTerminal: YesNoSelectValue;
+  hasEtaDate: YesNoSelectValue;
+  hasEtdDate: YesNoSelectValue;
 }
 
 // Grid column configuration

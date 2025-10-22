@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Button } from '@mantine/core';
+import { SegmentedControl } from '@mantine/core';
 import { FilterProps } from '../types';
 
 export interface DateRangeOption {
@@ -12,7 +12,9 @@ export interface DateRangeFilterProps extends FilterProps {
   options: DateRangeOption[];
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   radius?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  color?: string;
+  fullWidth?: boolean;
+  orientation?: 'horizontal' | 'vertical';
 }
 
 export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
@@ -21,30 +23,36 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   value,
   onChange,
   options,
-  size = 'sm',
-  radius = 'xl',
-  gap = 'xs',
+  size = 'md',
+  radius = 'lg',
+  color = 'blue',
+  fullWidth = false,
+  orientation = 'horizontal',
   ...props
 }) => {
-  const handleOptionClick = (optionValue: string) => {
-    onChange?.(optionValue);
+  const handleChange = (newValue: string) => {
+    onChange?.(newValue);
   };
-  
+
+  // Convert options to SegmentedControl data format
+  const data = options.map(option => ({
+    value: option.value,
+    label: option.label
+  }));
+
   return (
-    <Group gap={gap} {...props}>
-      {options.map((option) => (
-        <Button
-          key={option.value}
-          variant={value === option.value ? "filled" : "light"}
-          onClick={() => handleOptionClick(option.value)}
-          size={size}
-          radius={radius}
-          color={value === option.value ? 
-            (option.color || "blue") : "gray"}
-        >
-          {option.label}
-        </Button>
-      ))}
-    </Group>
+    <SegmentedControl
+      value={value}
+      onChange={handleChange}
+      data={data}
+      size={size}
+      radius={radius}
+      color={color}
+      fullWidth={fullWidth}
+      orientation={orientation}
+      transitionDuration={200}
+      transitionTimingFunction="ease"
+      {...props}
+    />
   );
 };

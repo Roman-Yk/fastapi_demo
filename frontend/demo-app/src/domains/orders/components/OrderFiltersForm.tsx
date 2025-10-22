@@ -1,17 +1,20 @@
 import React from 'react';
-import { 
-  IconMapPin, 
-  IconStatusChange, 
-  IconTruck, 
-  IconBox, 
-  IconStar, 
-  IconSearch
+import {
+  IconMapPin,
+  IconStatusChange,
+  IconTruck,
+  IconBox,
+  IconStar,
+  IconSearch,
+  IconCalendarEvent,
+  IconCalendarDue,
+  IconBuildingWarehouse
 } from '@tabler/icons-react';
-import { 
+import {
   ListFilters,
   DateRangeFilter,
   SelectFilter,
-  BooleanFilter,
+  SelectYesNoFilter,
   TextFilter
 } from '../../../shared/components';
 import { 
@@ -58,6 +61,8 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         source="dateFilter"
         label="ETA Date"
         alwaysOn
+        size="md"
+        radius="lg"
         options={Object.entries(DateFilterLabels).map(([value, label]) => ({
           value,
           label,
@@ -65,22 +70,7 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         }))}
       />
 
-      {/* Optional filters - these can be added/removed dynamically */}
-      <TextFilter
-        source="searchText"
-        label="Search"
-        placeholder="Search orders..."
-        width={250}
-        leftSection={<IconSearch size={16} />}
-      />
-      
-      <SelectFilter
-        source="locationFilter"
-        label="Location"
-        options={LocationFilterLabels}
-        leftSection={<IconMapPin size={16} />}
-      />
-      
+
       <SelectFilter
         source="statusFilter"
         label="Status"
@@ -102,18 +92,20 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         leftSection={<IconBox size={16} />}
       />
       
-      <BooleanFilter
+      <SelectYesNoFilter
         source="priorityFilter"
-        label="Priority Orders Only"
-        color="orange"
-        thumbIcon={<IconStar size={10} />}
+        label="Priority"
+        leftSection={<IconStar size={16} />}
+        placeholder="All orders"
+        width={150}
       />
-      
-      <BooleanFilter
+
+      <SelectYesNoFilter
         source="inTerminal"
         label="In Terminal"
-        color="green"
-        thumbIcon={<IconStar size={10} />}
+        leftSection={<IconBuildingWarehouse size={16} />}
+        placeholder="All orders"
+        width={160}
       />
     </ListFilters>
   );

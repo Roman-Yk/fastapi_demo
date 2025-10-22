@@ -15,7 +15,9 @@ const defaultFilters: OrderFilters = {
   commodityFilter: null,
   priorityFilter: null,
   searchText: '',
-  inTerminal: false,
+  inTerminal: null,
+  hasEtaDate: null,
+  hasEtdDate: null,
 };
 
 export const OrdersPage: React.FC = () => {
@@ -32,7 +34,32 @@ export const OrdersPage: React.FC = () => {
       // Automatically map frontend filters to backend filter fields
       const backendFilters: Record<string, any> = {};
       Object.entries(activeFilters).forEach(([key, value]) => {
-        if (value !== null && value !== "" && value !== false) {
+        // Special handling for Yes/No filters
+        const yesNoFilters = ["priorityFilter", "hasEtaDate", "hasEtdDate", "inTerminal"];
+        if (yesNoFilters.includes(key) && value !== null) {
+          // Handle Yes/No filter
+          // 'yes' -> true
+          // 'no' -> false
+          // null -> no filter (don't send to backend)
+          if (value === 'yes' || value === 'no') {
+            const boolValue = value === 'yes';
+            // Map filter names to backend fields
+            switch(key) {
+              case "priorityFilter":
+                backendFilters["priority"] = boolValue;
+                break;
+              case "hasEtaDate":
+                backendFilters["has_eta_date"] = boolValue;
+                break;
+              case "hasEtdDate":
+                backendFilters["has_etd_date"] = boolValue;
+                break;
+              case "inTerminal":
+                backendFilters["in_terminal"] = boolValue;
+                break;
+            }
+          }
+        } else if (value !== null && value !== "" && value !== false) {
           // Rename fields if needed
           if (key === "dateFilter") {
             backendFilters["date_range"] = value;
