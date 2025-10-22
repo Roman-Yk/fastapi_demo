@@ -17,7 +17,7 @@ from app.api._shared.schema.types import (
     NonNegativeOptionalFloat,
     NonNegativeOptionalInt,
 )
-
+from app.api._shared.schema.enums import DateRangeFilterModel
 
 from .BaseSchemas import ETAETDFieldsMixin, OrderBaseResponseSchema, OrderFieldsMixin
 
@@ -90,6 +90,26 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
     if using patch then use model_dump(exclude_unset=True)
     """
 
+    reference: Optional[str] = Field(
+        default=None,
+        max_length=32,
+        min_length=1,
+        description="Updated order reference number",
+        examples=["ORD-2024-002", "REF-67890"]
+    )
+    
+    service: Optional[OrderService] = Field(
+        default=None,
+        description="Updated type of service for this order",
+        examples=[OrderService.RELOAD_CAR_CAR]
+    )
+    
+    priority: Optional[bool] = Field(
+        default=None,
+        description="Updated priority status of the order",
+        examples=[True]
+    )
+    
     eta_date: NotPastOptionalDate = Field(
         default=None,
         description="Updated Estimated Time of Arrival date",
@@ -164,6 +184,7 @@ Filter_model = create_filter_model(
         ("id", uuid.UUID),
         "reference",
         ("service", OrderService),
+        ("date_range", DateRangeFilterModel)
     ]
 )
 # Declare dynamic sort model

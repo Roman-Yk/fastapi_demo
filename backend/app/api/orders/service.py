@@ -19,6 +19,8 @@ from app.utils.queries.fetching import (
 )
 from app.utils.queries.queries import apply_filter_sort_range_for_query
 from app.utils.models.update_model import update_model_fields
+from app.utils.dates.date_filters import apply_date_filter_to_query
+from app.api._shared.schema.enums import DateRangeFilterModel
 
 from .schemas import CollectionOrderQueryParams, CreateOrderSchema, UpdateOrderSchema
 
@@ -47,6 +49,17 @@ class OrderService(BaseService):
         """
         select_query = select(Order)
         count_query = select(func.count()).select_from(Order)
+
+        # Apply date range filter if provided
+        # For orders, we filter on both eta_date and etd_date fields (OR condition)
+        date_filter = querystring.filter.get("date_range") if querystring.filter else None
+        if date_filter and date_filter != DateRangeFilterModel.ALL:
+            select_query = apply_date_filter_to_query(
+                select_query, Order, ["eta_date", "etd_date"], date_filter
+            )
+            count_query = apply_date_filter_to_query(
+                count_query, Order, ["eta_date", "etd_date"], date_filter
+            )
 
         query, count_query = apply_filter_sort_range_for_query(
             Order,
