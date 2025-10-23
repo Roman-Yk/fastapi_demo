@@ -58,7 +58,7 @@ services:
     image: postgres:latest
     env_file: ./backend/.env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
       - 5432:5432
     networks:
@@ -83,7 +83,6 @@ services:
       - default
 
   celery_worker:
-    build: ./backend
     image: "fastapi-demo-backend:latest"
     entrypoint: ["./entrypoints/celery_worker.sh"]
     volumes:
@@ -95,7 +94,6 @@ services:
       - default
 
   flower:
-    build: ./backend
     image: "fastapi-demo-backend:latest"
     entrypoint: ["./entrypoints/flower.sh"]
     ports:

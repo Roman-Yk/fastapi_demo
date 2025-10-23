@@ -41,7 +41,7 @@ class OrderFieldsMixin(BaseModel):
     pallets: NonNegativeOptionalInt = None
     boxes: NonNegativeOptionalInt = None
     kilos: NonNegativeOptionalFloat = None
-    notes: Optional[str] = Field(max_length=1024)
+    notes: Optional[str] = Field(default=None, max_length=1024)
     priority: Optional[bool] = None
 
 

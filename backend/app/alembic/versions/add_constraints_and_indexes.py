@@ -1,7 +1,7 @@
 """Add database constraints and indexes for better data integrity and performance
 
 Revision ID: add_constraints_idx
-Revises:
+Revises: 346c1badb427
 Create Date: 2025-01-17
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_constraints_idx'
-down_revision = None  # Update this to your latest migration
+down_revision = '346c1badb427'
 branch_label = None
 depends_on = None
 

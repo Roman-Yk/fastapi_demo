@@ -15,7 +15,7 @@ function start() {
 
 # Build command
 function build () {
-    docker-compose build
+    docker-compose build --parallel
 }
 
 # Database command
