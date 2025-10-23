@@ -72,9 +72,10 @@ export function transformFormData<T = any>(
 
 /**
  * Preset configuration for order forms
+ * Note: numericFields no longer needed since FormNumberInput/FormFloatInput
+ * components automatically return proper number types
  */
 export const ORDER_FORM_CONFIG: FieldTransformConfig = {
-  numericFields: ['pallets', 'boxes', 'kilos'],
   skipEmpty: true
 };
 

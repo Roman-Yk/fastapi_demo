@@ -19,6 +19,8 @@ import {
   GridCol,
   GroupGrid,
   FormTextField,
+  FormNumberInput,
+  FormFloatInput,
   SelectField,
   TimePicker,
   DatePicker,
@@ -569,30 +571,25 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextField
+                    <FormNumberInput<EditOrderFormData, 'pallets'>
                       label="Pallets"
-                      placeholder="Number of pallets"
-                      type="number"
-                      value={formData.pallets?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, pallets: value ? parseInt(value) : null }))}
+                      source="pallets"
+                      placeholder="0"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextField
+                    <FormNumberInput<EditOrderFormData, 'boxes'>
                       label="Boxes"
-                      placeholder="Number of boxes"
-                      type="number"
-                      value={formData.boxes?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, boxes: value ? parseInt(value) : null }))}
+                      source="boxes"
+                      placeholder="0"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextField
-                      label="Kilos"
-                      placeholder="Weight in kg"
-                      type="number"
-                      value={formData.kilos?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ ...prev, kilos: value ? parseInt(value) : null }))}
+                    <FormFloatInput<EditOrderFormData, 'kilos'>
+                      label="Weight (kg)"
+                      source="kilos"
+                      placeholder="0.00"
+                      decimalScale={2}
                     />
                   </GridCol>
                 </Grid>

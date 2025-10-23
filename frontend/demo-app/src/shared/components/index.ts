@@ -26,6 +26,8 @@ export * from './forms/Form';
 export * from './forms/Grid';
 export * from './forms/GroupGrid';
 export * from './forms/FormTextInput';
+export * from './forms/FormNumberInput';
+export * from './forms/FormFloatInput';
 export * from './forms/FormSelectInput';
 export * from './forms/FormDateInput';
 export * from './forms/FormTimeInput';

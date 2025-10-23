@@ -19,6 +19,8 @@ import {
   GridCol,
   GroupGrid,
   FormTextInput,
+  FormNumberInput,
+  FormFloatInput,
   FormSelectInput,
   FormDateInput,
   FormTimeInput,
@@ -229,27 +231,25 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextInput<OrderFormData, 'pallets'>
+                    <FormNumberInput<OrderFormData, 'pallets'>
                       label="Pallets"
                       source="pallets"
                       placeholder="0"
-                      type="number"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextInput<OrderFormData, 'boxes'>
+                    <FormNumberInput<OrderFormData, 'boxes'>
                       label="Boxes"
                       source="boxes"
                       placeholder="0"
-                      type="number"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormTextInput<OrderFormData, 'kilos'>
+                    <FormFloatInput<OrderFormData, 'kilos'>
                       label="Weight (kg)"
                       source="kilos"
-                      placeholder="0"
-                      type="number"
+                      placeholder="0.00"
+                      decimalScale={2}
                     />
                   </GridCol>
                 </Grid>
