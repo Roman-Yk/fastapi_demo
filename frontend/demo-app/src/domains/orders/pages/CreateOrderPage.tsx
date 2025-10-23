@@ -27,24 +27,7 @@ import {
   FormSwitchInput,
   TerminalReferenceInput
 } from '../../../shared/components';
-import { transformFormData, ORDER_FORM_CONFIG } from '../../../utils/formTransform';
-
-// TypeScript interface for order form data
-interface OrderFormData {
-  reference: string;
-  service: string;
-  terminal_id: string | null;
-  eta_date: Date | null;
-  eta_time: string;
-  etd_date: Date | null;
-  etd_time: string;
-  commodity: string;
-  pallets: number;
-  boxes: number;
-  kilos: number;
-  notes: string;
-  priority: boolean;
-}
+import { createOrderFormSchema, CreateOrderFormData } from '../schemas/orderSchemas';
 
 // Validation rules for the order form
 const orderValidationRules = {
@@ -65,7 +48,7 @@ const CreateOrderFormContent: React.FC<{
   onBack: () => void;
 }> = ({ onBack }) => {
   const navigate = useNavigate();
-  const { formData, validateAll, isValid } = useFormContext<OrderFormData>();
+  const { formData, validateAll, isValid } = useFormContext<CreateOrderFormData>();
 
   useEffect(() => {
     console.log('isValid changed:', isValid);
@@ -80,12 +63,12 @@ const CreateOrderFormContent: React.FC<{
     }
 
     try {
-      // Transform form data to API format automatically
-      const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
-      
+      // Transform form data to API format using Zod schema
+      const apiData = createOrderFormSchema.parse(formData) as any;
+
       console.log('Creating order:', apiData);
       const newOrder = await ApiService.createOrder(apiData);
-      
+
       // Navigate to the edit page of the newly created order
       if (newOrder && newOrder.id) {
         navigate(`/orders/${newOrder.id}/edit`);
@@ -95,7 +78,7 @@ const CreateOrderFormContent: React.FC<{
       }
     } catch (error) {
       console.error('Failed to create order:', error);
-      // TODO: Show error notification to user
+      alert(`Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -138,7 +121,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Order Information">
                 <Grid>
                   <GridCol span={3}>
-                    <FormTextInput<OrderFormData, 'reference'>
+                    <FormTextInput<CreateOrderFormData, 'reference'>
                       label="Reference"
                       source="reference"
                       placeholder="Enter order reference"
@@ -146,7 +129,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <TerminalReferenceInput<OrderFormData, 'terminal_id'>
+                    <TerminalReferenceInput<CreateOrderFormData, 'terminal_id'>
                       label="Terminal"
                       source="terminal_id"
                       placeholder="-- Select Terminal --"
@@ -154,7 +137,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormSelectInput<OrderFormData, 'service'>
+                    <FormSelectInput<CreateOrderFormData, 'service'>
                       label="Service Type"
                       source="service"
                       placeholder="Select service"
@@ -163,7 +146,7 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormSwitchInput<OrderFormData, 'priority'>
+                    <FormSwitchInput<CreateOrderFormData, 'priority'>
                       label="Priority Order"
                       source="priority"
                       size="md"
@@ -178,14 +161,14 @@ const CreateOrderFormContent: React.FC<{
                     <GroupGrid title="ETA — ARRIVAL">
                       <Grid>
                         <GridCol span={6}>
-                          <FormDateInput<OrderFormData, 'eta_date'>
+                          <FormDateInput<CreateOrderFormData, 'eta_date'>
                             label="ETA Date"
                             source="eta_date"
                             placeholder="Select ETA date"
                           />
                         </GridCol>
                         <GridCol span={6}>
-                          <FormTimeInput<OrderFormData, 'eta_time'>
+                          <FormTimeInput<CreateOrderFormData, 'eta_time'>
                             label="ETA Time"
                             source="eta_time"
                             placeholder="Select ETA time"
@@ -201,14 +184,14 @@ const CreateOrderFormContent: React.FC<{
                     <GroupGrid title="ETD — DEPARTURE">
                       <Grid>
                         <GridCol span={6}>
-                          <FormDateInput<OrderFormData, 'etd_date'>
+                          <FormDateInput<CreateOrderFormData, 'etd_date'>
                             label="ETD Date"
                             source="etd_date"
                             placeholder="Select ETD date"
                           />
                         </GridCol>
                         <GridCol span={6}>
-                          <FormTimeInput<OrderFormData, 'etd_time'>
+                          <FormTimeInput<CreateOrderFormData, 'etd_time'>
                             label="ETD Time"
                             source="etd_time"
                             placeholder="Select ETD time"
@@ -223,7 +206,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Cargo Details">
                 <Grid>
                   <GridCol span={3}>
-                    <FormSelectInput<OrderFormData, 'commodity'>
+                    <FormSelectInput<CreateOrderFormData, 'commodity'>
                       label="Commodity Type"
                       source="commodity"
                       placeholder="Select commodity"
@@ -231,21 +214,21 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormNumberInput<OrderFormData, 'pallets'>
+                    <FormNumberInput<CreateOrderFormData, 'pallets'>
                       label="Pallets"
                       source="pallets"
                       placeholder="0"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormNumberInput<OrderFormData, 'boxes'>
+                    <FormNumberInput<CreateOrderFormData, 'boxes'>
                       label="Boxes"
                       source="boxes"
                       placeholder="0"
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormFloatInput<OrderFormData, 'kilos'>
+                    <FormFloatInput<CreateOrderFormData, 'kilos'>
                       label="Weight (kg)"
                       source="kilos"
                       placeholder="0.00"
@@ -258,7 +241,7 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Additional Information">
                 <Grid>
                   <GridCol span={12}>
-                    <FormTextInput<OrderFormData, 'notes'>
+                    <FormTextInput<CreateOrderFormData, 'notes'>
                       label="Notes"
                       source="notes"
                       placeholder="Some notes..."
@@ -300,15 +283,15 @@ export const CreateOrderPage: React.FC = () => {
   };
 
   // Initial form data with proper types
-  const initialData: OrderFormData = {
+  const initialData: CreateOrderFormData = {
     reference: '',
-    service: '',
-    terminal_id: null,
+    service: 0,
+    terminal_id: '',
     eta_date: null,
     eta_time: '',
     etd_date: null,
     etd_time: '',
-    commodity: '',
+    commodity: null,
     pallets: 0,
     boxes: 0,
     kilos: 0,
@@ -317,7 +300,7 @@ export const CreateOrderPage: React.FC = () => {
   };
 
   return (
-    <FormProvider<OrderFormData>
+    <FormProvider<CreateOrderFormData>
       initialData={initialData}
       validationRules={orderValidationRules}
       validateOnBlur={true}

@@ -30,39 +30,9 @@ import {
   TrailerReferenceInput
 } from '../../../shared/components';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
-import { transformFormData, populateFormFromApi, ORDER_FORM_CONFIG, ORDER_DATE_FIELDS } from '../../../utils/formTransform';
+import { apiToFormSchema, editOrderFormSchema, EditOrderFormData } from '../schemas/orderSchemas';
 import { OrderDocumentsUpload, OrderDocumentsUploadRef } from '../components/OrderDocumentsUpload';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
-
-// TypeScript interface for edit order form data
-interface EditOrderFormData {
-  reference: string;
-  service: number | null;
-  priority: boolean;
-  eta_date: Date | null;
-  eta_time: string;
-  etd_date: Date | null;
-  etd_time: string;
-  eta_driver_id: string | null;
-  eta_driver: string | null;
-  eta_driver_phone: string | null;
-  eta_truck_id: string | null;
-  eta_truck: string | null;
-  eta_trailer_id: string | null;
-  eta_trailer: string | null;
-  etd_driver_id: string | null;
-  etd_driver: string | null;
-  etd_driver_phone: string | null;
-  etd_truck_id: string | null;
-  etd_truck: string | null;
-  etd_trailer_id: string | null;
-  etd_trailer: string | null;
-  commodity: string | null;
-  pallets: number | null;
-  boxes: number | null;
-  kilos: number | null;
-  notes: string | null;
-}
 
 // Form content component that uses the context
 const EditOrderFormContent: React.FC<{
@@ -88,9 +58,9 @@ const EditOrderFormContent: React.FC<{
       try {
         const orderData = await ApiService.getOrder(orderId);
 
-        // Populate form from API data - fields are defined by JSX components only
+        // Populate form from API data using Zod schema
         if (orderData) {
-          setForm(() => populateFormFromApi(orderData, ORDER_DATE_FIELDS));
+          setForm(() => apiToFormSchema.parse(orderData));
 
           // Set manual mode based on whether manual fields have data
           setEtaDriverManualMode(!!(orderData.eta_driver || orderData.eta_driver_phone));
@@ -121,8 +91,8 @@ const EditOrderFormContent: React.FC<{
         await documentsUploadRef.current.uploadPendingDocuments();
       }
 
-      // Transform form data to API format automatically
-      const apiData = transformFormData(formData, ORDER_FORM_CONFIG);
+      // Transform form data to API format using Zod schema
+      const apiData = editOrderFormSchema.parse(formData);
       
       await ApiService.updateOrder(orderId, apiData);
       

@@ -13,5 +13,5 @@ export { orderDocumentApi } from './api/orderDocumentService';
 // Components
 export * from './components';
 
-// Validation
-export * from './validation/orderSchema';
+// Schemas (Zod)
+export * from './schemas/orderSchemas';
