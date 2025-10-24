@@ -102,14 +102,13 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
   
   const clearAllFilters = () => {
     setActiveFilters([]);
-    // Only clear optional filters, keep always-on filters with their default values
+    // Only clear optional filters, keep always-on filters with their current values
     const clearedFilters: Record<string, any> = {};
     alwaysOnFilters.forEach(filter => {
-      // Keep always-on filters but reset to their default values
+      // Keep always-on filters with their current values
       const source = filter.props.source;
-      const defaultValue = filter.props.defaultValue;
-      if (defaultValue !== undefined) {
-        clearedFilters[source] = defaultValue;
+      if (filters[source] !== undefined) {
+        clearedFilters[source] = filters[source];
       }
     });
     onFiltersChange(clearedFilters);
@@ -121,14 +120,9 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
   
   const hasActiveFilters = activeFilters.length > 0 ||
     Object.keys(filters).some(key => {
-      // Don't count always-on filters unless they have non-default values
+      // Don't count always-on filters at all
       const alwaysOnFilter = alwaysOnFilters.find(f => f.props.source === key);
       if (alwaysOnFilter) {
-        // For always-on filters, only count as active if value differs from default
-        const defaultValue = alwaysOnFilter.props.defaultValue;
-        if (defaultValue !== undefined) {
-          return filters[key] !== defaultValue;
-        }
         return false;
       }
       // Count optional filters that have values

@@ -38,17 +38,16 @@ export const BooleanSelectFilter: React.FC<BooleanSelectFilterProps> = ({
   };
 
   // Convert boolean to string for Select component
-  const displayValue = value === null ? '' : String(value);
+  const displayValue = value === null ? null : String(value);
 
   const data = [
-    { value: '', label: 'All' },
     { value: 'true', label: 'Yes' },
     { value: 'false', label: 'No' }
   ];
 
   return (
     <Select
-      label={label || source}
+      label={label}
       value={displayValue}
       onChange={handleChange}
       data={data}
@@ -57,7 +56,7 @@ export const BooleanSelectFilter: React.FC<BooleanSelectFilterProps> = ({
       placeholder={placeholder}
       leftSection={leftSection}
       rightSection={rightSection}
-      clearable={false}
+      clearable
       style={{ width: width || 'auto' }}
       {...props}
     />

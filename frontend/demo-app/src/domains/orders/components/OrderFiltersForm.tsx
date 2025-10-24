@@ -103,17 +103,15 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
 
       <BooleanSelectFilter
         source="priority"
-        label="Priority"
         leftSection={<IconStar size={16} />}
-        placeholder="All orders"
+        placeholder="Priority"
         width={150}
       />
 
       <BooleanSelectFilter
         source="in_terminal"
-        label="In Terminal"
         leftSection={<IconBuildingWarehouse size={16} />}
-        placeholder="All orders"
+        placeholder="In Terminal"
         width={160}
       />
     </ListFilters>

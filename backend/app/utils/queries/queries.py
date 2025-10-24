@@ -5,6 +5,7 @@ from sqlalchemy.sql.schema import Table
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy import DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean, Enum, and_, or_
 from sqlalchemy.sql.sqltypes import DateTime, Date, Time, Integer, SmallInteger, BigInteger, Boolean
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.constants import ORDER_ASC, ORDER_DESC
 
@@ -96,6 +97,12 @@ def _append_filter_column_to(
 					fields_filters.append(column == value)
 		# Handle Enum types - only equality/inequality operators
 		elif isinstance(col_type, Enum):
+			if operator == "ne":
+				fields_filters.append(column != value)
+			else:
+				fields_filters.append(column == value)
+		# Handle UUID types - only equality/inequality operators
+		elif isinstance(col_type, UUID):
 			if operator == "ne":
 				fields_filters.append(column != value)
 			else:
