@@ -107,10 +107,10 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
     alwaysOnFilters.forEach(filter => {
       // Keep always-on filters but reset to their default values
       const source = filter.props.source;
-      if (source === 'dateFilter') {
-        clearedFilters[source] = 'All'; // DateFilterOption.ALL
+      const defaultValue = filter.props.defaultValue;
+      if (defaultValue !== undefined) {
+        clearedFilters[source] = defaultValue;
       }
-      // Other always-on filters can be added here with their defaults
     });
     onFiltersChange(clearedFilters);
   };
@@ -119,16 +119,17 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
     filter => !activeFilters.includes(filter.key)
   );
   
-  const hasActiveFilters = activeFilters.length > 0 || 
+  const hasActiveFilters = activeFilters.length > 0 ||
     Object.keys(filters).some(key => {
       // Don't count always-on filters unless they have non-default values
-      const isAlwaysOn = alwaysOnFilters.some(f => f.props.source === key);
-      if (isAlwaysOn) {
-        // For date filter, only count as active if it's not 'All'
-        if (key === 'dateFilter') {
-          return filters[key] !== 'All';
+      const alwaysOnFilter = alwaysOnFilters.find(f => f.props.source === key);
+      if (alwaysOnFilter) {
+        // For always-on filters, only count as active if value differs from default
+        const defaultValue = alwaysOnFilter.props.defaultValue;
+        if (defaultValue !== undefined) {
+          return filters[key] !== defaultValue;
         }
-        return false; // Other always-on filters don't count towards "hasActiveFilters"
+        return false;
       }
       // Count optional filters that have values
       return filters[key] !== null && filters[key] !== undefined && filters[key] !== '';

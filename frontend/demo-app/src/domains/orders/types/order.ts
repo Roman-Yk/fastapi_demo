@@ -128,15 +128,15 @@ export const StatusFilterLabels = {
 
 // Filter interfaces
 export interface OrderFilters {
-  dateFilter: DateFilterOption;
-  terminalFilter: string | null;
-  locationFilter: LocationFilter | null;
-  statusFilter: StatusFilter | null;
-  serviceFilter: OrderService | null;
-  commodityFilter: CommodityType | null;
-  priorityFilter: boolean | null;
-  searchText: string;
-  inTerminal: boolean | null;
+  date_range: DateFilterOption;
+  terminal_id: string | null;
+  location: LocationFilter | null;
+  status: StatusFilter | null;
+  service: OrderService | null;
+  commodity: CommodityType | null;
+  priority: boolean | null;
+  search: string;
+  in_terminal: boolean | null;
 }
 
 // Grid column configuration

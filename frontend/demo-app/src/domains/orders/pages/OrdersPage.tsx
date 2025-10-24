@@ -8,15 +8,15 @@ import { Order, OrderFilters, DateFilterOption } from "../types/order";
 import { orderApi } from "../api/orderService";
 
 const defaultFilters: OrderFilters = {
-  dateFilter: DateFilterOption.TODAY,
-  terminalFilter: 'all',
-  locationFilter: null,
-  statusFilter: null,
-  serviceFilter: null,
-  commodityFilter: null,
-  priorityFilter: null,
-  searchText: '',
-  inTerminal: null,
+  date_range: DateFilterOption.TODAY,
+  terminal_id: 'all',
+  location: null,
+  status: null,
+  service: null,
+  commodity: null,
+  priority: null,
+  search: '',
+  in_terminal: null,
 };
 
 export const OrdersPage: React.FC = () => {
@@ -30,31 +30,11 @@ export const OrdersPage: React.FC = () => {
   const fetchOrders = async (activeFilters: OrderFilters, activeSortModel: GridSortModel = []) => {
     setLoading(true);
     try {
-      // Automatically map frontend filters to backend filter fields
+      // Filter out null, empty, or 'all' values - field names already match backend
       const backendFilters: Record<string, any> = {};
       Object.entries(activeFilters).forEach(([key, value]) => {
-        // Skip null, empty, or 'all' values
-        if (value === null || value === "" || value === 'all') {
-          return;
-        }
-
-        // Map filter names to backend fields
-        switch(key) {
-          case "priorityFilter":
-            backendFilters["priority"] = value;
-            break;
-          case "inTerminal":
-            backendFilters["in_terminal"] = value;
-            break;
-          case "dateFilter":
-            backendFilters["date_range"] = value;
-            break;
-          case "terminalFilter":
-            backendFilters["terminal_id"] = value;
-            break;
-          default:
-            // Generic mapping: remove 'Filter' suffix
-            backendFilters[key.replace(/Filter$/, "")] = value;
+        if (value !== null && value !== "" && value !== 'all') {
+          backendFilters[key] = value;
         }
       });
 

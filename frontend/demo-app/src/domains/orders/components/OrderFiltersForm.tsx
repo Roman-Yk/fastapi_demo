@@ -57,9 +57,10 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
     >
       {/* Always-on date filter - wrapped as a proper filter component */}
       <DateRangeFilter
-        source="dateFilter"
+        source="date_range"
         label="ETA Date"
         alwaysOn
+        defaultValue={DateFilterOption.ALL}
         size="md"
         radius="lg"
         options={Object.entries(DateFilterLabels).map(([value, label]) => ({
@@ -71,36 +72,37 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
 
       {/* Always-on terminal filter */}
       <TerminalFilter
-        source="terminalFilter"
+        source="terminal_id"
         label="Terminal"
         alwaysOn
+        defaultValue="all"
         size="md"
         radius="lg"
       />
 
       <SelectFilter
-        source="statusFilter"
+        source="status"
         label="Status"
         options={StatusFilterLabels}
         leftSection={<IconStatusChange size={16} />}
       />
-      
+
       <SelectFilter
-        source="serviceFilter"
+        source="service"
         label="Service"
         options={OrderServiceLabels}
         leftSection={<IconTruck size={16} />}
       />
-      
+
       <SelectFilter
-        source="commodityFilter"
+        source="commodity"
         label="Commodity"
         options={CommodityLabels}
         leftSection={<IconBox size={16} />}
       />
-      
+
       <BooleanSelectFilter
-        source="priorityFilter"
+        source="priority"
         label="Priority"
         leftSection={<IconStar size={16} />}
         placeholder="All orders"
@@ -108,7 +110,7 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
       />
 
       <BooleanSelectFilter
-        source="inTerminal"
+        source="in_terminal"
         label="In Terminal"
         leftSection={<IconBuildingWarehouse size={16} />}
         placeholder="All orders"
