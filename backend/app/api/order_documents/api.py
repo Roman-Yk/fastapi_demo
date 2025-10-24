@@ -1,9 +1,10 @@
 import uuid
-from fastapi import Depends, Response, status
+from fastapi import Depends, Response, status, Form, UploadFile, File
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.models.orders.enums import OrderDocumentType
 from app.database.conn import get_db
 from app.utils.queries.queries import generate_range
 
@@ -13,17 +14,17 @@ from .schemas import (
 	UpdateOrderDocumentSchema,
 )
 from .service import OrderDocumentsService
-from .file_operations import register_file_operations_routes
 
 
 order_documents_router = InferringRouter(prefix="/orders", tags=["order_documents"])
 
 
 @cbv(order_documents_router)
-class OrderDocumentsResource:
+class OrderDocumentsCRUD:
 	"""
-	CRUD operations for order documents.
-	File operations (upload, download, view) are in file_operations.py.
+	Complete CRUD operations for order documents.
+	Includes document management (create, read, update, delete) with file uploads.
+	File serving operations (download, view) are in file_operations.py.
 	"""
 
 	def __init__(self, response: Response, db: AsyncSession = Depends(get_db)):
@@ -63,6 +64,62 @@ class OrderDocumentsResource:
 		)
 		return document
 
+	@order_documents_router.post("/{order_id}/documents/",
+	                             response_model=ResponseOrderDocumentSchema,
+	                             status_code=status.HTTP_201_CREATED)
+	async def create_order_document(
+		self,
+		order_id: uuid.UUID,
+		file: UploadFile = File(...),
+		title: str = Form(...),
+		type: OrderDocumentType = Form(...),
+	):
+		"""
+		Create a new order document with file upload.
+		"""
+		document = await self.order_documents_service.create_order_document(
+			order_id=order_id,
+			file=file,
+			title=title,
+			doc_type=type,
+		)
+		return document
+
+	@order_documents_router.post("/{order_id}/documents/batch",
+	                             status_code=status.HTTP_201_CREATED)
+	async def create_order_documents_batch(
+		self,
+		order_id: uuid.UUID,
+		files: list[UploadFile] = File(...),
+		types: list[str] = Form(None),
+		type: OrderDocumentType = Form(OrderDocumentType.Other),
+	):
+		"""
+		Create multiple order documents at once (batch upload).
+		"""
+		created_documents = []
+		for index, file in enumerate(files):
+			# Use individual type if provided, otherwise use default type
+			doc_type = type
+			if types and index < len(types):
+				try:
+					doc_type = OrderDocumentType(types[index])
+				except ValueError:
+					doc_type = type
+
+			document = await self.order_documents_service.create_order_document(
+				order_id=order_id,
+				file=file,
+				title=file.filename or "Untitled",
+				doc_type=doc_type,
+			)
+			created_documents.append(document)
+
+		return {
+			"created": len(created_documents),
+			"documents": created_documents
+		}
+
 	@order_documents_router.patch("/{order_id}/documents/{document_id}", response_model=ResponseOrderDocumentSchema)
 	async def patch_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID, body: UpdateOrderDocumentSchema):
 		"""
@@ -94,5 +151,5 @@ class OrderDocumentsResource:
 		return None
 
 
-# Register file operation routes (upload, download, view, batch)
-register_file_operations_routes(order_documents_router)
+# Import file serving operations (download, view) - registered to same router
+from .file_operations import OrderDocumentFileServing  # noqa: E402, F401
