@@ -138,10 +138,10 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
     <Paper p="sm" radius="md" withBorder mb="sm">
       <Flex gap={gap} align="center" wrap="wrap">
         {/* Always-on filters */}
-        {alwaysOnFilters.map((filter, index) => 
+        {alwaysOnFilters.map((filter, index) =>
           React.cloneElement(filter, {
             key: `always-${index}`,
-            value: filters[filter.props.source] || '',
+            value: filters[filter.props.source] ?? '',
             onChange: (value: any) => handleFilterChange(filter.props.source, value)
           })
         )}
@@ -211,7 +211,7 @@ export const ListFilters: React.FC<ListFiltersProps> = ({
             return (
               <Group gap="xs" key={filterKey}>
                 {React.cloneElement(filterConfig.filter, {
-                  value: filters[filterConfig.filter.props.source] || null,
+                  value: filters[filterConfig.filter.props.source] ?? null,
                   onChange: (value: any) => handleFilterChange(filterConfig.filter.props.source, value)
                 })}
                 <ActionIcon 

@@ -17,8 +17,6 @@ const defaultFilters: OrderFilters = {
   priorityFilter: null,
   searchText: '',
   inTerminal: null,
-  hasEtaDate: null,
-  hasEtdDate: null,
 };
 
 export const OrdersPage: React.FC = () => {
@@ -35,34 +33,28 @@ export const OrdersPage: React.FC = () => {
       // Automatically map frontend filters to backend filter fields
       const backendFilters: Record<string, any> = {};
       Object.entries(activeFilters).forEach(([key, value]) => {
-        // Special handling for Yes/No filters
-        const yesNoFilters = ["priorityFilter", "hasEtaDate", "hasEtdDate", "inTerminal"];
-        if (yesNoFilters.includes(key) && value !== null) {
-          // Handle Yes/No filter
-          // 'yes' -> true
-          // 'no' -> false
-          // null -> no filter (don't send to backend)
-          if (value === 'yes' || value === 'no') {
-            const boolValue = value === 'yes';
-            // Map filter names to backend fields
-            switch(key) {
-              case "priorityFilter":
-                backendFilters["priority"] = boolValue;
-                break;
-              case "inTerminal":
-                backendFilters["in_terminal"] = boolValue;
-                break;
-            }
-          }
-        } else if (value !== null && value !== "" && value !== false && value !== 'all') {
-          // Rename fields if needed
-          if (key === "dateFilter") {
+        // Skip null, empty, or 'all' values
+        if (value === null || value === "" || value === 'all') {
+          return;
+        }
+
+        // Map filter names to backend fields
+        switch(key) {
+          case "priorityFilter":
+            backendFilters["priority"] = value;
+            break;
+          case "inTerminal":
+            backendFilters["in_terminal"] = value;
+            break;
+          case "dateFilter":
             backendFilters["date_range"] = value;
-          } else if (key === "terminalFilter") {
+            break;
+          case "terminalFilter":
             backendFilters["terminal_id"] = value;
-          } else {
+            break;
+          default:
+            // Generic mapping: remove 'Filter' suffix
             backendFilters[key.replace(/Filter$/, "")] = value;
-          }
         }
       });
 

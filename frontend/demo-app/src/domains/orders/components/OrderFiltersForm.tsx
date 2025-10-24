@@ -6,8 +6,6 @@ import {
   IconBox,
   IconStar,
   IconSearch,
-  IconCalendarEvent,
-  IconCalendarDue,
   IconBuildingWarehouse
 } from '@tabler/icons-react';
 import {
@@ -15,7 +13,7 @@ import {
   DateRangeFilter,
   TerminalFilter,
   SelectFilter,
-  SelectYesNoFilter,
+  BooleanSelectFilter,
   TextFilter
 } from '../../../shared/components';
 import { 
@@ -101,7 +99,7 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         leftSection={<IconBox size={16} />}
       />
       
-      <SelectYesNoFilter
+      <BooleanSelectFilter
         source="priorityFilter"
         label="Priority"
         leftSection={<IconStar size={16} />}
@@ -109,7 +107,7 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         width={150}
       />
 
-      <SelectYesNoFilter
+      <BooleanSelectFilter
         source="inTerminal"
         label="In Terminal"
         leftSection={<IconBuildingWarehouse size={16} />}

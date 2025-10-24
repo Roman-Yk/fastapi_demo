@@ -21,6 +21,9 @@ export type { SelectFilterProps, SelectOption } from './inputs/SelectFilter';
 export { BooleanFilter } from './inputs/BooleanFilter';
 export type { BooleanFilterProps } from './inputs/BooleanFilter';
 
+export { BooleanSelectFilter } from './inputs/BooleanSelectFilter';
+export type { BooleanSelectFilterProps } from './inputs/BooleanSelectFilter';
+
 export { DateRangeFilter } from './inputs/DateRangeFilter';
 export type { DateRangeFilterProps, DateRangeOption } from './inputs/DateRangeFilter';
 
