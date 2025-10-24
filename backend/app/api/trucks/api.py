@@ -39,11 +39,7 @@ class TrucksResource:
         """
         Get all trucks with optional filtering, sorting, and pagination.
         """
-        """
-        query_params: CollectionTruckQueryParams = Depends()
-        need to be called like that because it's not a pydantic model and needs to be initialized
-        """
-        trucks, count = await self.truck_service.get_all_trucks(query_params)
+        trucks, count = await self.truck_service.get_all(query_params)
         if query_params.dict_data.get("range"):
             self.response.headers["Content-Range"] = generate_range(
                 query_params.dict_data.get("range"), count
@@ -56,5 +52,5 @@ class TrucksResource:
         Get truck by ID.
         truck_id - path parameter
         """
-        truck = await self.truck_service.get_truck_by_id(truck_id)
+        truck = await self.truck_service.get_by_id(truck_id)
         return truck 

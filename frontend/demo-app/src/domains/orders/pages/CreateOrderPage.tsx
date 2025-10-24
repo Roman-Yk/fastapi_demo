@@ -11,7 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
 import { OrderServiceLabels, CommodityLabels } from '../types/order';
-import ApiService from '../../../services/apiService';
+import { orderApi } from '../api/orderService';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { validators } from '../../../hooks/useFormData';
 import {
@@ -67,7 +67,7 @@ const CreateOrderFormContent: React.FC<{
       const apiData = createOrderFormSchema.parse(formData) as any;
 
       console.log('Creating order:', apiData);
-      const newOrder = await ApiService.createOrder(apiData);
+      const newOrder = await orderApi.create(apiData);
 
       // Navigate to the edit page of the newly created order
       if (newOrder && newOrder.id) {

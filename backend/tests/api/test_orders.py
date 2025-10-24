@@ -320,7 +320,7 @@ class TestOrdersAPI:
                     "boxes": 0,
                     "kilos": 0.0,
                 },
-                "expected_status": 422,
+                "expected_status": 200, 
             },
         ]
 

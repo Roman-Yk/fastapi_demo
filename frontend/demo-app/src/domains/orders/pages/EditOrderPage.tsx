@@ -13,7 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconEdit } from '@tabler/icons-react';
 import { OrderServiceLabels, CommodityLabels } from '../types/order';
 import { OrderDocument } from '../types/document';
-import ApiService from '../../../services/apiService';
+import { orderApi } from '../api/orderService';
 import {
   Grid,
   GridCol,
@@ -56,7 +56,7 @@ const EditOrderFormContent: React.FC<{
   useEffect(() => {
     const loadData = async () => {
       try {
-        const orderData = await ApiService.getOrder(orderId);
+        const orderData = await orderApi.getOrder(orderId);
 
         // Populate form from API data using Zod schema
         if (orderData) {
@@ -72,7 +72,7 @@ const EditOrderFormContent: React.FC<{
         }
 
         // Load existing documents
-        const documents = await ApiService.getOrderDocuments(orderId);
+        const documents = await orderApi.getOrderDocuments(orderId);
         setExistingDocuments(documents);
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -94,7 +94,7 @@ const EditOrderFormContent: React.FC<{
       // Transform form data to API format using Zod schema
       const apiData = editOrderFormSchema.parse(formData);
       
-      await ApiService.updateOrder(orderId, apiData);
+      await orderApi.updateOrder(orderId, apiData);
       
       navigate('/');
     } catch (error) {
@@ -602,9 +602,9 @@ const EditOrderFormContent: React.FC<{
                   onUpload={async (files, metadata) => {
                     // Upload files immediately with metadata
                     try {
-                      await ApiService.uploadOrderDocuments(orderId, files, metadata);
+                      await orderApi.uploadOrderDocuments(orderId, files, metadata);
                       // Refresh the documents list
-                      const documents = await ApiService.getOrderDocuments(orderId);
+                      const documents = await orderApi.getOrderDocuments(orderId);
                       setExistingDocuments(documents);
                     } catch (error) {
                       console.error('Failed to upload documents:', error);
@@ -615,9 +615,9 @@ const EditOrderFormContent: React.FC<{
                   onDelete={async (documentId) => {
                     // Delete existing document from server
                     try {
-                      await ApiService.deleteOrderDocument(orderId, documentId);
+                      await orderApi.deleteOrderDocument(orderId, documentId);
                       // Refresh the documents list
-                      const documents = await ApiService.getOrderDocuments(orderId);
+                      const documents = await orderApi.getOrderDocuments(orderId);
                       setExistingDocuments(documents);
                     } catch (error) {
                       console.error('Failed to delete document:', error);
@@ -626,7 +626,7 @@ const EditOrderFormContent: React.FC<{
                   onDownload={async (documentId) => {
                     // Download button - forces file download
                     try {
-                      await ApiService.downloadOrderDocument(orderId, documentId);
+                      await orderApi.downloadOrderDocument(orderId, documentId);
                     } catch (error) {
                       console.error('Failed to download document:', error);
                     }
@@ -634,7 +634,7 @@ const EditOrderFormContent: React.FC<{
                   onView={(document) => {
                     // Card click - opens file in browser for viewing
                     try {
-                      ApiService.viewOrderDocument(orderId, document.id);
+                      orderApi.viewOrderDocument(orderId, document.id);
                     } catch (error) {
                       console.error('Failed to view document:', error);
                     }
@@ -642,12 +642,12 @@ const EditOrderFormContent: React.FC<{
                   onEdit={async (documentId, title, documentType) => {
                     // Edit document metadata
                     try {
-                      await ApiService.updateOrderDocument(orderId, documentId, {
+                      await orderApi.updateOrderDocument(orderId, documentId, {
                         title,
                         type: documentType
                       });
                       // Refresh the documents list
-                      const documents = await ApiService.getOrderDocuments(orderId);
+                      const documents = await orderApi.getOrderDocuments(orderId);
                       setExistingDocuments(documents);
                     } catch (error) {
                       console.error('Failed to update document:', error);

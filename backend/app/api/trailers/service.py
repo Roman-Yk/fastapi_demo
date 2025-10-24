@@ -1,44 +1,16 @@
-import uuid
-from fastapi import HTTPException
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.database.models.vehicles import Trailer
-from app.api._shared.base_service import BaseService
-
-from app.utils.queries.fetching import fetch_one_or_none, fetch_all, fetch_count_query, fetch_one_or_404
-from app.utils.queries.queries import apply_filter_sort_range_for_query
+from app.api._shared.base_crud_service import BaseCRUDService
 
 from .schemas import CollectionTrailerQueryParams
 
 
-class TrailerService(BaseService):
+class TrailerService(BaseCRUDService[Trailer, CollectionTrailerQueryParams]):
     """
     Service class for handling trailer-related operations.
+    Inherits common CRUD operations from BaseCRUDService.
     """
 
-    async def get_all_trailers(self, querystring: CollectionTrailerQueryParams):
-        """
-        Fetch all trailers with optional filtering, sorting, and pagination.
-        """
-        select_query = select(Trailer)
-        count_query = select(func.count()).select_from(Trailer)
+    model = Trailer
 
-        query, count_query = apply_filter_sort_range_for_query(
-            Trailer,
-            select_query,
-            count_query,
-            querystring.dict_data,
-        )
-
-        trailers = await fetch_all(self.db, query)
-        trailers_count = await fetch_count_query(self.db, count_query)
-        return trailers, trailers_count
-
-    async def get_trailer_by_id(self, trailer_id: uuid.UUID):
-        """
-        Retrieve a single trailer by its ID.
-        """
-        query = select(Trailer).where(Trailer.id == trailer_id)
-        trailer = await fetch_one_or_404(self.db, query, detail="Trailer not found")
-        return trailer 
+    # All basic CRUD operations (get_all, get_by_id) are inherited from BaseCRUDService
+    # Add trailer-specific business logic methods here if needed 

@@ -41,11 +41,7 @@ class TerminalsResource:
         """
         Get all terminals with optional filtering, sorting, and pagination.
         """
-        """
-        query_params: CollectionTerminalQueryParams = Depends()
-        need to be called like that because it's not a pydantic model and needs to be initialized
-        """
-        terminals, count = await self.terminal_service.get_all_terminals(query_params)
+        terminals, count = await self.terminal_service.get_all(query_params)
         if query_params.dict_data.get("range"):
             self.response.headers["Content-Range"] = generate_range(
                 query_params.dict_data.get("range"), count
@@ -60,5 +56,5 @@ class TerminalsResource:
         Get terminal by ID.
         terminal_id - path parameter
         """
-        terminal = await self.terminal_service.get_terminal_by_id(terminal_id)
+        terminal = await self.terminal_service.get_by_id(terminal_id)
         return terminal

@@ -1,3 +1,15 @@
+/**
+ * @deprecated This hook is deprecated in favor of useFormContext + Zod validation.
+ *
+ * Preferred pattern:
+ * - Use `useFormContext` from hooks/useFormContext.tsx for form state management
+ * - Use Zod schemas (from domains/.../schemas/) for type-safe validation
+ * - See EditOrderPage.tsx and CreateOrderPage.tsx for examples
+ *
+ * This hook is kept for backward compatibility with existing code.
+ * New forms should use the useFormContext + Zod pattern.
+ */
+
 import { useState, useCallback, useMemo } from 'react';
 
 export interface FormField<T = any> {
@@ -19,7 +31,9 @@ export interface FormConfig<T extends Record<string, any>> {
   validateOnBlur?: boolean;
 }
 
-// Generic hook for managing form data with validation
+/**
+ * @deprecated Use useFormContext + Zod instead
+ */
 export function useFormData<T extends Record<string, any>>(config: FormConfig<T>) {
   const { 
     initialData, 

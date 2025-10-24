@@ -128,12 +128,19 @@ class OrderService(BaseService):
     async def update_order(self, order_id: uuid.UUID, data: UpdateOrderSchema) -> Order:
         """
         Entirely update an existing order.
+        Note: Since UpdateOrderSchema has all optional fields, we exclude None values
+        to avoid overwriting required fields (reference, service, terminal_id).
+        For a true full replacement, use exclude_unset=True like PATCH.
         """
         query = select(Order).where(Order.id == order_id)
         order = await fetch_one_or_404(self.db, query, detail="Order not found")
 
-        # Get all fields from the schema (including unset ones with default values)
-        update_data = data.model_dump()
+        # Exclude unset fields to avoid setting required fields to None
+        # This makes PUT behave more like PATCH for backward compatibility
+        update_data = data.model_dump(exclude_unset=True)
+
+        if not update_data:
+            return order  # No changes to apply
 
         # Validate foreign keys
         await self._validate_foreign_keys(update_data)

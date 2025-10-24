@@ -5,7 +5,9 @@
 
 import { BaseApiService } from '../../../services/baseApiService';
 import { Order } from '../types/order';
+import { OrderDocument } from '../types/document';
 import { FilterOptions } from '../../../shared/types/common';
+import { formatApiUrl } from '../../../utils/config';
 
 export interface CreateOrderRequest {
   reference: string;
@@ -31,6 +33,11 @@ export interface CreateOrderRequest {
 
 export interface UpdateOrderRequest extends Partial<CreateOrderRequest> {}
 
+export interface DocumentMetadata {
+  title: string;
+  type: string;
+}
+
 /**
  * Order API Service implementation
  */
@@ -53,6 +60,76 @@ class OrderApiService extends BaseApiService<Order, CreateOrderRequest, UpdateOr
 
     const query = params.toString() ? `?${params.toString()}` : '';
     return this.makeRequest<Order[]>(query);
+  }
+
+  // Alias for compatibility
+  async getOrder(id: string): Promise<Order> {
+    return this.getById(id);
+  }
+
+  // Alias for compatibility
+  async updateOrder(id: string, data: UpdateOrderRequest): Promise<Order> {
+    return this.update(id, data);
+  }
+
+  // Order Documents methods
+  async getOrderDocuments(orderId: string): Promise<OrderDocument[]> {
+    return this.customRequest<OrderDocument[]>(`/${orderId}/documents/`);
+  }
+
+  async uploadOrderDocuments(
+    orderId: string,
+    files: File[],
+    metadata: DocumentMetadata[]
+  ): Promise<{ created: number; documents: OrderDocument[] }> {
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    metadata.forEach((meta) => {
+      formData.append('types', meta.type);
+    });
+
+    const url = formatApiUrl(`${this.endpoint}/${orderId}/documents/batch`);
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload documents: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async deleteOrderDocument(orderId: string, documentId: string): Promise<void> {
+    return this.customRequest<void>(`/${orderId}/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateOrderDocument(
+    orderId: string,
+    documentId: string,
+    data: Partial<OrderDocument>
+  ): Promise<OrderDocument> {
+    return this.customRequest<OrderDocument>(`/${orderId}/documents/${documentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async downloadOrderDocument(orderId: string, documentId: string): Promise<void> {
+    const url = formatApiUrl(`${this.endpoint}/${orderId}/documents/${documentId}/download`);
+    window.open(url, '_blank');
+  }
+
+  viewOrderDocument(orderId: string, documentId: string): void {
+    const url = formatApiUrl(`${this.endpoint}/${orderId}/documents/${documentId}/view`);
+    window.open(url, '_blank');
   }
 }
 

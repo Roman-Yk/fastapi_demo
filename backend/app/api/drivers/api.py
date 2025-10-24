@@ -39,11 +39,7 @@ class DriversResource:
         """
         Get all drivers with optional filtering, sorting, and pagination.
         """
-        """
-        query_params: CollectionDriverQueryParams = Depends()
-        need to be called like that because it's not a pydantic model and needs to be initialized
-        """
-        drivers, count = await self.driver_service.get_all_drivers(query_params)
+        drivers, count = await self.driver_service.get_all(query_params)
         if query_params.dict_data.get("range"):
             self.response.headers["Content-Range"] = generate_range(
                 query_params.dict_data.get("range"), count
@@ -56,5 +52,5 @@ class DriversResource:
         Get driver by ID.
         driver_id - path parameter
         """
-        driver = await self.driver_service.get_driver_by_id(driver_id)
+        driver = await self.driver_service.get_by_id(driver_id)
         return driver 

@@ -39,11 +39,7 @@ class TrailersResource:
         """
         Get all trailers with optional filtering, sorting, and pagination.
         """
-        """
-        query_params: CollectionTrailerQueryParams = Depends()
-        need to be called like that because it's not a pydantic model and needs to be initialized
-        """
-        trailers, count = await self.trailer_service.get_all_trailers(query_params)
+        trailers, count = await self.trailer_service.get_all(query_params)
         if query_params.dict_data.get("range"):
             self.response.headers["Content-Range"] = generate_range(
                 query_params.dict_data.get("range"), count
@@ -56,5 +52,5 @@ class TrailersResource:
         Get trailer by ID.
         trailer_id - path parameter
         """
-        trailer = await self.trailer_service.get_trailer_by_id(trailer_id)
+        trailer = await self.trailer_service.get_by_id(trailer_id)
         return trailer 
