@@ -32,3 +32,6 @@ export type { YesNoFilterProps, YesNoValue } from './inputs/YesNoFilter';
 
 export { SelectYesNoFilter } from './inputs/SelectYesNoFilter';
 export type { SelectYesNoFilterProps, YesNoSelectValue } from './inputs/SelectYesNoFilter';
+
+export { TerminalFilter } from './inputs/TerminalFilter';
+export type { TerminalFilterProps } from './inputs/TerminalFilter';

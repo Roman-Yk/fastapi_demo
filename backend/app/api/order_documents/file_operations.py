@@ -2,13 +2,13 @@ import os
 import uuid
 from fastapi import Depends, Response, HTTPException
 from fastapi_utils.cbv import cbv
-
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.conn import get_db
-from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
 
-from .service import OrderDocumentsService
+from app.utils.files import get_mime_type, is_displayable_in_browser, encode_filename_for_header
+from app.database.conn import get_db
+
 from .api import order_documents_router
+from .service import OrderDocumentsService
 
 
 @cbv(order_documents_router)

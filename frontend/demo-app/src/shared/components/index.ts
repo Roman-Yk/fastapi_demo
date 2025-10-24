@@ -20,6 +20,9 @@ export * from './fields/ReferenceDriverField';
 export * from './fields/ReferenceDriverFieldOptimized';
 export * from './fields/ReferenceVehicleField';
 export * from './fields/ReferenceVehicleFieldOptimized';
+export * from './fields/ReferenceTerminalField';
+export * from './fields/ReferenceTerminalFieldOptimized';
+export * from './fields/CommodityField';
 
 // Forms (Input components) - TextField renamed to avoid conflict
 export * from './forms/Form';
@@ -40,6 +43,7 @@ export * from './forms/DriverReferenceInput';
 export * from './forms/TruckReferenceInput';
 export * from './forms/TrailerReferenceInput';
 export * from './forms/TerminalReferenceInput';
+export * from './forms/CommoditySelectInput';
 export * from './forms/PhoneInput';
 export * from './forms/TimePicker';
 export * from './forms/DatePicker';

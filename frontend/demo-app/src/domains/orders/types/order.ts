@@ -131,6 +131,7 @@ export const StatusFilterLabels = {
 // Filter interfaces
 export interface OrderFilters {
   dateFilter: DateFilterOption;
+  terminalFilter: string | null;
   locationFilter: LocationFilter | null;
   statusFilter: StatusFilter | null;
   serviceFilter: OrderService | null;

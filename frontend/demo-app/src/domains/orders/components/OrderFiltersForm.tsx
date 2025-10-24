@@ -13,6 +13,7 @@ import {
 import {
   ListFilters,
   DateRangeFilter,
+  TerminalFilter,
   SelectFilter,
   SelectYesNoFilter,
   TextFilter
@@ -70,6 +71,14 @@ export const OrderFiltersForm: React.FC<OrderFiltersFormProps> = ({
         }))}
       />
 
+      {/* Always-on terminal filter */}
+      <TerminalFilter
+        source="terminalFilter"
+        label="Terminal"
+        alwaysOn
+        size="md"
+        radius="lg"
+      />
 
       <SelectFilter
         source="statusFilter"

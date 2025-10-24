@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy, IconEdit } from '@tabler/icons-react';
-import { OrderServiceLabels, CommodityLabels } from '../types/order';
+import { OrderServiceLabels } from '../types/order';
 import { OrderDocument } from '../types/document';
 import { orderApi } from '../api/orderService';
 import {
@@ -21,13 +21,14 @@ import {
   FormTextField,
   FormNumberInput,
   FormFloatInput,
-  SelectField,
+  FormSelectInput,
   TimePicker,
   DatePicker,
   PhoneNumberInput,
   DriverReferenceInput,
   TruckReferenceInput,
-  TrailerReferenceInput
+  TrailerReferenceInput,
+  CommoditySelectInput
 } from '../../../shared/components';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { apiToFormSchema, editOrderFormSchema, EditOrderFormData } from '../schemas/orderSchemas';
@@ -110,11 +111,6 @@ const EditOrderFormContent: React.FC<{
     label
   }));
 
-  const commodityOptions = Object.entries(CommodityLabels).map(([value, label]) => ({
-    value,
-    label
-  }));
-
   return (
     <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' }}>
       <Box px="xl" py="md" style={{ flex: 1, width: '100%' }}>
@@ -154,16 +150,12 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <SelectField
+                    <FormSelectInput<EditOrderFormData, 'service'>
                       label="Service Type"
+                      source="service"
                       placeholder="Select service"
                       required
                       data={serviceOptions}
-                      value={formData.service?.toString() || ''}
-                      onChange={(value) => setForm(prev => ({ 
-                        ...prev, 
-                        service: value ? parseInt(value) : null 
-                      }))}
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -529,15 +521,10 @@ const EditOrderFormContent: React.FC<{
               <GroupGrid title="Cargo Details">
                 <Grid>
                   <GridCol span={3}>
-                    <SelectField
+                    <CommoditySelectInput<EditOrderFormData, 'commodity'>
                       label="Commodity"
+                      source="commodity"
                       placeholder="Select commodity"
-                      data={commodityOptions}
-                      value={formData.commodity || ''}
-                      onChange={(value) => setForm(prev => ({ 
-                        ...prev, 
-                        commodity: value || null 
-                      }))}
                     />
                   </GridCol>
                   <GridCol span={3}>

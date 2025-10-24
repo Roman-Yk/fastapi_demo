@@ -9,6 +9,7 @@ import { orderApi } from "../api/orderService";
 
 const defaultFilters: OrderFilters = {
   dateFilter: DateFilterOption.TODAY,
+  terminalFilter: 'all',
   locationFilter: null,
   statusFilter: null,
   serviceFilter: null,
@@ -48,21 +49,17 @@ export const OrdersPage: React.FC = () => {
               case "priorityFilter":
                 backendFilters["priority"] = boolValue;
                 break;
-              case "hasEtaDate":
-                backendFilters["has_eta_date"] = boolValue;
-                break;
-              case "hasEtdDate":
-                backendFilters["has_etd_date"] = boolValue;
-                break;
               case "inTerminal":
                 backendFilters["in_terminal"] = boolValue;
                 break;
             }
           }
-        } else if (value !== null && value !== "" && value !== false) {
+        } else if (value !== null && value !== "" && value !== false && value !== 'all') {
           // Rename fields if needed
           if (key === "dateFilter") {
             backendFilters["date_range"] = value;
+          } else if (key === "terminalFilter") {
+            backendFilters["terminal_id"] = value;
           } else {
             backendFilters[key.replace(/Filter$/, "")] = value;
           }

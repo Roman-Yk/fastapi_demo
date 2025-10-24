@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
-import { OrderServiceLabels, CommodityLabels } from '../types/order';
+import { OrderServiceLabels } from '../types/order';
 import { orderApi } from '../api/orderService';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { validators } from '../../../hooks/useFormData';
@@ -25,7 +25,8 @@ import {
   FormDateInput,
   FormTimeInput,
   FormSwitchInput,
-  TerminalReferenceInput
+  TerminalReferenceInput,
+  CommoditySelectInput
 } from '../../../shared/components';
 import { createOrderFormSchema, CreateOrderFormData } from '../schemas/orderSchemas';
 
@@ -83,11 +84,6 @@ const CreateOrderFormContent: React.FC<{
   };
 
   const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
-    value,
-    label
-  }));
-
-  const commodityOptions = Object.entries(CommodityLabels).map(([value, label]) => ({
     value,
     label
   }));
@@ -206,11 +202,10 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Cargo Details">
                 <Grid>
                   <GridCol span={3}>
-                    <FormSelectInput<CreateOrderFormData, 'commodity'>
+                    <CommoditySelectInput<CreateOrderFormData, 'commodity'>
                       label="Commodity Type"
                       source="commodity"
                       placeholder="Select commodity"
-                      data={commodityOptions}
                     />
                   </GridCol>
                   <GridCol span={3}>
