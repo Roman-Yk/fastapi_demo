@@ -151,12 +151,12 @@ class OrderDocumentsService(BaseService):
         order_document_text_select_query = select(OrderDocumentText).where(OrderDocumentText.order_document_id == order_document.id)
         order_document_text = await fetch_one_or_none(self.db, order_document_text_select_query)
         if order_document_text:
-            self.db.delete(order_document_text)
+            await self.db.delete(order_document_text)
 
         # Remove file from filesystem
         if order_document.src and os.path.exists(order_document.src):
             os.remove(order_document.src)
 
         # Delete from database
-        self.db.delete(order_document)
+        await self.db.delete(order_document)
         await self.db.flush()  # Flush without committing (get_db handles commit)
