@@ -41,3 +41,6 @@ export type { LinkFieldProps } from './LinkField';
 
 export { TooltipField } from './TooltipField';
 export type { TooltipFieldProps } from './TooltipField';
+
+export { DocumentIconField } from './DocumentIconField';
+export type { DocumentIconFieldProps } from './DocumentIconField';

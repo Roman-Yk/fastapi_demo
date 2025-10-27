@@ -80,3 +80,5 @@ class OrderBaseResponseSchema(BaseModel):
     etd_driver_id: Optional[uuid.UUID] = None
     etd_trailer_id: Optional[uuid.UUID] = None
     etd_driver_phone: Optional[str] = None
+
+    documents_count: int = Field(default=0, description="Number of documents attached to this order")

@@ -77,6 +77,9 @@ export interface Order {
   etd_driver_phone: string | null;
   etd_truck: string | null;
   etd_trailer: string | null;
+
+  // Documents
+  documents_count?: number;
 }
 
 // Date filter options

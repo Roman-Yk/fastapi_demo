@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Order
+from app.database.models.orders import OrderDocument
 from app.database.models.drivers import Driver
 from app.database.models.vehicles import Truck, Trailer
 from app.database.models.terminals import Terminal
@@ -70,6 +71,10 @@ class OrderService(BaseService):
 
         orders = await fetch_all(self.db, query)
         orders_count = await fetch_count_query(self.db, count_query)
+
+        # Add documents_count to each order
+        await self._add_documents_count(orders)
+
         return orders, orders_count
 
     async def get_order_by_id(self, order_id: uuid.UUID):
@@ -78,6 +83,10 @@ class OrderService(BaseService):
         """
         query = select(Order).where(Order.id == order_id)
         order = await fetch_one_or_404(self.db, query, detail="Order not found")
+
+        # Add documents_count
+        await self._add_documents_count([order])
+
         return order
 
     async def create_order(self, data: CreateOrderSchema):
@@ -149,3 +158,31 @@ class OrderService(BaseService):
         await self.db.flush()  # Flush without committing (get_db handles commit)
         await self.db.refresh(updated_order)
         return updated_order
+
+    async def _add_documents_count(self, orders: list[Order]):
+        """
+        Add documents_count attribute to each order efficiently.
+        Uses a single query to fetch all document counts.
+        """
+        if not orders:
+            return
+
+        # Get all order IDs
+        order_ids = [order.id for order in orders]
+
+        # Fetch document counts for all orders in a single query
+        count_query = (
+            select(
+                OrderDocument.order_id,
+                func.count(OrderDocument.id).label('count')
+            )
+            .where(OrderDocument.order_id.in_(order_ids))
+            .group_by(OrderDocument.order_id)
+        )
+
+        result = await self.db.execute(count_query)
+        counts_dict = {row.order_id: row.count for row in result}
+
+        # Assign counts to orders
+        for order in orders:
+            order.documents_count = counts_dict.get(order.id, 0)

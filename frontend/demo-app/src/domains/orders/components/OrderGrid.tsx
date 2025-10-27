@@ -1,17 +1,16 @@
 import React from 'react';
-import { IconEdit } from '@tabler/icons-react';
 import { GridSortModel } from '@mui/x-data-grid';
 import {
   Datagrid,
   TextField,
   LinkField,
   BadgeField,
-  ActionField,
   CombinedDateTimeField,
   PriorityField,
   TooltipField,
   ReferenceDriverFieldOptimized,
-  ReferenceVehicleFieldOptimized
+  ReferenceVehicleFieldOptimized,
+  DocumentIconField
 } from '../../../shared/components';
 import { useReferenceDataForGrid } from '../hooks/useReferenceDataForGrid';
 import {
@@ -68,28 +67,20 @@ export const OrderGrid: React.FC<OrderGridProps> = ({
       sortModel={sortModel}
       onSortModelChange={onSortModelChange}
     >
-      {/* Actions */}
-      <ActionField
-        source="actions"
-        label="Actions"
-        width={80}
+      {/* Documents */}
+      <DocumentIconField
+        source="documents"
+        label="Docs"
+        width={70}
         sortable={false}
         filterable={false}
-        actions={[
-          {
-            key: 'edit',
-            icon: IconEdit,
-            color: 'blue',
-            variant: 'subtle',
-            tooltip: 'Edit Order',
-            onClick: (record) => onEdit?.(record.id)
-          }
-        ]}
+        onEdit={(record) => onEdit?.(record.id)}
       />
+
       {/* Priority indicator */}
-      <PriorityField 
-        source="priority" 
-        label="" 
+      <PriorityField
+        source="priority"
+        label=""
         width={60}
         sortable={false}
         filterable={false}

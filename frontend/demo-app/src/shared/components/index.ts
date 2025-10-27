@@ -23,6 +23,7 @@ export * from './fields/ReferenceVehicleFieldOptimized';
 export * from './fields/ReferenceTerminalField';
 export * from './fields/ReferenceTerminalFieldOptimized';
 export * from './fields/CommodityField';
+export * from './fields/DocumentIconField';
 
 // Forms (Input components) - TextField renamed to avoid conflict
 export * from './forms/Form';
