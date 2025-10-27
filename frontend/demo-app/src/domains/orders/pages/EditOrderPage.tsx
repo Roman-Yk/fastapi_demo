@@ -493,7 +493,7 @@ const EditOrderFormContent: React.FC<{
                     // Existing documents from the server
                     ...existingDocuments.map((doc) => ({
                       id: doc.id.toString(),
-                      name: doc.title || 'Untitled',
+                      name: doc.display_name || doc.title || 'Untitled',
                       size: 0, // Backend doesn't provide file size
                       type: '', // Backend doesn't provide mime type
                       documentType: doc.type,

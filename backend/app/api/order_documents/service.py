@@ -39,6 +39,28 @@ class OrderDocumentsService(BaseService):
         "order_id": Order,
     }
 
+    def _ensure_title_has_extension(self, title: str, file_path: str) -> str:
+        """
+        Ensure the title has the correct extension from the actual file.
+        If title is provided without extension, append it from the source file.
+        """
+        # Extract extension from the actual file
+        _, file_extension = os.path.splitext(file_path)
+
+        # Check if title already has an extension
+        _, title_extension = os.path.splitext(title)
+
+        # If title has no extension, add the file's extension
+        if not title_extension:
+            return f"{title}{file_extension}"
+
+        # If title has different extension, replace it with the correct one
+        if title_extension != file_extension:
+            title_without_ext = os.path.splitext(title)[0]
+            return f"{title_without_ext}{file_extension}"
+
+        return title
+
     async def get_all_order_documents(
         self, order_id: uuid.UUID, querystring: CollectionOrderDocumentsQueryParams
     ) -> tuple[list[OrderDocument], int]:
@@ -101,11 +123,14 @@ class OrderDocumentsService(BaseService):
             with open(destination_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
             
+            # Ensure title has the correct file extension
+            title_with_extension = self._ensure_title_has_extension(title, destination_path)
+
             # Create database record after file is saved
             new_order_document = OrderDocument(
-                order_id=order_id, 
-                title=title, 
-                type=doc_type, 
+                order_id=order_id,
+                title=title_with_extension,
+                type=doc_type,
                 src=destination_path
             )
             self.db.add(new_order_document)
@@ -130,15 +155,20 @@ class OrderDocumentsService(BaseService):
     ) -> OrderDocument:
         """
         Update an existing order document.
+        If title is being updated, automatically append the file extension from the source file.
         """
         order_document_select_query = select(OrderDocument).where(OrderDocument.id == order_document_id)
         order_document = await fetch_one_or_404(self.db, order_document_select_query, detail="Order document not found")
+
+        # If title is being updated, ensure it has the correct file extension
+        if "title" in data and data["title"] is not None:
+            data["title"] = self._ensure_title_has_extension(data["title"], order_document.src)
+
         order_document = await update_model_fields(self.db, order_document, data)
 
         await self.db.flush()  # Flush without committing (get_db handles commit)
         await self.db.refresh(order_document)
         return order_document
-
 
     async def delete_order_document(self, order_document_id: uuid.UUID):
         """

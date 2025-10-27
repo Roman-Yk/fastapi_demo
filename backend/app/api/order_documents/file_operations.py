@@ -41,7 +41,8 @@ class OrderDocumentFileServing:
 			raise HTTPException(status_code=404, detail="File not found")
 
 		# Get filename from document title or file path
-		filename = document.title if document.title else os.path.basename(file_path)
+		# Ensure the filename has the correct extension from the actual file
+		filename = self._ensure_filename_extension(document.title, file_path)
 
 		# Get MIME type
 		mime_type = get_mime_type(file_path)
@@ -60,6 +61,29 @@ class OrderDocumentFileServing:
 				"Content-Disposition": content_disposition
 			}
 		)
+
+	def _ensure_filename_extension(self, title: str | None, file_path: str) -> str:
+		"""
+		Ensure the filename has the correct extension from the actual file.
+		If title is provided but missing extension, append it from the source file.
+		If no title, use the basename of the source file.
+		"""
+		if not title:
+			return os.path.basename(file_path)
+
+		# Extract extension from the actual file
+		_, file_extension = os.path.splitext(file_path)
+
+		# Check if title already has an extension
+		_, title_extension = os.path.splitext(title)
+
+		# If title has no extension or has different extension, use the file's extension
+		if not title_extension or title_extension != file_extension:
+			# Remove any existing extension from title and add the correct one
+			title_without_ext = os.path.splitext(title)[0] if title_extension else title
+			return f"{title_without_ext}{file_extension}"
+
+		return title
 
 	@order_documents_router.get("/{order_id}/documents/{document_id}/view")
 	async def view_order_document(self, order_id: uuid.UUID, document_id: uuid.UUID):
@@ -91,7 +115,8 @@ class OrderDocumentFileServing:
 			)
 		else:
 			# Force download for non-displayable types (Office docs, etc.)
-			filename = document.title if document.title else os.path.basename(file_path)
+			# Ensure the filename has the correct extension from the actual file
+			filename = self._ensure_filename_extension(document.title, file_path)
 			content_disposition = encode_filename_for_header(filename)
 			return Response(
 				content=content,

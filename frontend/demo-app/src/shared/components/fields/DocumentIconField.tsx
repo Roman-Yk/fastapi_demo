@@ -154,7 +154,7 @@ export const DocumentIconField: React.FC<DocumentIconFieldProps> = ({
                       </Box>
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                         <Text size="sm" fw={500} lineClamp={1}>
-                          {doc.title || 'Untitled'}
+                          {doc.display_name || doc.title || 'Untitled'}
                         </Text>
                         <Text size="xs" c="dimmed">
                           {doc.type}

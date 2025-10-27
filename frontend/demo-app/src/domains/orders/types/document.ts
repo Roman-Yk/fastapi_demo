@@ -33,6 +33,7 @@ export interface OrderDocument {
   src: string;
   type: OrderDocumentType;
   title: Nullable<string>;
+  display_name: Nullable<string>; // Title without file extension
   order_id: ID;
   thumbnail: Nullable<string>;
   created_at: string;
