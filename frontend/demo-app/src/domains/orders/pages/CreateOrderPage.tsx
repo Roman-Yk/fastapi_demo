@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
-import { OrderServiceLabels } from '../types/order';
+import { OrderServiceLabels, OrderService } from '../types/order';
 import { orderApi } from '../api/orderService';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { validators } from '../../../hooks/useFormData';
@@ -18,12 +18,12 @@ import {
   Grid,
   GridCol,
   GroupGrid,
-  FormTextInput,
+  FormTextField,
   FormNumberInput,
   FormFloatInput,
   FormSelectInput,
-  FormDateInput,
-  FormTimeInput,
+  DatePicker,
+  TimePicker,
   FormSwitchInput,
   TerminalReferenceInput,
   CommoditySelectInput
@@ -49,18 +49,54 @@ const CreateOrderFormContent: React.FC<{
   onBack: () => void;
 }> = ({ onBack }) => {
   const navigate = useNavigate();
-  const { formData, validateAll, isValid } = useFormContext<CreateOrderFormData>();
+  const { formData, setForm, validateAll, isValid } = useFormContext<CreateOrderFormData>();
 
+  // Convert service to number for proper comparison
+  const serviceValue = typeof formData.service === 'string' ? parseInt(formData.service, 10) : formData.service;
+  const isPlukk = serviceValue === OrderService.INTO_PLUKK_STORAGE;
+
+  // Auto-sync dates for non-Plukk services
   useEffect(() => {
-    console.log('isValid changed:', isValid);
-    console.log('formData:', formData);
-  }, [isValid, formData]);
+    if (!isPlukk && serviceValue !== 0 && !isNaN(serviceValue)) {
+      // If ETA date is set and ETD date is not, copy ETA to ETD
+      if (formData.eta_date && !formData.etd_date) {
+        setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
+      }
+      // If ETD date is set and ETA date is not, copy ETD to ETA
+      else if (formData.etd_date && !formData.eta_date) {
+        setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
+      }
+    }
+  }, [formData.eta_date, formData.etd_date, isPlukk, serviceValue, setForm]);
 
   const handleSave = async () => {
     // Validate all fields before submission
     if (!validateAll()) {
       console.log('Form validation failed. Please check the errors.');
       return;
+    }
+
+    // Validate dates based on service type
+    if (serviceValue && serviceValue !== 0 && !isNaN(serviceValue)) {
+      if (isPlukk) {
+        // Plukk: requires exactly ONE date (either ETA or ETD, not both)
+        const hasEta = !!formData.eta_date;
+        const hasEtd = !!formData.etd_date;
+
+        if (!hasEta && !hasEtd) {
+          alert('Plukk service requires either ETA date OR ETD date');
+          return;
+        } else if (hasEta && hasEtd) {
+          alert('Plukk service can only have ONE section (ETA OR ETD, not both)');
+          return;
+        }
+      } else {
+        // Non-Plukk: requires BOTH dates
+        if (!formData.eta_date || !formData.etd_date) {
+          alert('This service requires both ETA date AND ETD date');
+          return;
+        }
+      }
     }
 
     try {
@@ -117,11 +153,12 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Order Information">
                 <Grid>
                   <GridCol span={3}>
-                    <FormTextInput<CreateOrderFormData, 'reference'>
+                    <FormTextField
                       label="Reference"
-                      source="reference"
                       placeholder="Enter order reference"
                       required
+                      value={formData.reference}
+                      onChange={(value) => setForm(prev => ({ ...prev, reference: value }))}
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -142,11 +179,13 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormSwitchInput<CreateOrderFormData, 'priority'>
-                      label="Priority Order"
-                      source="priority"
-                      size="md"
-                    />
+                    <Box style={{ paddingTop: '28px' }}>
+                      <FormSwitchInput<CreateOrderFormData, 'priority'>
+                        label="Priority Order"
+                        source="priority"
+                        size="md"
+                      />
+                    </Box>
                   </GridCol>
                 </Grid>
               </GroupGrid>
@@ -157,17 +196,19 @@ const CreateOrderFormContent: React.FC<{
                     <GroupGrid title="ETA — ARRIVAL">
                       <Grid>
                         <GridCol span={6}>
-                          <FormDateInput<CreateOrderFormData, 'eta_date'>
+                          <DatePicker
                             label="ETA Date"
-                            source="eta_date"
                             placeholder="Select ETA date"
+                            value={formData.eta_date}
+                            onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
                           />
                         </GridCol>
                         <GridCol span={6}>
-                          <FormTimeInput<CreateOrderFormData, 'eta_time'>
+                          <TimePicker
                             label="ETA Time"
-                            source="eta_time"
                             placeholder="Select ETA time"
+                            value={formData.eta_time}
+                            onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
                           />
                         </GridCol>
                       </Grid>
@@ -180,17 +221,19 @@ const CreateOrderFormContent: React.FC<{
                     <GroupGrid title="ETD — DEPARTURE">
                       <Grid>
                         <GridCol span={6}>
-                          <FormDateInput<CreateOrderFormData, 'etd_date'>
+                          <DatePicker
                             label="ETD Date"
-                            source="etd_date"
                             placeholder="Select ETD date"
+                            value={formData.etd_date}
+                            onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
                           />
                         </GridCol>
                         <GridCol span={6}>
-                          <FormTimeInput<CreateOrderFormData, 'etd_time'>
+                          <TimePicker
                             label="ETD Time"
-                            source="etd_time"
                             placeholder="Select ETD time"
+                            value={formData.etd_time}
+                            onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
                           />
                         </GridCol>
                       </Grid>
@@ -236,10 +279,11 @@ const CreateOrderFormContent: React.FC<{
               <GroupGrid title="Additional Information">
                 <Grid>
                   <GridCol span={12}>
-                    <FormTextInput<CreateOrderFormData, 'notes'>
+                    <FormTextField
                       label="Notes"
-                      source="notes"
                       placeholder="Some notes..."
+                      value={formData.notes || ''}
+                      onChange={(value) => setForm(prev => ({ ...prev, notes: value }))}
                       multiline
                       rows={4}
                     />

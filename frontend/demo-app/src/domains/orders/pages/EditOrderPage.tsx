@@ -10,8 +10,8 @@ import {
   Paper
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconDeviceFloppy, IconEdit } from '@tabler/icons-react';
-import { OrderServiceLabels } from '../types/order';
+import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
+import { OrderServiceLabels, OrderService } from '../types/order';
 import { OrderDocument } from '../types/document';
 import { orderApi } from '../api/orderService';
 import {
@@ -24,15 +24,14 @@ import {
   FormSelectInput,
   TimePicker,
   DatePicker,
-  PhoneNumberInput,
-  DriverReferenceInput,
-  TruckReferenceInput,
-  TrailerReferenceInput,
   CommoditySelectInput
 } from '../../../shared/components';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { apiToFormSchema, editOrderFormSchema, EditOrderFormData } from '../schemas/orderSchemas';
 import { OrderDocumentsUpload, OrderDocumentsUploadRef } from '../components/OrderDocumentsUpload';
+import { ToggleDriverInput } from '../components/ToggleDriverInput';
+import { ToggleTruckInput } from '../components/ToggleTruckInput';
+import { ToggleTrailerInput } from '../components/ToggleTrailerInput';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 // Form content component that uses the context
@@ -52,6 +51,24 @@ const EditOrderFormContent: React.FC<{
   const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
   const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
   const [existingDocuments, setExistingDocuments] = useState<OrderDocument[]>([]);
+
+  // Convert service to number for proper comparison
+  const serviceValue = typeof formData.service === 'string' ? parseInt(formData.service, 10) : formData.service;
+  const isPlukk = serviceValue === OrderService.INTO_PLUKK_STORAGE;
+
+  // Auto-sync dates for non-Plukk services
+  useEffect(() => {
+    if (!isPlukk && serviceValue !== null && serviceValue !== 0 && !isNaN(serviceValue)) {
+      // If ETA date is set and ETD date is not, copy ETA to ETD
+      if (formData.eta_date && !formData.etd_date) {
+        setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
+      }
+      // If ETD date is set and ETA date is not, copy ETD to ETA
+      else if (formData.etd_date && !formData.eta_date) {
+        setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
+      }
+    }
+  }, [formData.eta_date, formData.etd_date, isPlukk, serviceValue, setForm]);
 
   // Load data and populate form
   useEffect(() => {
@@ -86,6 +103,29 @@ const EditOrderFormContent: React.FC<{
   }, [orderId, setForm]);
 
   const handleSave = async () => {
+    // Validate dates based on service type
+    if (serviceValue && serviceValue !== 0 && !isNaN(serviceValue)) {
+      if (isPlukk) {
+        // Plukk: requires exactly ONE date (either ETA or ETD, not both)
+        const hasEta = !!formData.eta_date;
+        const hasEtd = !!formData.etd_date;
+
+        if (!hasEta && !hasEtd) {
+          alert('Plukk service requires either ETA date OR ETD date');
+          return;
+        } else if (hasEta && hasEtd) {
+          alert('Plukk service can only have ONE section (ETA OR ETD, not both)');
+          return;
+        }
+      } else {
+        // Non-Plukk: requires BOTH dates
+        if (!formData.eta_date || !formData.etd_date) {
+          alert('This service requires both ETA date AND ETD date');
+          return;
+        }
+      }
+    }
+
     try {
       // First, upload any pending documents
       if (documentsUploadRef.current?.hasPendingDocuments()) {
@@ -198,146 +238,84 @@ const EditOrderFormContent: React.FC<{
 
                     <Grid>
                       <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etaDriverManualMode ? (
-                            <DriverReferenceInput
-                              label="ETA-A driver"
-                              source="eta_driver_id"
-                              placeholder="Select driver"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETA-A driver"
-                              placeholder="Enter driver name"
-                              value={formData.eta_driver || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                eta_driver: value || null,
-                                eta_driver_id: null
-                              }))}
-                            />
-                          )}
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtaDriverManualMode(!etaDriverManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etaDriverManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, eta_driver_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual fields
-                                setForm(prev => ({ ...prev, eta_driver: null, eta_driver_phone: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
-                      </GridCol>
-                    </Grid>
-
-                    <Grid>
-                      <GridCol span={12}>
-                        <PhoneNumberInput
-                          label="ETA-A driver phone"
-                          placeholder="+47 XXX XX XXX"
-                          value={formData.eta_driver_phone || ''}
-                          onChange={(value) => setForm(prev => ({ 
+                        <ToggleDriverInput
+                          label="ETA-A driver"
+                          driverName={formData.eta_driver}
+                          driverPhone={formData.eta_driver_phone}
+                          driverIdSource="eta_driver_id"
+                          isManualMode={etaDriverManualMode}
+                          onToggleMode={() => {
+                            setEtaDriverManualMode(!etaDriverManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etaDriverManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, eta_driver_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual fields
+                              setForm(prev => ({ ...prev, eta_driver: null, eta_driver_phone: null }));
+                            }
+                          }}
+                          onDriverNameChange={(value) => setForm(prev => ({ 
                             ...prev, 
-                            eta_driver_phone: value || null
+                            eta_driver: value,
+                            eta_driver_id: null
                           }))}
-                          defaultCountry="NO"
+                          onDriverPhoneChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            eta_driver_phone: value
+                          }))}
                         />
                       </GridCol>
                     </Grid>
 
                     <Grid>
                       <GridCol span={{ base: 12, md: 6 }}>
-                        <Group gap="xs" wrap="nowrap">
-                          <Box style={{ flex: 1 }}>
-                            {!etaTruckManualMode ? (
-                              <TruckReferenceInput
-                                label="ETA-A truck"
-                                source="eta_truck_id"
-                                placeholder="Select truck"
-                              />
-                            ) : (
-                              <FormTextField
-                                label="ETA-A truck"
-                                placeholder="Enter truck name"
-                                value={formData.eta_truck || ''}
-                                onChange={(value) => setForm(prev => ({ 
-                                  ...prev, 
-                                  eta_truck: value || null,
-                                  eta_truck_id: null
-                                }))}
-                              />
-                            )}
-                          </Box>
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtaTruckManualMode(!etaTruckManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etaTruckManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, eta_truck_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual field
-                                setForm(prev => ({ ...prev, eta_truck: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
+                        <ToggleTruckInput
+                          label="ETA-A truck"
+                          truckName={formData.eta_truck}
+                          truckIdSource="eta_truck_id"
+                          isManualMode={etaTruckManualMode}
+                          onToggleMode={() => {
+                            setEtaTruckManualMode(!etaTruckManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etaTruckManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, eta_truck_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual field
+                              setForm(prev => ({ ...prev, eta_truck: null }));
+                            }
+                          }}
+                          onTruckNameChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            eta_truck: value,
+                            eta_truck_id: null
+                          }))}
+                        />
                       </GridCol>
                       <GridCol span={{ base: 12, md: 6 }}>
-                        <Group gap="xs" wrap="nowrap">
-                          <Box style={{ flex: 1 }}>
-                            {!etaTrailerManualMode ? (
-                              <TrailerReferenceInput
-                                label="ETA-A trailer"
-                                source="eta_trailer_id"
-                                placeholder="Select trailer"
-                              />
-                            ) : (
-                              <FormTextField
-                                label="ETA-A trailer"
-                                placeholder="Enter trailer name"
-                                value={formData.eta_trailer || ''}
-                                onChange={(value) => setForm(prev => ({ 
-                                  ...prev, 
-                                  eta_trailer: value || null,
-                                  eta_trailer_id: null
-                                }))}
-                              />
-                            )}
-                          </Box>
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtaTrailerManualMode(!etaTrailerManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etaTrailerManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, eta_trailer_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual field
-                                setForm(prev => ({ ...prev, eta_trailer: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
+                        <ToggleTrailerInput
+                          label="ETA-A trailer"
+                          trailerName={formData.eta_trailer}
+                          trailerIdSource="eta_trailer_id"
+                          isManualMode={etaTrailerManualMode}
+                          onToggleMode={() => {
+                            setEtaTrailerManualMode(!etaTrailerManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etaTrailerManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, eta_trailer_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual field
+                              setForm(prev => ({ ...prev, eta_trailer: null }));
+                            }
+                          }}
+                          onTrailerNameChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            eta_trailer: value,
+                            eta_trailer_id: null
+                          }))}
+                        />
                       </GridCol>
                     </Grid>
                   </GroupGrid>
@@ -370,146 +348,84 @@ const EditOrderFormContent: React.FC<{
 
                     <Grid>
                       <GridCol span={12}>
-                        <Group gap="xs">
-                          {!etdDriverManualMode ? (
-                            <DriverReferenceInput
-                              label="ETD-D driver"
-                              source="etd_driver_id"
-                              placeholder="Select driver"
-                            />
-                          ) : (
-                            <FormTextField
-                              label="ETD-D driver"
-                              placeholder="Enter driver name"
-                              value={formData.etd_driver || ''}
-                              onChange={(value) => setForm(prev => ({ 
-                                ...prev, 
-                                etd_driver: value || null,
-                                etd_driver_id: null
-                              }))}
-                            />
-                          )}
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtdDriverManualMode(!etdDriverManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etdDriverManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, etd_driver_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual fields
-                                setForm(prev => ({ ...prev, etd_driver: null, etd_driver_phone: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
-                      </GridCol>
-                    </Grid>
-
-                    <Grid>
-                      <GridCol span={12}>
-                        <PhoneNumberInput
-                          label="ETD-D driver phone"
-                          placeholder="+47 XXX XX XXX"
-                          value={formData.etd_driver_phone || ''}
-                          onChange={(value) => setForm(prev => ({ 
+                        <ToggleDriverInput
+                          label="ETD-D driver"
+                          driverName={formData.etd_driver}
+                          driverPhone={formData.etd_driver_phone}
+                          driverIdSource="etd_driver_id"
+                          isManualMode={etdDriverManualMode}
+                          onToggleMode={() => {
+                            setEtdDriverManualMode(!etdDriverManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etdDriverManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, etd_driver_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual fields
+                              setForm(prev => ({ ...prev, etd_driver: null, etd_driver_phone: null }));
+                            }
+                          }}
+                          onDriverNameChange={(value) => setForm(prev => ({ 
                             ...prev, 
-                            etd_driver_phone: value || null
+                            etd_driver: value,
+                            etd_driver_id: null
                           }))}
-                          defaultCountry="NO"
+                          onDriverPhoneChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            etd_driver_phone: value
+                          }))}
                         />
                       </GridCol>
                     </Grid>
 
                     <Grid>
                       <GridCol span={{ base: 12, md: 6 }}>
-                        <Group gap="xs" wrap="nowrap">
-                          <Box style={{ flex: 1 }}>
-                            {!etdTruckManualMode ? (
-                              <TruckReferenceInput
-                                label="ETD-D truck"
-                                source="etd_truck_id"
-                                placeholder="Select truck"
-                              />
-                            ) : (
-                              <FormTextField
-                                label="ETD-D truck"
-                                placeholder="Enter truck name"
-                                value={formData.etd_truck || ''}
-                                onChange={(value) => setForm(prev => ({ 
-                                  ...prev, 
-                                  etd_truck: value || null,
-                                  etd_truck_id: null
-                                }))}
-                              />
-                            )}
-                          </Box>
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtdTruckManualMode(!etdTruckManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etdTruckManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, etd_truck_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual field
-                                setForm(prev => ({ ...prev, etd_truck: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
+                        <ToggleTruckInput
+                          label="ETD-D truck"
+                          truckName={formData.etd_truck}
+                          truckIdSource="etd_truck_id"
+                          isManualMode={etdTruckManualMode}
+                          onToggleMode={() => {
+                            setEtdTruckManualMode(!etdTruckManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etdTruckManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, etd_truck_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual field
+                              setForm(prev => ({ ...prev, etd_truck: null }));
+                            }
+                          }}
+                          onTruckNameChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            etd_truck: value,
+                            etd_truck_id: null
+                          }))}
+                        />
                       </GridCol>
                       <GridCol span={{ base: 12, md: 6 }}>
-                        <Group gap="xs" wrap="nowrap">
-                          <Box style={{ flex: 1 }}>
-                            {!etdTrailerManualMode ? (
-                              <TrailerReferenceInput
-                                label="ETD-D trailer"
-                                source="etd_trailer_id"
-                                placeholder="Select trailer"
-                              />
-                            ) : (
-                              <FormTextField
-                                label="ETD-D trailer"
-                                placeholder="Enter trailer name"
-                                value={formData.etd_trailer || ''}
-                                onChange={(value) => setForm(prev => ({ 
-                                  ...prev, 
-                                  etd_trailer: value || null,
-                                  etd_trailer_id: null
-                                }))}
-                              />
-                            )}
-                          </Box>
-                          <Button
-                            variant="light"
-                            size="sm"
-                            onClick={() => {
-                              setEtdTrailerManualMode(!etdTrailerManualMode);
-                              // Clear the opposite field when toggling
-                              if (!etdTrailerManualMode) {
-                                // Switching to manual mode - clear ID
-                                setForm(prev => ({ ...prev, etd_trailer_id: null }));
-                              } else {
-                                // Switching to reference mode - clear manual field
-                                setForm(prev => ({ ...prev, etd_trailer: null }));
-                              }
-                            }}
-                            style={{ alignSelf: 'flex-end', marginBottom: '2px' }}
-                          >
-                            <IconEdit size={16} />
-                          </Button>
-                        </Group>
+                        <ToggleTrailerInput
+                          label="ETD-D trailer"
+                          trailerName={formData.etd_trailer}
+                          trailerIdSource="etd_trailer_id"
+                          isManualMode={etdTrailerManualMode}
+                          onToggleMode={() => {
+                            setEtdTrailerManualMode(!etdTrailerManualMode);
+                            // Clear the opposite field when toggling
+                            if (!etdTrailerManualMode) {
+                              // Switching to manual mode - clear ID
+                              setForm(prev => ({ ...prev, etd_trailer_id: null }));
+                            } else {
+                              // Switching to reference mode - clear manual field
+                              setForm(prev => ({ ...prev, etd_trailer: null }));
+                            }
+                          }}
+                          onTrailerNameChange={(value) => setForm(prev => ({ 
+                            ...prev, 
+                            etd_trailer: value,
+                            etd_trailer_id: null
+                          }))}
+                        />
                       </GridCol>
                     </Grid>
                   </GroupGrid>
@@ -589,7 +505,12 @@ const EditOrderFormContent: React.FC<{
                   onUpload={async (files, metadata) => {
                     // Upload files immediately with metadata
                     try {
-                      await orderApi.uploadOrderDocuments(orderId, files, metadata);
+                      // Ensure metadata has title field
+                      const enrichedMetadata = metadata.map(m => ({
+                        ...m,
+                        title: m.name
+                      }));
+                      await orderApi.uploadOrderDocuments(orderId, files, enrichedMetadata);
                       // Refresh the documents list
                       const documents = await orderApi.getOrderDocuments(orderId);
                       setExistingDocuments(documents);
