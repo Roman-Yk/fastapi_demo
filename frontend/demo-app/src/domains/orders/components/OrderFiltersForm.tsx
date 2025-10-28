@@ -1,11 +1,9 @@
 import React from 'react';
 import {
-  IconMapPin,
   IconStatusChange,
   IconTruck,
   IconBox,
   IconStar,
-  IconSearch,
   IconBuildingWarehouse
 } from '@tabler/icons-react';
 import {
@@ -13,14 +11,12 @@ import {
   DateRangeFilter,
   TerminalFilter,
   SelectFilter,
-  BooleanSelectFilter,
-  TextFilter
+  BooleanSelectFilter
 } from '../../../shared/components';
-import { 
+import {
   OrderFilters,
   DateFilterOption,
   DateFilterLabels,
-  LocationFilterLabels,
   StatusFilterLabels,
   OrderServiceLabels,
   CommodityLabels

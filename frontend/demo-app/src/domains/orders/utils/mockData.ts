@@ -122,66 +122,66 @@ const getDateRange = (option: DateFilterOption): { start: string; end: string } 
 export const filterOrders = (orders: Order[], filters: OrderFilters): Order[] => {
   return orders.filter(order => {
     // Date filter
-    if (filters.dateFilter && filters.dateFilter !== DateFilterOption.ALL && order.eta_date) {
-      const { start, end } = getDateRange(filters.dateFilter);
+    if (filters.date_range && filters.date_range !== DateFilterOption.ALL && order.eta_date) {
+      const { start, end } = getDateRange(filters.date_range);
       if (order.eta_date < start || order.eta_date > end) {
         return false;
       }
     }
-    
+
     // Service filter
-    if (filters.serviceFilter !== null && order.service !== filters.serviceFilter) {
+    if (filters.service !== null && order.service !== filters.service) {
       return false;
     }
-    
+
     // Commodity filter
-    if (filters.commodityFilter !== null && order.commodity !== filters.commodityFilter) {
+    if (filters.commodity !== null && order.commodity !== filters.commodity) {
       return false;
     }
-    
+
     // Priority filter
-    if (filters.priorityFilter !== null && order.priority !== filters.priorityFilter) {
+    if (filters.priority !== null && order.priority !== filters.priority) {
       return false;
     }
-    
+
     // Location filter (mock implementation - in real app this would filter by terminal location)
-    if (filters.locationFilter !== null) {
+    if (filters.location !== null) {
       // For demo purposes, we'll filter based on terminal_id patterns
       // In a real app, this would be based on actual terminal location data
       const terminalIndex = terminalIds.indexOf(order.terminal_id);
-      if (filters.locationFilter === 'oslo' && terminalIndex !== 0) {
+      if (filters.location === 'oslo' && terminalIndex !== 0) {
         return false;
       }
-      if (filters.locationFilter === 'wsc' && terminalIndex !== 1) {
+      if (filters.location === 'wsc' && terminalIndex !== 1) {
         return false;
       }
     }
-    
+
     // Status filter (mock implementation)
-    if (filters.statusFilter !== null) {
+    if (filters.status !== null) {
       // For demo purposes, we'll use priority and eta_date to simulate status
-      if (filters.statusFilter === 'active' && !order.priority) {
+      if (filters.status === 'active' && !order.priority) {
         return false;
       }
-      if (filters.statusFilter === 'not_active' && order.priority) {
+      if (filters.status === 'not_active' && order.priority) {
         return false;
       }
-      if (filters.statusFilter === 'search_in_docs' && !order.notes) {
+      if (filters.status === 'search_in_docs' && !order.notes) {
         return false;
       }
     }
-    
+
     // In Terminal filter (mock implementation)
-    if (filters.inTerminal) {
+    if (filters.in_terminal) {
       // For demo purposes, we'll consider orders with both ETA and ETD dates as "in terminal"
       if (!order.eta_date || !order.etd_date) {
         return false;
       }
     }
-    
+
     // Search text filter
-    if (filters.searchText) {
-      const searchLower = filters.searchText.toLowerCase();
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
       return (
         order.reference.toLowerCase().includes(searchLower) ||
         order.eta_driver?.toLowerCase().includes(searchLower) ||
@@ -190,7 +190,7 @@ export const filterOrders = (orders: Order[], filters: OrderFilters): Order[] =>
         order.notes?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     return true;
   });
 }; 

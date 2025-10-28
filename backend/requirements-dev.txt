@@ -29,7 +29,7 @@ hypothesis==6.119.4         # Property-based testing
 # Type Stubs for Better Type Checking
 types-redis==4.6.0.20240425
 types-pytz==2024.2.0.20240913
-sqlalchemy[mypy]==2.0.36
+sqlalchemy[mypy]==2.0.41
 
 # Code Quality Tools
 interrogate==1.7.0          # Check docstring coverage (optional)
