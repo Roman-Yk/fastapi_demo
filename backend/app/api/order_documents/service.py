@@ -18,7 +18,7 @@ from app.utils.models.update_model import update_model_fields
 from app.utils.files import validate_file_upload
 
 from app.api._shared.base_service import BaseService
-from app.api._shared.tasks.tasks import add_order_document_text
+# from app.api._shared.tasks.tasks import add_order_document_text
 from app.database.exceptions import ForeignKeyError, NotFoundError
 
 from app.database.models.orders.enums import OrderDocumentType
