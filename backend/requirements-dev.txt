@@ -1,0 +1,35 @@
+# Development and Testing Dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Include production requirements
+-r requirements.txt
+
+# Code Formatting
+black==24.10.0              # Opinionated code formatter
+isort==5.13.2               # Import statement sorter
+
+# Linting and Type Checking
+ruff==0.8.4                 # Fast Python linter (replaces flake8, pylint, etc.)
+mypy==1.13.0                # Static type checker
+bandit==1.8.0               # Security vulnerability scanner
+
+# Pre-commit Framework
+pre-commit==4.0.1           # Git hook scripts manager
+
+# Testing Tools (already in requirements.txt, listed here for completeness)
+# pytest==7.4.3
+# pytest-asyncio==0.23.2
+# pytest-cov==4.1.0
+
+# Additional Testing Tools
+pytest-xdist==3.6.1         # Run tests in parallel
+pytest-mock==3.14.0         # Mocking utilities for pytest
+hypothesis==6.119.4         # Property-based testing
+
+# Type Stubs for Better Type Checking
+types-redis==4.6.0.20240425
+types-pytz==2024.2.0.20240913
+sqlalchemy[mypy]==2.0.36
+
+# Code Quality Tools
+interrogate==1.7.0          # Check docstring coverage (optional)

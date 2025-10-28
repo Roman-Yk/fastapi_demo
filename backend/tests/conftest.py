@@ -1,168 +1,117 @@
+"""
+Pytest configuration and fixtures for backend tests.
+
+Provides database setup, test client, and sample data fixtures.
+"""
+
 import pytest
 import pytest_asyncio
-from typing import AsyncGenerator
-import os
-
-from fastapi import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
-import asyncio
 import uuid
-from typing import AsyncGenerator, Generator
 from datetime import date, time, datetime
+from typing import AsyncGenerator, Generator
 
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.database.conn import get_db
 from app.database.base_model import BASE_MODEL
 from app.database.models import *
-from contextlib import asynccontextmanager
 
-from testcontainers.postgres import PostgresContainer
-from alembic.config import Config
-from alembic.command import upgrade
-import docker
+from tests.database_manager import DatabaseManager
 
-# Check if Docker is available and running
-try:
-    docker_client = docker.from_env()
-    docker_client.ping()
-    print("✅ Docker is available and testcontainers ready")
-except Exception as e:
-    print(f"\n⚠️  Docker not available: {e}")
-    print("💡 To use testcontainers, make sure Docker is installed and running.")
-    # Exit with an error to prevent tests from running without Docker
-    raise e
+# Check Docker availability for local development
+if not DatabaseManager.is_ci_environment():
+    import docker
+
+    try:
+        docker_client = docker.from_env()
+        docker_client.ping()
+        print("✅ Docker is available and testcontainers ready")
+    except Exception as e:
+        print(f"\n⚠️  Docker not available: {e}")
+        print("💡 To use testcontainers, make sure Docker is installed and running.")
+        raise e
+else:
+    print("🔵 Running in CI environment - using service postgres")
 
 
-# Test database configuration
-
-# Global container instance for testcontainers
-_postgres_container = None
-_sync_engine = None
-_async_engine = None
+# Module-level database manager
+_db_manager: DatabaseManager = DatabaseManager()
 
 
 def pytest_configure(config):
-    """Configure pytest with our custom settings."""
-    global _postgres_container, _sync_engine, _async_engine
-
-    # Start PostgreSQL container once for all tests
+    """Configure pytest with database setup."""
+    del config  # Unused but required by pytest
     try:
-        _postgres_container = PostgresContainer(
-            image="postgres:15",
-            username="test_user",
-            password="test_password",
-            dbname="test_db",
-            port=5432,
-        )
-        _postgres_container.start()
+        sync_engine, async_engine = _db_manager.setup()
+        del async_engine  # Created but not needed here
 
-        # Get connection details
-        host = _postgres_container.get_container_host_ip()
-        port = _postgres_container.get_exposed_port(5432)
-
-        async_url = (
-            f"postgresql+asyncpg://test_user:test_password@{host}:{port}/test_db"
-        )
-        sync_url = f"postgresql://test_user:test_password@{host}:{port}/test_db"
-
-        print(f"\n🚀 PostgreSQL container started at {host}:{port}")
-
-        # Create both sync and async engines
-        _sync_engine = create_engine(sync_url, echo=False)
-        _async_engine = create_async_engine(async_url, echo=False, future=True)
-
-        # Create tables using synchronous approach (more reliable)
+        # Create database schema
         print("🔄 Creating database tables...")
-
-        try:
-            BASE_MODEL.metadata.create_all(bind=_sync_engine)
-            print("✅ Database schema created with metadata.create_all")
-        except Exception as e:
-            print(f"⚠️  metadata.create_all failed: {e}")
-
-            # Fallback to Alembic migrations
-            try:
-                print("🔄 Trying Alembic migrations as fallback...")
-                alembic_ini_path = os.path.join(
-                    os.path.dirname(__file__), "..", "alembic.ini"
-                )
-                alembic_cfg = Config(alembic_ini_path)
-                alembic_cfg.set_main_option("script_location", "app:alembic")
-                alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
-                alembic_cfg.set_main_option("prepend_sys_path", ".")
-
-                upgrade(alembic_cfg, "head")
-                print("✅ Database schema created with Alembic")
-            except Exception as alembic_error:
-                print(f"❌ Both metadata.create_all and Alembic failed!")
-                print(f"   metadata.create_all error: {e}")
-                print(f"   Alembic error: {alembic_error}")
-                raise Exception("Failed to create database schema") from alembic_error
+        BASE_MODEL.metadata.create_all(bind=sync_engine)
+        print("✅ Database schema created successfully")
 
     except Exception as e:
-        print(f"\n❌ Failed to start PostgreSQL container: {e}")
-        raise e
+        print(f"\n❌ Failed to configure database: {e}")
+        _db_manager.teardown()
+        raise
 
 
 def pytest_unconfigure(config):
     """Clean up after all tests."""
-    global _postgres_container, _sync_engine, _async_engine
-
-    if _sync_engine:
-        _sync_engine.dispose()
-
-    if _async_engine:
-        # We can't await here, but the engine will be cleaned up when the process exits
-        pass
-
-    if _postgres_container:
-        print(f"\n🛑 Stopping PostgreSQL container")
-        _postgres_container.stop()
+    del config  # Unused but required by pytest
+    _db_manager.teardown()
 
 
 @pytest.fixture(scope="function")
-def test_db_session():
+def test_db_session() -> Generator[Session, None, None]:
     """
-    Create a synchronous database session for a test, with proper transaction isolation.
+    Provide a transactional database session for a test.
+
+    Each test gets a fresh session with automatic rollback.
     """
-    global _sync_engine
+    if not _db_manager.sync_engine:
+        raise RuntimeError("Database not initialized")
 
     # Create a connection and transaction
-    connection = _sync_engine.connect()
-    trans = connection.begin()
+    connection = _db_manager.sync_engine.connect()
+    transaction = connection.begin()
 
     # Create session bound to this connection
-    session_maker = sessionmaker(bind=connection)
-    session = session_maker()
+    session_factory = sessionmaker(bind=connection)
+    session = session_factory()
 
     try:
         yield session
     finally:
         session.close()
-        trans.rollback()
+        transaction.rollback()
         connection.close()
 
 
 @pytest_asyncio.fixture
-async def async_client(test_db_session):
-    """Return an async client with DB override."""
+async def async_client(test_db_session: Session) -> AsyncGenerator[AsyncClient, None]:
+    """
+    Provide an async HTTP client with database dependency override.
 
-    # Create an async session that wraps the sync session
+    Args:
+        test_db_session: Test database session fixture
+
+    Yields:
+        AsyncClient configured for testing
+    """
+
     class AsyncSessionWrapper:
-        def __init__(self, sync_session):
+        """Wrapper to make sync session compatible with async context."""
+
+        def __init__(self, sync_session: Session):
             self.sync_session = sync_session
 
         def add(self, obj):
             return self.sync_session.add(obj)
 
-        def delete(self, obj):
+        async def delete(self, obj):
             return self.sync_session.delete(obj)
 
         async def execute(self, query):
@@ -180,13 +129,13 @@ async def async_client(test_db_session):
         async def close(self):
             return self.sync_session.close()
 
-    # Override the database dependency to return the wrapped session
+    # Override the database dependency
     async def override_get_db():
         yield AsyncSessionWrapper(test_db_session)
 
     app.dependency_overrides[get_db] = override_get_db
 
-    # Create AsyncClient with ASGITransport
+    # Create AsyncClient
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
@@ -195,11 +144,14 @@ async def async_client(test_db_session):
     app.dependency_overrides.clear()
 
 
-# ---- Test data fixtures ----
+# =====================================================================
+# Sample Data Fixtures
+# =====================================================================
 
 
 @pytest.fixture
-def sample_terminal(test_db_session):
+def sample_terminal(test_db_session: Session) -> Terminal:
+    """Create a sample terminal for testing."""
     terminal = Terminal(
         id=uuid.uuid4(),
         name="Test Terminal",
@@ -215,7 +167,8 @@ def sample_terminal(test_db_session):
 
 
 @pytest.fixture
-def sample_driver(test_db_session):
+def sample_driver(test_db_session: Session) -> Driver:
+    """Create a sample driver for testing."""
     driver = Driver(id=uuid.uuid4(), name="John Doe", phone="+1234567890")
     test_db_session.add(driver)
     test_db_session.flush()
@@ -224,7 +177,8 @@ def sample_driver(test_db_session):
 
 
 @pytest.fixture
-def sample_truck(test_db_session):
+def sample_truck(test_db_session: Session) -> Truck:
+    """Create a sample truck for testing."""
     truck = Truck(id=uuid.uuid4(), name="Test Truck", license_plate="ABC123")
     test_db_session.add(truck)
     test_db_session.flush()
@@ -233,7 +187,8 @@ def sample_truck(test_db_session):
 
 
 @pytest.fixture
-def sample_trailer(test_db_session):
+def sample_trailer(test_db_session: Session) -> Trailer:
+    """Create a sample trailer for testing."""
     trailer = Trailer(id=uuid.uuid4(), name="Test Trailer", license_plate="XYZ789")
     test_db_session.add(trailer)
     test_db_session.flush()
@@ -242,7 +197,8 @@ def sample_trailer(test_db_session):
 
 
 @pytest.fixture
-def sample_order(test_db_session, sample_terminal):
+def sample_order(test_db_session: Session, sample_terminal: Terminal) -> Order:
+    """Create a sample order for testing."""
     order = Order(
         id=uuid.uuid4(),
         reference="TEST-001",
@@ -266,7 +222,10 @@ def sample_order(test_db_session, sample_terminal):
 
 
 @pytest.fixture
-def sample_order_document(test_db_session, sample_order):
+def sample_order_document(
+    test_db_session: Session, sample_order: Order
+) -> OrderDocument:
+    """Create a sample order document for testing."""
     order_document = OrderDocument(
         id=uuid.uuid4(),
         order_id=sample_order.id,
@@ -283,7 +242,8 @@ def sample_order_document(test_db_session, sample_order):
 
 
 @pytest.fixture
-def multiple_orders(test_db_session, sample_terminal):
+def multiple_orders(test_db_session: Session, sample_terminal: Terminal) -> list[Order]:
+    """Create multiple sample orders for testing pagination and filtering."""
     orders = []
     for i in range(15):
         order = Order(
@@ -315,12 +275,17 @@ def multiple_orders(test_db_session, sample_terminal):
     return orders
 
 
-# ---- Test data generator ----
+# =====================================================================
+# Test Data Generators
+# =====================================================================
 
 
 class TestDataGenerator:
+    """Helper class for generating test data."""
+
     @staticmethod
     def valid_order_data(terminal_id: str) -> dict:
+        """Generate valid order data for API requests."""
         return {
             "reference": f"TEST-{uuid.uuid4().hex[:8]}",
             "service": OrderService.RELOAD_CAR_CAR,
@@ -339,10 +304,12 @@ class TestDataGenerator:
 
     @staticmethod
     def invalid_order_data_missing_required() -> dict:
+        """Generate invalid order data with missing required fields."""
         return {"notes": "Test order without required fields", "priority": False}
 
     @staticmethod
     def invalid_order_data_wrong_types() -> dict:
+        """Generate invalid order data with wrong field types."""
         return {
             "reference": 123,
             "service": "INVALID_SERVICE",
@@ -357,14 +324,17 @@ class TestDataGenerator:
 
     @staticmethod
     def valid_driver_data() -> dict:
+        """Generate valid driver data for API requests."""
         return {"name": "John Doe", "phone": "+1234567890"}
 
     @staticmethod
     def invalid_driver_data() -> dict:
+        """Generate invalid driver data."""
         return {"name": "", "phone": ""}
 
     @staticmethod
     def valid_terminal_data() -> dict:
+        """Generate valid terminal data for API requests."""
         return {
             "name": "Test Terminal",
             "time_zone": "Europe/Oslo",
@@ -375,9 +345,11 @@ class TestDataGenerator:
 
     @staticmethod
     def invalid_terminal_data() -> dict:
+        """Generate invalid terminal data."""
         return {"name": "", "time_zone": ""}
 
 
 @pytest.fixture
-def test_data_generator():
+def test_data_generator() -> TestDataGenerator:
+    """Provide test data generator instance."""
     return TestDataGenerator()

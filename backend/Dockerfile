@@ -13,8 +13,14 @@ RUN apk add --no-cache \
     postgresql-dev
 
 # Install Python dependencies into a separate folder
-COPY requirements.txt .
+COPY requirements.txt ./
 RUN pip install --prefix=/install/deps --no-cache-dir -r requirements.txt
+
+# Install essential test dependencies without strict version pins
+RUN pip install --prefix=/install/deps --no-cache-dir \
+    hypothesis \
+    pytest-xdist \
+    pytest-mock
 
 # Final runtime stage
 FROM python:3.11-alpine
