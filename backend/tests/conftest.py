@@ -4,6 +4,7 @@ Pytest configuration and fixtures for backend tests.
 Provides database setup, test client, and sample data fixtures.
 """
 
+import os
 import pytest
 import pytest_asyncio
 import uuid
@@ -12,6 +13,18 @@ from typing import AsyncGenerator, Generator
 
 from sqlalchemy.orm import sessionmaker, Session
 from httpx import AsyncClient, ASGITransport
+
+# Set up test environment variables BEFORE importing app modules
+# This prevents Settings validation errors when modules are imported
+os.environ.setdefault("POSTGRES_DB", "test_db")
+os.environ.setdefault("POSTGRES_USER", "test_user")
+os.environ.setdefault("POSTGRES_HOST", "localhost")
+os.environ.setdefault("POSTGRES_PASSWORD", "test_password")
+os.environ.setdefault("POSTGRES_PORT", "5432")
+os.environ.setdefault("PGADMIN_DEFAULT_EMAIL", "test@example.com")
+os.environ.setdefault("PGADMIN_DEFAULT_PASSWORD", "test_password")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+os.environ.setdefault("FILES_PATH", "test_files")
 
 from app.main import app
 from app.database.conn import get_db

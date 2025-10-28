@@ -116,6 +116,8 @@ class DocumentParsingManager:
                             image, lang=cls.PARSING_LANGUAGES, config=config
                         )
                     except Exception as error:
+                        # Log the error and try next PSM mode
+                        print(f"PSM mode {psm} failed: {str(error)}")
                         continue
                 return pytesseract.image_to_string(
                     image,

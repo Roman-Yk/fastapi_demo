@@ -13,8 +13,8 @@ export interface YesNoFilterProps extends FilterProps {
 }
 
 export const YesNoFilter: React.FC<YesNoFilterProps> = ({
-  source,
-  label,
+  source: _source,
+  label: _label,
   value = null,
   onChange,
   size = 'sm',

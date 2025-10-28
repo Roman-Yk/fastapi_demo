@@ -20,8 +20,8 @@ export interface AnimatedDateRangeFilterProps extends FilterProps {
 }
 
 export const AnimatedDateRangeFilter: React.FC<AnimatedDateRangeFilterProps> = ({
-  source,
-  label,
+  source: _source,
+  label: _label,
   value,
   onChange,
   options,

@@ -28,15 +28,15 @@ export interface ReferenceVehicleFieldOptimizedProps extends FieldProps {
  * />
  * ```
  */
-export const ReferenceVehicleFieldOptimized: React.FC<ReferenceVehicleFieldOptimizedProps> = ({ 
+export const ReferenceVehicleFieldOptimized: React.FC<ReferenceVehicleFieldOptimizedProps> = ({
   record,
-  source,
+  source: _source,
   prefix,
   size = 'sm',
   showIcon = true,
   getTruck,
   getTrailer,
-  ...props 
+  ...props
 }) => {
   // Derive the field names
   const truckIdField = prefix ? `${prefix}_truck_id` : 'truck_id';

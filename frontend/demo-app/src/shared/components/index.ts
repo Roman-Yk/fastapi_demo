@@ -39,7 +39,6 @@ export * from './forms/FormSwitchInput';
 // export * from './forms/TextField'; // Commented out due to naming conflict
 export { TextField as FormTextField } from './forms/TextField';
 export * from './forms/SelectField';
-export * from './forms/ReferenceInput';
 export * from './forms/DriverReferenceInput';
 export * from './forms/TruckReferenceInput';
 export * from './forms/TrailerReferenceInput';

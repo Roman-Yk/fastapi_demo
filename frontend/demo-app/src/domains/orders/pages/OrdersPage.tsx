@@ -66,8 +66,7 @@ export const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrders(filters, sortModel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, sortModel]);
+  }, [filters, sortModel, fetchOrders]);
 
   const handleFiltersChange = async (newFilters: OrderFilters) => {
     setFilters(newFilters);

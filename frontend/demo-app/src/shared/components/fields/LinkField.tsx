@@ -14,7 +14,7 @@ export interface LinkFieldProps extends FieldProps {
 
 export const LinkField: React.FC<LinkFieldProps> = ({
   source,
-  label,
+  _label,
   record,
   value,
   to,

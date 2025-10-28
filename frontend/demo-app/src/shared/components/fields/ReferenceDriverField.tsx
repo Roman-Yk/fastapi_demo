@@ -11,14 +11,14 @@ export interface ReferenceDriverFieldProps extends FieldProps {
   showPhone?: boolean;
 }
 
-export const ReferenceDriverField: React.FC<ReferenceDriverFieldProps> = ({ 
+export const ReferenceDriverField: React.FC<ReferenceDriverFieldProps> = ({
   record,
-  source,
+  source: _source,
   prefix,
   size = 'sm',
   showIcon = true,
   showPhone = true,
-  ...props 
+  ...props
 }) => {
   // Derive the field names
   const driverIdField = prefix ? `${prefix}_driver_id` : 'driver_id';

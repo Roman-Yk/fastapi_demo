@@ -18,8 +18,8 @@ export interface DateRangeFilterProps extends FilterProps {
 }
 
 export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
-  source,
-  label,
+  source: _source,
+  label: _label,
   value,
   onChange,
   options,

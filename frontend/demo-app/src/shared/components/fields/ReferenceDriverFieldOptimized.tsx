@@ -28,15 +28,15 @@ export interface ReferenceDriverFieldOptimizedProps extends FieldProps {
  * />
  * ```
  */
-export const ReferenceDriverFieldOptimized: React.FC<ReferenceDriverFieldOptimizedProps> = ({ 
+export const ReferenceDriverFieldOptimized: React.FC<ReferenceDriverFieldOptimizedProps> = ({
   record,
-  source,
+  source: _source,
   prefix,
   size = 'sm',
   showIcon = true,
   showPhone = true,
   getDriver,
-  ...props 
+  ...props
 }) => {
   // Derive the field names
   const driverIdField = prefix ? `${prefix}_driver_id` : 'driver_id';

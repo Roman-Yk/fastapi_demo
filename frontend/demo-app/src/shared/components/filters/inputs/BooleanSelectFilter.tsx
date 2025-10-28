@@ -14,7 +14,7 @@ export interface BooleanSelectFilterProps extends FilterProps {
 }
 
 export const BooleanSelectFilter: React.FC<BooleanSelectFilterProps> = ({
-  source,
+  source: _source,
   label,
   value = null,
   onChange,

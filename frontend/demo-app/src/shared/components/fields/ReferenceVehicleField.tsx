@@ -11,13 +11,13 @@ export interface ReferenceVehicleFieldProps extends FieldProps {
   showIcon?: boolean;
 }
 
-export const ReferenceVehicleField: React.FC<ReferenceVehicleFieldProps> = ({ 
+export const ReferenceVehicleField: React.FC<ReferenceVehicleFieldProps> = ({
   record,
-  source,
+  source: _source,
   prefix,
   size = 'sm',
   showIcon = true,
-  ...props 
+  ...props
 }) => {
   // Derive the field names
   const truckIdField = prefix ? `${prefix}_truck_id` : 'truck_id';

@@ -16,7 +16,7 @@ export const List: React.FC<ListProps> = ({
   children,
   filters,
   actions,
-  title,
+  title: _title,
   containerSize = "100%",
   spacing = 'sm',
   px = 'xl',

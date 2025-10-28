@@ -28,8 +28,8 @@ export interface TerminalFilterProps extends FilterProps {
  * ```
  */
 export const TerminalFilter: React.FC<TerminalFilterProps> = ({
-  source,
-  label,
+  source: _source,
+  label: _label,
   value,
   onChange,
   size = 'md',

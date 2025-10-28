@@ -15,7 +15,6 @@ export { FormSwitchInput } from './FormSwitchInput';
 export { FormTimeInput } from './FormTimeInput';
 
 // Reference input components (for forms)
-export { ReferenceInput } from './ReferenceInput';
 export { DriverReferenceInput } from './DriverReferenceInput';
 export { TerminalReferenceInput } from './TerminalReferenceInput';
 export { TruckReferenceInput } from './TruckReferenceInput';
