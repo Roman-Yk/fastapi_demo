@@ -40,32 +40,6 @@ class DatabaseConfig:
         """Get asynchronous database URL."""
         return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
 
-    @classmethod
-    def from_env(cls) -> "DatabaseConfig":
-        """Create config from environment variables."""
-        # Try DATABASE_URL first
-        database_url = os.getenv("DATABASE_URL")
-        if database_url:
-            # Parse DATABASE_URL (format: postgresql://user:pass@host:port/db)
-            from urllib.parse import urlparse
-
-            parsed = urlparse(database_url)
-            return cls(
-                host=parsed.hostname or "localhost",
-                port=parsed.port or 5432,
-                username=parsed.username or "postgres",
-                password=parsed.password or "postgres",
-                database=parsed.path.lstrip("/") or "test_db",
-            )
-
-        # Fallback to individual variables
-        return cls(
-            host=os.getenv("POSTGRES_HOST", "localhost"),
-            port=int(os.getenv("POSTGRES_PORT", "5432")),
-            username=os.getenv("POSTGRES_USER", "postgres"),
-            password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-            database=os.getenv("POSTGRES_DB", "test_db"),
-        )
 
 
 class DatabaseProvider(ABC):
@@ -90,7 +64,7 @@ class TestcontainersProvider(DatabaseProvider):
 
     def setup(self) -> DatabaseConfig:
         """Start PostgreSQL container and return configuration."""
-        print("\n🚀 Local environment - starting testcontainers PostgreSQL")
+        print("\n🚀 Starting testcontainers PostgreSQL...")
 
         self._container = PostgresContainer(
             image="postgres:15",
@@ -122,28 +96,11 @@ class TestcontainersProvider(DatabaseProvider):
             self._container = None
 
 
-class ServiceProvider(DatabaseProvider):
-    """Database provider using existing database service (for CI)."""
-
-    def setup(self) -> DatabaseConfig:
-        """Get configuration for existing database service."""
-        print("\n🔵 CI environment - using service postgres")
-
-        config = DatabaseConfig.from_env()
-        print(f"🔗 Connecting to: {config.host}:{config.port}/{config.database}")
-
-        return config
-
-    def teardown(self) -> None:
-        """Nothing to clean up - service is managed externally."""
-        pass
-
-
 class DatabaseManager:
     """
     Manages database setup and teardown for tests.
 
-    Automatically selects the appropriate provider based on environment.
+    Uses testcontainers to spin up PostgreSQL in both local and CI environments.
     """
 
     def __init__(self):
@@ -157,13 +114,6 @@ class DatabaseManager:
         """Check if running in CI environment."""
         return os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
 
-    def _get_provider(self) -> DatabaseProvider:
-        """Get appropriate database provider for current environment."""
-        if self.is_ci_environment():
-            return ServiceProvider()
-        else:
-            return TestcontainersProvider()
-
     def setup(self) -> Tuple[Engine, AsyncEngine]:
         """
         Set up database and return engines.
@@ -171,7 +121,8 @@ class DatabaseManager:
         Returns:
             Tuple of (sync_engine, async_engine)
         """
-        self._provider = self._get_provider()
+        # Always use testcontainers for consistency
+        self._provider = TestcontainersProvider()
         self._config = self._provider.setup()
 
         # Create engines

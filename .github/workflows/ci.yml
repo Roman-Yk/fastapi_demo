@@ -123,9 +123,8 @@ jobs:
         python-version: ["3.11", "3.12"]
 
     services:
-      # PostgreSQL is managed by testcontainers in tests
-      # This provides better isolation and works the same locally and in CI
-
+      # PostgreSQL is managed by testcontainers (starts its own container)
+      # Redis is shared across all tests
       redis:
         image: redis:7-alpine
         ports:
@@ -137,7 +136,6 @@ jobs:
           --health-retries=5
 
     env:
-      # Testcontainers manages PostgreSQL (no need to configure here)
       PYTHONPATH: ${{ github.workspace }}/backend
       REDIS_URL: redis://localhost:6379/0
 

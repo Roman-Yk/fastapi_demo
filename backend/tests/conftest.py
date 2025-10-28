@@ -14,8 +14,9 @@ from typing import AsyncGenerator, Generator
 from sqlalchemy.orm import sessionmaker, Session
 from httpx import AsyncClient, ASGITransport
 
-# Set up test environment variables BEFORE importing app modules
+# Set up minimal environment variables BEFORE importing app modules
 # This prevents Settings validation errors when modules are imported
+# Note: Database credentials are managed by testcontainers, these are just for Settings validation
 os.environ.setdefault("POSTGRES_DB", "test_db")
 os.environ.setdefault("POSTGRES_USER", "test_user")
 os.environ.setdefault("POSTGRES_HOST", "localhost")
@@ -33,20 +34,19 @@ from app.database.models import *
 
 from tests.database_manager import DatabaseManager
 
-# Check Docker availability for local development
-if not DatabaseManager.is_ci_environment():
-    import docker
+# Check Docker availability (required for testcontainers in both local and CI)
+import docker
 
-    try:
-        docker_client = docker.from_env()
-        docker_client.ping()
-        print("✅ Docker is available and testcontainers ready")
-    except Exception as e:
-        print(f"\n⚠️  Docker not available: {e}")
-        print("💡 To use testcontainers, make sure Docker is installed and running.")
-        raise e
-else:
-    print("🔵 Running in CI environment - using service postgres")
+env_type = "CI" if DatabaseManager.is_ci_environment() else "local"
+try:
+    docker_client = docker.from_env()
+    docker_client.ping()
+    print(f"✅ Docker is available - testcontainers ready ({env_type} environment)")
+except Exception as e:
+    print(f"\n⚠️  Docker not available: {e}")
+    print("💡 Testcontainers requires Docker to be installed and running.")
+    print(f"   Environment: {env_type}")
+    raise e
 
 
 # Module-level database manager
