@@ -2,14 +2,11 @@
  * Truck types
  */
 
-import { BaseEntity, Nullable } from '../../../shared/types/common';
+import { BaseEntity } from '../../../shared/types/common';
 
 export interface Truck extends BaseEntity {
-  truck_number: string;
-  make: Nullable<string>;
-  model: Nullable<string>;
-  year: Nullable<number>;
-  license_plate: Nullable<string>;
+  name: string;
+  license_plate: string;
 }
 
 export type CreateTruckRequest = Omit<Truck, keyof BaseEntity>;

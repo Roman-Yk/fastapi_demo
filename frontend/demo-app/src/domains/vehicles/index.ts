@@ -3,7 +3,8 @@
  */
 
 // Types
-export * from './types/vehicle';
+export * from './types/truck';
+export * from './types/trailer';
 
 // API Services
 export { truckApi } from './api/truckService';

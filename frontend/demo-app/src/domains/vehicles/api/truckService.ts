@@ -4,7 +4,7 @@
  */
 
 import { BaseApiService } from '../../../services/baseApiService';
-import { Truck, CreateTruckRequest, UpdateTruckRequest } from '../types/vehicle';
+import { Truck, CreateTruckRequest, UpdateTruckRequest } from '../types/truck';
 
 /**
  * Truck API Service implementation

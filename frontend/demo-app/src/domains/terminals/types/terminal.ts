@@ -6,12 +6,10 @@ import { BaseEntity, Nullable } from '../../../shared/types/common';
 
 export interface Terminal extends BaseEntity {
   name: string;
-  code: string;
   address: Nullable<string>;
-  phone: Nullable<string>;
-  email: Nullable<string>;
-  timezone?: string;
-  account_code?: string;
+  time_zone: string;
+  short_name: Nullable<string>;
+  account_code: Nullable<string>;
 }
 
 export type CreateTerminalRequest = Omit<Terminal, keyof BaseEntity>;

@@ -4,7 +4,7 @@
  */
 
 import { BaseApiService } from '../../../services/baseApiService';
-import { Trailer, CreateTrailerRequest, UpdateTrailerRequest } from '../types/vehicle';
+import { Trailer, CreateTrailerRequest, UpdateTrailerRequest } from '../types/trailer';
 
 /**
  * Trailer API Service implementation

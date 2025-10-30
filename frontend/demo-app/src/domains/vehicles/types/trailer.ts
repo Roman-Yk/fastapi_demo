@@ -2,12 +2,11 @@
  * Trailer types
  */
 
-import { BaseEntity, Nullable } from '../../../shared/types/common';
+import { BaseEntity } from '../../../shared/types/common';
 
 export interface Trailer extends BaseEntity {
+  name: string;
   license_plate: string;
-  type: Nullable<string>;
-  capacity: Nullable<number>;
 }
 
 export type CreateTrailerRequest = Omit<Trailer, keyof BaseEntity>;
