@@ -1,0 +1,71 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing and coverage
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+*.cover
+*.log
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Development tools
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Package files
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# Documentation
+docs/
+*.md
+
+# Local development files
+files/
+.dockerignore
+Dockerfile
+docker-compose*.yml
+.pre-commit-config.yaml
+
+# Test files (optional - remove if you want tests in image)
+tests/
+pytest.ini
+
+# Alembic local files
+alembic/versions/*.pyc

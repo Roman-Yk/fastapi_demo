@@ -1,7 +1,7 @@
-# Build stage
+# Build stage - compile dependencies
 FROM python:3.11-alpine AS builder
 
-WORKDIR /install
+WORKDIR /build
 
 # Install build dependencies
 RUN apk add --no-cache \
@@ -9,39 +9,38 @@ RUN apk add --no-cache \
     libffi-dev \
     musl-dev \
     gcc \
-    gdb \
     postgresql-dev
 
-# Install Python dependencies into a separate folder
-COPY requirements.txt ./
-RUN pip install --prefix=/install/deps --no-cache-dir -r requirements.txt
-
-# Install essential test dependencies without strict version pins
-RUN pip install --prefix=/install/deps --no-cache-dir \
-    hypothesis \
-    pytest-xdist \
-    pytest-mock
+# Copy and install Python dependencies including dev/test packages
+# This layer will be cached unless requirements files change
+COPY requirements*.txt ./
+RUN pip install --user --no-cache-dir -r requirements.txt && \
+    if [ -f requirements-dev.txt ]; then pip install --user --no-cache-dir -r requirements-dev.txt; fi
 
 # Final runtime stage
 FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Install runtime dependencies INCLUDING tesseract and poppler-utils
+# Install runtime dependencies for PostgreSQL, OCR, and PDF processing
 RUN apk add --no-cache \
     libpq \
     tesseract-ocr \
     tesseract-ocr-data-eng \
-    poppler-utils
+    poppler-utils \
+    && rm -rf /var/cache/apk/*
 
-# Copy installed Python dependencies
-COPY --from=builder /install/deps /usr/local/
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app
 
 # Copy application code
 COPY . .
 
-# Set PYTHONPATH so Python can find the app module
-ENV PYTHONPATH=/app
-
 EXPOSE 8000
+
+# Run with reload for local development
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

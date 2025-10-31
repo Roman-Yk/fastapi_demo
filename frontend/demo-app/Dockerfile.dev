@@ -3,17 +3,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better layer caching
+# This layer only rebuilds when package.json or package-lock.json change
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy source code
+# Copy the rest of the application
+# In development, this layer will be overridden by volume mount
 COPY . .
 
 # Expose Vite dev server port
 EXPOSE 3000
 
 # Start development server with hot reload
-CMD ["npm", "run", "dev"]
+# Vite will watch for file changes via the volume mount
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
