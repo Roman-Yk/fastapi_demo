@@ -1,19 +1,22 @@
-import React, { useEffect } from 'react';
-import { 
-  Title, 
-  Text, 
-  Stack, 
-  Button, 
+import React, { useEffect, useState } from 'react';
+import {
+  Title,
+  Text,
+  Stack,
+  Button,
   Group,
   Box,
   Paper
 } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
-import { OrderServiceLabels, OrderService } from '../types/order';
+import { OrderService } from '../types/order';
 import { orderApi } from '../api/orderService';
+import { ServiceSelectInput } from '../components';
 import { FormProvider, useFormContext } from '../../../hooks/useFormContext';
 import { validators } from '../../../hooks/useFormData';
+import { notify } from '../../../shared/services/notificationService';
+import { useOrderValidation } from '../validation';
 import {
   Grid,
   GridCol,
@@ -21,7 +24,6 @@ import {
   FormTextField,
   FormNumberInput,
   FormFloatInput,
-  FormSelectInput,
   DatePicker,
   TimePicker,
   FormSwitchInput,
@@ -50,14 +52,15 @@ const CreateOrderFormContent: React.FC<{
 }> = ({ onBack }) => {
   const navigate = useNavigate();
   const { formData, setForm, validateAll, isValid } = useFormContext<CreateOrderFormData>();
+  const { validateCreateOrder, isValidating } = useOrderValidation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Convert service to number for proper comparison
-  const serviceValue = typeof formData.service === 'string' ? parseInt(formData.service, 10) : formData.service;
-  const isPlukk = serviceValue === OrderService.INTO_PLUKK_STORAGE;
+  // Service is already a number thanks to parseValue in FormSelectInput
+  const isPlukk = formData.service === OrderService.INTO_PLUKK_STORAGE;
 
   // Auto-sync dates for non-Plukk services
   useEffect(() => {
-    if (!isPlukk && serviceValue !== 0 && !isNaN(serviceValue)) {
+    if (!isPlukk && formData.service !== 0 && !isNaN(formData.service)) {
       // If ETA date is set and ETD date is not, copy ETA to ETD
       if (formData.eta_date && !formData.etd_date) {
         setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
@@ -67,44 +70,35 @@ const CreateOrderFormContent: React.FC<{
         setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
       }
     }
-  }, [formData.eta_date, formData.etd_date, isPlukk, serviceValue, setForm]);
+  }, [formData.eta_date, formData.etd_date, isPlukk, formData.service, setForm]);
 
   const handleSave = async () => {
-    // Validate all fields before submission
+    // Prevent double submission
+    if (isSubmitting || isValidating) return;
+
+    // Validate required fields
     if (!validateAll()) {
-      console.log('Form validation failed. Please check the errors.');
+      notify.error('Please fill in all required fields');
       return;
     }
 
-    // Validate dates based on service type
-    if (serviceValue && serviceValue !== 0 && !isNaN(serviceValue)) {
-      if (isPlukk) {
-        // Plukk: requires exactly ONE date (either ETA or ETD, not both)
-        const hasEta = !!formData.eta_date;
-        const hasEtd = !!formData.etd_date;
-
-        if (!hasEta && !hasEtd) {
-          alert('Plukk service requires either ETA date OR ETD date');
-          return;
-        } else if (hasEta && hasEtd) {
-          alert('Plukk service can only have ONE section (ETA OR ETD, not both)');
-          return;
-        }
-      } else {
-        // Non-Plukk: requires BOTH dates
-        if (!formData.eta_date || !formData.etd_date) {
-          alert('This service requires both ETA date AND ETD date');
-          return;
-        }
-      }
+    // Validate order-specific business rules (dates, reference uniqueness, etc.)
+    const isValid = await validateCreateOrder(formData);
+    if (!isValid) {
+      return; // Errors already shown via toast notifications
     }
 
     try {
+      setIsSubmitting(true);
+
       // Transform form data to API format using Zod schema
       const apiData = createOrderFormSchema.parse(formData) as any;
 
       console.log('Creating order:', apiData);
       const newOrder = await orderApi.create(apiData);
+
+      // Show success notification
+      notify.success('Order created successfully!');
 
       // Navigate to the edit page of the newly created order
       if (newOrder && newOrder.id) {
@@ -115,14 +109,11 @@ const CreateOrderFormContent: React.FC<{
       }
     } catch (error) {
       console.error('Failed to create order:', error);
-      alert(`Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      notify.error(`Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
-    value,
-    label
-  }));
 
   return (
     <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' }}>
@@ -170,12 +161,9 @@ const CreateOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormSelectInput<CreateOrderFormData, 'service'>
-                      label="Service Type"
+                    <ServiceSelectInput<CreateOrderFormData, 'service'>
                       source="service"
-                      placeholder="Select service"
                       required
-                      data={serviceOptions}
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -297,13 +285,14 @@ const CreateOrderFormContent: React.FC<{
                   Cancel
                 </Button>
                 
-                <Button 
+                <Button
                   leftSection={<IconDeviceFloppy size={18} />}
                   onClick={handleSave}
                   size="md"
-                  disabled={!isValid}
+                  disabled={!isValid || isSubmitting || isValidating}
+                  loading={isSubmitting || isValidating}
                 >
-                  Create Order
+                  {isSubmitting ? 'Creating...' : isValidating ? 'Validating...' : 'Create Order'}
                 </Button>
               </Group>
             </Stack>

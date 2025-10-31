@@ -11,6 +11,7 @@ interface FormSelectInputProps<T extends Record<string, any>, K extends keyof T>
   clearable?: boolean;
   disabled?: boolean;
   description?: string;
+  parseValue?: (value: string | null) => T[K]; // Optional function to transform the value
 }
 
 export function FormSelectInput<T extends Record<string, any>, K extends keyof T>({
@@ -22,14 +23,16 @@ export function FormSelectInput<T extends Record<string, any>, K extends keyof T
   searchable = false,
   clearable = false,
   disabled,
-  description
+  description,
+  parseValue
 }: FormSelectInputProps<T, K>) {
   const { formData, updateField, errors, touched } = useFormContext<T>();
   const value = formData[source];
   const error = touched[source] ? errors[source] : undefined;
 
   const handleChange = (newValue: string | null) => {
-    updateField(source, newValue as T[K], { validate: true });
+    const parsedValue = parseValue ? parseValue(newValue) : (newValue as T[K]);
+    updateField(source, parsedValue, { validate: true });
   };
 
   return (

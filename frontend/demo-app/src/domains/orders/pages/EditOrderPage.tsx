@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Title, 
-  Text, 
-  Stack, 
-  Button, 
-  Switch, 
+import {
+  Title,
+  Text,
+  Stack,
+  Button,
+  Switch,
   Group,
   Box,
   Paper
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
-import { OrderServiceLabels, OrderService } from '../types/order';
+import { OrderService } from '../types/order';
 import { OrderDocument } from '../types/document';
 import { orderApi } from '../api/orderService';
+import { ServiceSelectInput } from '../components';
+import { notify } from '../../../shared/services/notificationService';
+import { useOrderValidation } from '../validation';
 import {
   Grid,
   GridCol,
@@ -21,7 +24,6 @@ import {
   FormTextField,
   FormNumberInput,
   FormFloatInput,
-  FormSelectInput,
   TimePicker,
   DatePicker,
   CommoditySelectInput
@@ -44,6 +46,8 @@ const EditOrderFormContent: React.FC<{
   const documentsUploadRef = useRef<OrderDocumentsUploadRef>(null);
 
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { validateEditOrder, isValidating } = useOrderValidation();
   const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
   const [etdDriverManualMode, setEtdDriverManualMode] = useState(false);
   const [etaTruckManualMode, setEtaTruckManualMode] = useState(false);
@@ -51,14 +55,14 @@ const EditOrderFormContent: React.FC<{
   const [etaTrailerManualMode, setEtaTrailerManualMode] = useState(false);
   const [etdTrailerManualMode, setEtdTrailerManualMode] = useState(false);
   const [existingDocuments, setExistingDocuments] = useState<OrderDocument[]>([]);
+  const [terminalId, setTerminalId] = useState<string>('');
 
-  // Convert service to number for proper comparison
-  const serviceValue = typeof formData.service === 'string' ? parseInt(formData.service, 10) : formData.service;
-  const isPlukk = serviceValue === OrderService.INTO_PLUKK_STORAGE;
+  // Service is already a number thanks to parseValue in FormSelectInput
+  const isPlukk = formData.service === OrderService.INTO_PLUKK_STORAGE;
 
   // Auto-sync dates for non-Plukk services
   useEffect(() => {
-    if (!isPlukk && serviceValue !== null && serviceValue !== 0 && !isNaN(serviceValue)) {
+    if (!isPlukk && formData.service !== null && formData.service !== 0 && !isNaN(formData.service)) {
       // If ETA date is set and ETD date is not, copy ETA to ETD
       if (formData.eta_date && !formData.etd_date) {
         setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
@@ -68,7 +72,7 @@ const EditOrderFormContent: React.FC<{
         setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
       }
     }
-  }, [formData.eta_date, formData.etd_date, isPlukk, serviceValue, setForm]);
+  }, [formData.eta_date, formData.etd_date, isPlukk, formData.service, setForm]);
 
   // Load data and populate form
   useEffect(() => {
@@ -79,6 +83,9 @@ const EditOrderFormContent: React.FC<{
         // Populate form from API data using Zod schema
         if (orderData) {
           setForm(() => apiToFormSchema.parse(orderData));
+
+          // Store terminal_id for reference validation
+          setTerminalId(orderData.terminal_id);
 
           // Set manual mode based on whether manual fields have data
           setEtaDriverManualMode(!!(orderData.eta_driver || orderData.eta_driver_phone));
@@ -103,30 +110,18 @@ const EditOrderFormContent: React.FC<{
   }, [orderId, setForm]);
 
   const handleSave = async () => {
-    // Validate dates based on service type
-    if (serviceValue && serviceValue !== 0 && !isNaN(serviceValue)) {
-      if (isPlukk) {
-        // Plukk: requires exactly ONE date (either ETA or ETD, not both)
-        const hasEta = !!formData.eta_date;
-        const hasEtd = !!formData.etd_date;
+    // Prevent double submission
+    if (isSubmitting || isValidating) return;
 
-        if (!hasEta && !hasEtd) {
-          alert('Plukk service requires either ETA date OR ETD date');
-          return;
-        } else if (hasEta && hasEtd) {
-          alert('Plukk service can only have ONE section (ETA OR ETD, not both)');
-          return;
-        }
-      } else {
-        // Non-Plukk: requires BOTH dates
-        if (!formData.eta_date || !formData.etd_date) {
-          alert('This service requires both ETA date AND ETD date');
-          return;
-        }
-      }
+    // Validate order-specific business rules
+    const isValid = await validateEditOrder(formData, orderId, terminalId);
+    if (!isValid) {
+      return; // Errors already shown via toast notifications
     }
 
     try {
+      setIsSubmitting(true);
+
       // First, upload any pending documents
       if (documentsUploadRef.current?.hasPendingDocuments()) {
         await documentsUploadRef.current.uploadPendingDocuments();
@@ -134,22 +129,20 @@ const EditOrderFormContent: React.FC<{
 
       // Transform form data to API format using Zod schema
       const apiData = editOrderFormSchema.parse(formData);
-      
+
       await orderApi.updateOrder(orderId, apiData);
-      
+
+      // Show success notification
+      notify.success('Order updated successfully!');
+
       navigate('/');
     } catch (error) {
       console.error('Failed to update order:', error);
-      alert(`Failed to save order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      notify.error(`Failed to save order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-
-
-  const serviceOptions = Object.entries(OrderServiceLabels).map(([value, label]) => ({
-    value,
-    label
-  }));
 
   return (
     <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' }}>
@@ -190,12 +183,10 @@ const EditOrderFormContent: React.FC<{
                     />
                   </GridCol>
                   <GridCol span={3}>
-                    <FormSelectInput<EditOrderFormData, 'service'>
-                      label="Service Type"
+                    <ServiceSelectInput<EditOrderFormData, 'service'>
                       source="service"
-                      placeholder="Select service"
                       required
-                      data={serviceOptions}
+                      nullable
                     />
                   </GridCol>
                   <GridCol span={3}>
@@ -516,7 +507,7 @@ const EditOrderFormContent: React.FC<{
                       setExistingDocuments(documents);
                     } catch (error) {
                       console.error('Failed to upload documents:', error);
-                      alert(`Failed to upload documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      notify.error(`Failed to upload documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
                       throw error; // Re-throw to let component handle it
                     }
                   }}
@@ -559,7 +550,7 @@ const EditOrderFormContent: React.FC<{
                       setExistingDocuments(documents);
                     } catch (error) {
                       console.error('Failed to update document:', error);
-                      alert(`Failed to update document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                      notify.error(`Failed to update document: ${error instanceof Error ? error.message : 'Unknown error'}`);
                       throw error;
                     }
                   }}
@@ -572,13 +563,14 @@ const EditOrderFormContent: React.FC<{
                 Cancel
               </Button>
               
-              <Button 
+              <Button
                 leftSection={<IconDeviceFloppy size={18} />}
                 onClick={handleSave}
                 size="md"
-                loading={loading}
+                loading={isSubmitting || isValidating}
+                disabled={isSubmitting || isValidating}
               >
-                Update Order
+                {isSubmitting ? 'Updating...' : isValidating ? 'Validating...' : 'Update Order'}
               </Button>
             </Group>
             </Stack>

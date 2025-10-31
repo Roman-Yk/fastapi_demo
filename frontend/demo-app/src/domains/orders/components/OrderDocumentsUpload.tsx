@@ -34,6 +34,7 @@ import {
   IconCheck,
   IconEdit
 } from '@tabler/icons-react';
+import { notify } from '../../../shared/services/notificationService';
 
 // Document type enum matching backend
 export enum OrderDocumentType {
@@ -228,7 +229,7 @@ const DocumentEditModal: React.FC<{
       onClose();
     } catch (error) {
       console.error('Error in handleSave:', error);
-      alert(`Error saving document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      notify.error(`Error saving document: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -456,7 +457,7 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
     } catch (error) {
       console.error('Upload failed:', error);
       // Don't clear pending docs on error so user can retry
-      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      notify.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
     }
@@ -485,7 +486,7 @@ export const OrderDocumentsUpload = React.forwardRef<OrderDocumentsUploadRef, Or
       setEditingDocument(null);
     } catch (error) {
       console.error('Failed to edit document:', error);
-      alert(`Failed to edit document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      notify.error(`Failed to edit document: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }, [editingDocument, onEdit]);
 

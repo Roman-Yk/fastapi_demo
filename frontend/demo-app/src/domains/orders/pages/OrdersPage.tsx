@@ -66,7 +66,7 @@ export const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrders(filters, sortModel);
-  }, [filters, sortModel, fetchOrders]);
+  }, [filters, sortModel]);
 
   const handleFiltersChange = async (newFilters: OrderFilters) => {
     setFilters(newFilters);
