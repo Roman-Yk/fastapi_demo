@@ -45,7 +45,6 @@ const EditOrderFormContent: React.FC<{
   const { formData, setForm } = useFormContext<EditOrderFormData>();
   const documentsUploadRef = useRef<OrderDocumentsUploadRef>(null);
 
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { validateEditOrder, isValidating } = useOrderValidation();
   const [etaDriverManualMode, setEtaDriverManualMode] = useState(false);
@@ -101,8 +100,6 @@ const EditOrderFormContent: React.FC<{
         setExistingDocuments(documents);
       } catch (error) {
         console.error('Failed to load data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 

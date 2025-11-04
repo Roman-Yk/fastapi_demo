@@ -1,20 +1,15 @@
-import { 
+import {
   AppShell,
   Group,
   Title,
-  ActionIcon,
-  useMantineColorScheme,
   Box
 } from '@mantine/core';
-import { 
-  IconSun, 
-  IconMoon, 
+import {
   IconTruck
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const navigate = useNavigate();
 
   return (
@@ -56,25 +51,9 @@ export const Navbar = () => {
 
 
 
-        {/* Right Side Navigation */}
+        {/* Right Side Navigation - removed theme toggle */}
         <Group gap="sm">
-          {/* Theme Toggle */}
-          <ActionIcon
-            variant="default"
-            size="lg"
-            onClick={toggleColorScheme}
-            aria-label="Toggle color scheme"
-            style={{
-              border: '1px solid var(--mantine-color-gray-3)',
-            }}
-          >
-            {colorScheme === 'dark' ? (
-              <IconSun size={18} />
-            ) : (
-              <IconMoon size={18} />
-            )}
-          </ActionIcon>
-
+          {/* Additional navigation items can be added here */}
         </Group>
       </Group>
     </AppShell.Header>

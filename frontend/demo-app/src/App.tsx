@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { 
-  MantineProvider, 
-  AppShell, 
+import {
+  MantineProvider,
+  AppShell,
   createTheme,
-  MantineColorsTuple,
-  useMantineColorScheme
+  MantineColorsTuple
 } from '@mantine/core';
 import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
@@ -38,14 +37,12 @@ const mantineTheme = createTheme({
   fontFamily: 'Inter, system-ui, Avenir, Helvetica, Arial, sans-serif',
 });
 
-// App content component that uses the theme
+// App content component - light theme only
 const AppContent = () => {
-  const { colorScheme } = useMantineColorScheme();
-  
-  // Material-UI theme that responds to color scheme
+  // Material-UI theme - light mode only
   const muiTheme = useMemo(() => createMuiTheme({
     palette: {
-      mode: colorScheme === 'dark' ? 'dark' : 'light',
+      mode: 'light',
       primary: {
         main: '#228be6',
       },
@@ -56,7 +53,7 @@ const AppContent = () => {
     typography: {
       fontFamily: 'Inter, system-ui, Avenir, Helvetica, Arial, sans-serif',
     },
-  }), [colorScheme]);
+  }), []);
 
   return (
     <ThemeProvider theme={muiTheme}>
@@ -78,7 +75,7 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
-      <MantineProvider theme={mantineTheme}>
+      <MantineProvider theme={mantineTheme} forceColorScheme="light">
         <DatesProvider settings={{ firstDayOfWeek: 1 }}>
           <Notifications />
           <AppContent />

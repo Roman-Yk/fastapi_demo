@@ -1,4 +1,3 @@
-import React from 'react';
 import { FormSelectInput } from '../../../shared/components';
 import { OrderServiceLabels } from '../types/order';
 
