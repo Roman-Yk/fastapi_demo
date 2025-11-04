@@ -75,20 +75,24 @@ export function useOrderValidation() {
   /**
    * Validates edit order form data
    * Checks:
-   * - Dates are not in the past (if being changed)
+   * - Dates are not in the past (only if being changed from original)
    * - Service-specific date requirements
    * - Reference uniqueness for terminal (excluding current order)
    */
   const validateEditOrder = useCallback(async (
     formData: EditOrderFormData,
     orderId: string,
-    terminalId: string
+    terminalId: string,
+    fieldChanges?: {
+      hasEtaChanged?: boolean;
+      hasEtdChanged?: boolean;
+    }
   ): Promise<boolean> => {
     setIsValidating(true);
 
     try {
-      // Validate ETA date not in past
-      if (formData.eta_date) {
+      // Validate ETA date not in past (only if changed from original)
+      if (formData.eta_date && fieldChanges?.hasEtaChanged) {
         const etaResult = dateValidators.notInPast('ETA Date')(formData.eta_date);
         if (!etaResult.valid) {
           notify.validationError('ETA Date', etaResult.error!);
@@ -96,8 +100,8 @@ export function useOrderValidation() {
         }
       }
 
-      // Validate ETD date not in past
-      if (formData.etd_date) {
+      // Validate ETD date not in past (only if changed from original)
+      if (formData.etd_date && fieldChanges?.hasEtdChanged) {
         const etdResult = dateValidators.notInPast('ETD Date')(formData.etd_date);
         if (!etdResult.valid) {
           notify.validationError('ETD Date', etdResult.error!);

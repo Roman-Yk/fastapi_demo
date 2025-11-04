@@ -24,6 +24,9 @@ interface FormContextType<T extends Record<string, any>> {
     onChange: (value: T[K]) => void;
     onBlur: () => void;
   };
+  initialValues: T;
+  hasFieldChanged: <K extends keyof T>(field: K) => boolean;
+  setInitialData: (data: T) => void;
 }
 
 const FormContext = createContext<FormContextType<any> | null>(null);

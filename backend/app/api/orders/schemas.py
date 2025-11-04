@@ -1,5 +1,5 @@
 import uuid
-from datetime import time
+from datetime import time, date
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -110,7 +110,7 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
         examples=[True]
     )
     
-    eta_date: NotPastOptionalDate = Field(
+    eta_date: Optional[date] = Field(
         default=None,
         description="Updated Estimated Time of Arrival date",
         examples=["2024-12-27"]
@@ -121,7 +121,7 @@ class UpdateOrderSchema(ETAETDFieldsMixin, BaseModel):
         examples=["16:00:00"]
     )
 
-    etd_date: NotPastOptionalDate = Field(
+    etd_date: Optional[date] = Field(
         default=None,
         description="Updated Estimated Time of Departure date",
         examples=["2024-12-28"]

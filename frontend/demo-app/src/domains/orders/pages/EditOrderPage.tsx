@@ -42,7 +42,7 @@ const EditOrderFormContent: React.FC<{
   onBack: () => void;
 }> = ({ orderId, onBack }) => {
   const navigate = useNavigate();
-  const { formData, setForm } = useFormContext<EditOrderFormData>();
+  const { formData, setForm, setInitialData, hasFieldChanged } = useFormContext<EditOrderFormData>();
   const documentsUploadRef = useRef<OrderDocumentsUploadRef>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,22 +56,8 @@ const EditOrderFormContent: React.FC<{
   const [existingDocuments, setExistingDocuments] = useState<OrderDocument[]>([]);
   const [terminalId, setTerminalId] = useState<string>('');
 
-  // Service is already a number thanks to parseValue in FormSelectInput
-  const isPlukk = formData.service === OrderService.INTO_PLUKK_STORAGE;
-
-  // Auto-sync dates for non-Plukk services
-  useEffect(() => {
-    if (!isPlukk && formData.service !== null && formData.service !== 0 && !isNaN(formData.service)) {
-      // If ETA date is set and ETD date is not, copy ETA to ETD
-      if (formData.eta_date && !formData.etd_date) {
-        setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
-      }
-      // If ETD date is set and ETA date is not, copy ETD to ETA
-      else if (formData.etd_date && !formData.eta_date) {
-        setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
-      }
-    }
-  }, [formData.eta_date, formData.etd_date, isPlukk, formData.service, setForm]);
+  const isCCOrCTC = formData.service === OrderService.RELOAD_CAR_CAR ||
+                    formData.service === OrderService.RELOAD_CAR_TERMINAL_CAR;
 
   // Load data and populate form
   useEffect(() => {
@@ -81,7 +67,9 @@ const EditOrderFormContent: React.FC<{
 
         // Populate form from API data using Zod schema
         if (orderData) {
-          setForm(() => apiToFormSchema.parse(orderData));
+          const formData = apiToFormSchema.parse(orderData);
+          // Set as initial data so we can track changes
+          setInitialData(formData);
 
           // Store terminal_id for reference validation
           setTerminalId(orderData.terminal_id);
@@ -104,14 +92,17 @@ const EditOrderFormContent: React.FC<{
     };
 
     loadData();
-  }, [orderId, setForm]);
+  }, [orderId, setInitialData]);
 
   const handleSave = async () => {
     // Prevent double submission
     if (isSubmitting || isValidating) return;
 
-    // Validate order-specific business rules
-    const isValid = await validateEditOrder(formData, orderId, terminalId);
+    // Validate order-specific business rules (pass field change checker for comparison)
+    const isValid = await validateEditOrder(formData, orderId, terminalId, {
+      hasEtaChanged: hasFieldChanged('eta_date'),
+      hasEtdChanged: hasFieldChanged('etd_date')
+    });
     if (!isValid) {
       return; // Errors already shown via toast notifications
     }
@@ -210,7 +201,13 @@ const EditOrderFormContent: React.FC<{
                           label="ETA-A date"
                           placeholder="Select date"
                           value={formData.eta_date}
-                          onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
+                          onChange={(value) => setForm(prev => {
+                            // For CC/CTC orders, sync both dates
+                            if (isCCOrCTC) {
+                              return { ...prev, eta_date: value, etd_date: value };
+                            }
+                            return { ...prev, eta_date: value };
+                          })}
                           required
                         />
                       </GridCol>
@@ -219,7 +216,13 @@ const EditOrderFormContent: React.FC<{
                           label="ETA-A time"
                           placeholder="Select time"
                           value={formData.eta_time}
-                          onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
+                          onChange={(value) => setForm(prev => {
+                            // For CC/CTC orders, sync both times
+                            if (isCCOrCTC) {
+                              return { ...prev, eta_time: value || '', etd_time: value || '' };
+                            }
+                            return { ...prev, eta_time: value || '' };
+                          })}
                         />
                       </GridCol>
                     </Grid>
@@ -320,7 +323,13 @@ const EditOrderFormContent: React.FC<{
                           label="ETD-D date"
                           placeholder="Select date"
                           value={formData.etd_date}
-                          onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
+                          onChange={(value) => setForm(prev => {
+                            // For CC/CTC orders, sync both dates
+                            if (isCCOrCTC) {
+                              return { ...prev, eta_date: value, etd_date: value };
+                            }
+                            return { ...prev, etd_date: value };
+                          })}
                           required
                         />
                       </GridCol>
@@ -329,7 +338,13 @@ const EditOrderFormContent: React.FC<{
                           label="ETD-D time"
                           placeholder="Select time"
                           value={formData.etd_time}
-                          onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
+                          onChange={(value) => setForm(prev => {
+                            // For CC/CTC orders, sync both times
+                            if (isCCOrCTC) {
+                              return { ...prev, eta_time: value || '', etd_time: value || '' };
+                            }
+                            return { ...prev, etd_time: value || '' };
+                          })}
                         />
                       </GridCol>
                     </Grid>

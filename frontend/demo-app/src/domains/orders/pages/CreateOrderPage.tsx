@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Title,
   Text,
@@ -55,22 +55,8 @@ const CreateOrderFormContent: React.FC<{
   const { validateCreateOrder, isValidating } = useOrderValidation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Service is already a number thanks to parseValue in FormSelectInput
-  const isPlukk = formData.service === OrderService.INTO_PLUKK_STORAGE;
-
-  // Auto-sync dates for non-Plukk services
-  useEffect(() => {
-    if (!isPlukk && formData.service !== 0 && !isNaN(formData.service)) {
-      // If ETA date is set and ETD date is not, copy ETA to ETD
-      if (formData.eta_date && !formData.etd_date) {
-        setForm(prev => ({ ...prev, etd_date: formData.eta_date }));
-      }
-      // If ETD date is set and ETA date is not, copy ETD to ETA
-      else if (formData.etd_date && !formData.eta_date) {
-        setForm(prev => ({ ...prev, eta_date: formData.etd_date }));
-      }
-    }
-  }, [formData.eta_date, formData.etd_date, isPlukk, formData.service, setForm]);
+  const isCCOrCTC = formData.service === OrderService.RELOAD_CAR_CAR ||
+                    formData.service === OrderService.RELOAD_CAR_TERMINAL_CAR;
 
   const handleSave = async () => {
     // Prevent double submission
@@ -188,7 +174,13 @@ const CreateOrderFormContent: React.FC<{
                             label="ETA Date"
                             placeholder="Select ETA date"
                             value={formData.eta_date}
-                            onChange={(value) => setForm(prev => ({ ...prev, eta_date: value }))}
+                            onChange={(value) => setForm(prev => {
+                              // For CC/CTC orders, sync both dates
+                              if (isCCOrCTC) {
+                                return { ...prev, eta_date: value, etd_date: value };
+                              }
+                              return { ...prev, eta_date: value };
+                            })}
                           />
                         </GridCol>
                         <GridCol span={6}>
@@ -196,7 +188,13 @@ const CreateOrderFormContent: React.FC<{
                             label="ETA Time"
                             placeholder="Select ETA time"
                             value={formData.eta_time}
-                            onChange={(value) => setForm(prev => ({ ...prev, eta_time: value || '' }))}
+                            onChange={(value) => setForm(prev => {
+                              // For CC/CTC orders, sync both times
+                              if (isCCOrCTC) {
+                                return { ...prev, eta_time: value || '', etd_time: value || '' };
+                              }
+                              return { ...prev, eta_time: value || '' };
+                            })}
                           />
                         </GridCol>
                       </Grid>
@@ -213,7 +211,13 @@ const CreateOrderFormContent: React.FC<{
                             label="ETD Date"
                             placeholder="Select ETD date"
                             value={formData.etd_date}
-                            onChange={(value) => setForm(prev => ({ ...prev, etd_date: value }))}
+                            onChange={(value) => setForm(prev => {
+                              // For CC/CTC orders, sync both dates
+                              if (isCCOrCTC) {
+                                return { ...prev, eta_date: value, etd_date: value };
+                              }
+                              return { ...prev, etd_date: value };
+                            })}
                           />
                         </GridCol>
                         <GridCol span={6}>
@@ -221,7 +225,13 @@ const CreateOrderFormContent: React.FC<{
                             label="ETD Time"
                             placeholder="Select ETD time"
                             value={formData.etd_time}
-                            onChange={(value) => setForm(prev => ({ ...prev, etd_time: value || '' }))}
+                            onChange={(value) => setForm(prev => {
+                              // For CC/CTC orders, sync both times
+                              if (isCCOrCTC) {
+                                return { ...prev, eta_time: value || '', etd_time: value || '' };
+                              }
+                              return { ...prev, etd_time: value || '' };
+                            })}
                           />
                         </GridCol>
                       </Grid>

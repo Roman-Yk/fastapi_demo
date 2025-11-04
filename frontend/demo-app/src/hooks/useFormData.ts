@@ -35,14 +35,15 @@ export interface FormConfig<T extends Record<string, any>> {
  * @deprecated Use useFormContext + Zod instead
  */
 export function useFormData<T extends Record<string, any>>(config: FormConfig<T>) {
-  const { 
-    initialData, 
-    validationRules = {}, 
-    validateOnChange = false, 
-    validateOnBlur = true 
+  const {
+    initialData,
+    validationRules = {},
+    validateOnChange = false,
+    validateOnBlur = true
   } = config;
 
   const [formData, setFormData] = useState<T>(initialData);
+  const [initialValues, setInitialValues] = useState<T>(initialData);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof T, boolean>>>({});
 
@@ -136,10 +137,10 @@ export function useFormData<T extends Record<string, any>>(config: FormConfig<T>
 
   // Reset form to initial state
   const resetForm = useCallback(() => {
-    setFormData(initialData);
+    setFormData(initialValues);
     setErrors({});
     setTouched({});
-  }, [initialData]);
+  }, [initialValues]);
 
   // Get field props for easy integration with inputs
   const getFieldProps = useCallback(<K extends keyof T>(field: K) => ({
@@ -181,7 +182,20 @@ export function useFormData<T extends Record<string, any>>(config: FormConfig<T>
     return valid;
   }, [errors, formData, validationRules, validateField]);
 
-  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+  // Check if a specific field has changed from initial value
+  const hasFieldChanged = useCallback(<K extends keyof T>(field: K): boolean => {
+    return formData[field] !== initialValues[field];
+  }, [formData, initialValues]);
+
+  // Set new initial values (useful for edit forms after loading data)
+  const setInitialData = useCallback((data: T) => {
+    setInitialValues(data);
+    setFormData(data);
+    setErrors({});
+    setTouched({});
+  }, []);
+
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialValues);
 
   return {
     formData,
@@ -196,6 +210,9 @@ export function useFormData<T extends Record<string, any>>(config: FormConfig<T>
     validateField,
     validateAll,
     getFieldProps,
+    initialValues,
+    hasFieldChanged,
+    setInitialData,
   };
 }
 
